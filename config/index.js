@@ -21,7 +21,11 @@ module.exports = {
       '/ms':{
           target: 'https://www.easy-mock.com/mock/592501a391470c0ac1fab128',
           changeOrigin: true
-      }
+      },
+//    '/static':{
+//    	target: 'http://localhost:8080',
+//    	changeOrigin: true
+//    },
     },
     // Various Dev Server settings
     host: 'localhost', // can be overwritten by process.env.HOST
