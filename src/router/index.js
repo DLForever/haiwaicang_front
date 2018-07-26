@@ -56,6 +56,11 @@ export default new Router({
                     meta: { title: '货物管理' }
                 },
                 {
+                    path: '/ordermanage',
+                    component: resolve => require(['../components/page/OrderManage.vue'], resolve),
+                    meta: { title: '订单管理' }
+                },
+                {
                     path: '/fbamanage',
                     component: resolve => require(['../components/page/FBAManage.vue'], resolve),
                     meta: { title: 'FBA管理' }
@@ -68,6 +73,11 @@ export default new Router({
                 {
                     path: '/WMSordermanage',
                     component: resolve => require(['../components/page/WMSOrderManage.vue'], resolve),
+                    meta: { title: 'WMS订单管理' }
+                },
+                {
+                    path: '/WMSproductmanage',
+                    component: resolve => require(['../components/page/WMSProductManage.vue'], resolve),
                     meta: { title: 'WMS订单管理' }
                 },
                 {

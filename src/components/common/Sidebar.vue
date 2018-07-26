@@ -74,8 +74,15 @@
                                 index: 'goodsmanage',
                                 title: '货物管理'
                             },
+                        ]
+                    },
+                    {
+                        icon: 'el-icon-news',
+                        index: 'ordermanage',
+                        title: '订单管理',
+                        subs: [
                             {
-                                index: '11',
+                                index: 'ordermanage',
                                 title: '订单管理'
                             },
                         ]
@@ -115,11 +122,11 @@
                     },
                     {
                         icon: 'el-icon-printer',
-                        index: '7',
+                        index: '9',
                         title: 'WMS货物管理',
                         subs: [
                             {
-                                index: 'WMSordermanage',
+                                index: 'WMSproductmanage',
                                 title: 'WMS货物管理'
                             },
                         ]
