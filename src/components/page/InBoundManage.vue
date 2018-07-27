@@ -16,7 +16,7 @@
                 <el-input v-model="select_word" placeholder="筛选关键词" class="handle-input mr10"></el-input>
                 <el-button type="primary" icon="search" @click="search">搜索</el-button>
             </div>
-            <el-table :data="data" border style="width: 100%" ref="multipleTable" @selection-change="handleSelectionChange">
+            <el-table :data="data.slice((cur_page-1)*pagesize, cur_page*pagesize)" border style="width: 100%" ref="multipleTable" @selection-change="handleSelectionChange">
                 <el-table-column type="selection" width="55"></el-table-column>
                 <el-table-column prop="id" label="id" width="150">
                 </el-table-column>
@@ -31,8 +31,11 @@
                 <el-table-column prop="arrive_sum" label="接收数量" width="120">
                 </el-table-column>
                 <el-table-column prop="status" label="状态" width="120">
+                	<template slot-scope="scope">{{getStatusName(scope.row.status)}}</template>
                 </el-table-column>        
-                <el-table-column prop="remark" label="备注" :formatter="formatter">
+                <el-table-column prop="user_remark" label="用户备注">
+                </el-table-column>
+                <el-table-column prop="manager_remark" label="仓库备注">
                 </el-table-column>
                 <el-table-column label="操作" width="100">
                     <template slot-scope="scope">
@@ -42,7 +45,7 @@
                 </el-table-column>
             </el-table>
             <div class="pagination">
-                <el-pagination @current-change="handleCurrentChange" layout="prev, pager, next" :total="200000000">
+                <el-pagination @current-change="handleCurrentChange" :page-sizes="[10, 20, 30, 50]" layout="sizes, prev, pager, next" :total="totals">
                 </el-pagination>
             </div>
         </div>
@@ -86,9 +89,11 @@
                 url: './static/vuetable.json',
                 tableData: [],
                 cur_page: 1,
+                pagesize: 10,
                 multipleSelection: [],
                 select_cate: '',
                 select_word: '',
+                totals: 1,
                 del_list: [],
                 is_search: false,
                 editVisible: false,
@@ -144,14 +149,17 @@
                     page: this.cur_page
                 }).then((res) => {
                     this.tableData = res.data.data;
+                    this.totals = this.tableData.length
+                }).catch((res) =>{
+                	console.log(res)
                 })
             },
             search() {
                 this.is_search = true;
             },
-            formatter(row, column) {
-                return row.address;
-            },
+//          formatter(row, column) {
+//              return row.address;
+//          },
             filterTag(value, row) {
                 return row.tag === value;
             },
@@ -193,6 +201,13 @@
                 this.tableData.splice(this.idx, 1);
                 this.$message.success('删除成功');
                 this.delVisible = false;
+            },
+            getStatusName(status){
+            	if(status == 1){
+            		return "正常"
+            	}else{
+            		return "已完成"
+            	}
             }
         }
     }

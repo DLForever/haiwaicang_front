@@ -83,7 +83,11 @@
                         subs: [
                             {
                                 index: 'ordermanage',
-                                title: '订单管理'
+                                title: '换标订单管理'
+                            },
+                            {
+                                index: 'ordersendmanage',
+                                title: '发货订单管理'
                             },
                         ]
                     },
@@ -116,7 +120,11 @@
                         subs: [
                             {
                                 index: 'WMSordermanage',
-                                title: 'WMS订单管理'
+                                title: 'WMS换标订单'
+                            },
+                            {
+                                index: 'WMSordersendmanage',
+                                title: 'WMS发货订单'
                             },
                         ]
                     },
@@ -131,11 +139,11 @@
                             },
                         ]
                     },
-                    {
-                        icon: 'el-icon-tickets',
-                        index: 'table',
-                        title: '基础表格'
-                    },
+//                  {
+//                      icon: 'el-icon-tickets',
+//                      index: 'table',
+//                      title: '基础表格'
+//                  },
 //                  {
 //                      icon: 'el-icon-message',
 //                      index: 'tabs',

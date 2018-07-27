@@ -139,6 +139,7 @@
 					}
 				}).then((res) => {
 					localStorage.setItem('ms_username', this.ruleForm.username);
+					localStorage.setItem('token', res.data.data.token);
 					console.log(res)
 					this.$router.push('/');
 				})

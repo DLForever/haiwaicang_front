@@ -17,15 +17,18 @@
             </div>
             <el-table :data="data.slice((cur_page-1)*pagesize, cur_page*pagesize)" border style="width: 100%" ref="multipleTable" @selection-change="handleSelectionChange">
                 <el-table-column type="selection" width="55"></el-table-column>
-                <el-table-column prop="fnsku" label="FNSKU" width="180">
+                <el-table-column prop="fnsku" label="fnsku" width="200">
                 </el-table-column>
-                <el-table-column prop="name" label="产品名称">
+                <el-table-column prop="stock_sum" label="库存数量" width="150">
                 </el-table-column>
-                <el-table-column prop="length" label="长*宽*高(CM)" width="180">
+                <el-table-column prop="done_sum" label="已发出数量" width="150">
                 </el-table-column>
-                <el-table-column prop="weight" label="重量" width="150">
+                <el-table-column prop="lock_sum" label="已锁定数量" width="120">
+				</el-table-column>
+                <el-table-column prop="status" label="状态" width="120">
+                	<template slot-scope="scope">{{getStatusName(scope.row.status)}}</template>
                 </el-table-column>
-                <el-table-column prop="" label="状态" width="120">
+                <el-table-column prop="remark" label="备注">
                 </el-table-column>                
                 <!--<el-table-column prop="date" label="日期" sortable width="150">
                 </el-table-column>
@@ -147,7 +150,7 @@
                 };
                 let token = localStorage.getItem('token')
                 console.log(token)
-                this.$axios.get( 'http://47.74.177.128:3000/products', {
+                this.$axios.get( 'http://47.74.177.128:3000/admin/cargos', {
                 	headers: {'Authorization': token},
                     params:{
                     	page: this.cur_page
@@ -211,6 +214,13 @@
                 this.tableData.splice(this.idx, 1);
                 this.$message.success('删除成功');
                 this.delVisible = false;
+            },
+            getStatusName(status){
+            	if(status == 1){
+            		return "正常"
+            	}else{
+            		return "无库存"
+            	}
             }
         }
     }

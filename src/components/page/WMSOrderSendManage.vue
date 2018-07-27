@@ -2,31 +2,43 @@
 	<div class="table">
 		<div class="crumbs">
 			<el-breadcrumb separator="/">
-				<el-breadcrumb-item><i class="el-icon-tickets"></i> WMS入库管理</el-breadcrumb-item>
-				<el-breadcrumb-item>入库管理</el-breadcrumb-item>
+				<el-breadcrumb-item><i class="el-icon-tickets"></i> WMS订单管理</el-breadcrumb-item>
+				<el-breadcrumb-item>订单管理</el-breadcrumb-item>
 			</el-breadcrumb>
 		</div>
 		<div class="container">
 			<div class="handle-box">
 				<el-button type="primary" icon="delete" class="handle-del mr10" @click="delAll">批量删除</el-button>
+				<el-select v-model="select_cate" placeholder="筛选省份" class="handle-select mr10">
+					<el-option key="1" label="广东省" value="广东省"></el-option>
+					<el-option key="2" label="湖南省" value="湖南省"></el-option>
+				</el-select>
 				<el-input v-model="select_word" placeholder="筛选关键词" class="handle-input mr10"></el-input>
 				<el-button type="primary" icon="search" @click="search">搜索</el-button>
 			</div>
 			<el-table :data="data.slice((cur_page-1)*pagesize, cur_page*pagesize)" border style="width: 100%" model="form" ref="multipleTable" @selection-change="handleSelectionChange">
 				<el-table-column type="selection" width="55"></el-table-column>
-				<el-table-column prop="logistics_number" label="入库单号" width="150">
+				<el-table-column prop="fnsku" label="fnsku" width="150">
 				</el-table-column>
-				<el-table-column prop="way_sum" label="产品在途数量" width="150">
+				<el-table-column prop="sum" label="数量" width="150">
 				</el-table-column>
-				<el-table-column prop="arrive_sum" label="已收到数量" width="120">
+				<el-table-column prop="box_sum" label="箱子数量" width="120">
 				</el-table-column>
-				<el-table-column prop="status" label="状态" width="120">
-                	<template slot-scope="scope">{{getStatusName(scope.row.status)}}</template>
-                </el-table-column>
+				<el-table-column prop="weight" label="装箱重量" width="120">
+				</el-table-column>
+				<el-table-column prop="length" label="装箱长度" width="120">
+				</el-table-column>
+				<el-table-column prop="width" label="装箱宽度" width="120">
+				</el-table-column>
+				<el-table-column prop="height" label="装箱高度" width="120">
+				</el-table-column>
 				<el-table-column prop="user_remark" label="用户备注">
 				</el-table-column>
 				<el-table-column prop="manager_remark" label="仓库备注">
 				</el-table-column>
+				<el-table-column prop="status" label="状态" width="120">
+                	<template slot-scope="scope">{{getStatusName(scope.row.status)}}</template>
+                </el-table-column>
 				<el-table-column label="操作" width="100">
 					<template slot-scope="scope">
 						<!--<el-button size="small" @click="handleEdit(scope.$index, scope.row)">编辑</el-button>-->
@@ -36,7 +48,8 @@
 								操作<i class="el-icon-arrow-down el-icon--right"></i>
 							</el-button>
 							<el-dropdown-menu slot="dropdown">
-								<el-dropdown-item><el-button @click="handleEdit(scope.$index, scope.row)" type="text">入库</el-button></el-dropdown-item>
+								<el-dropdown-item><el-button @click="handleEdit(scope.$index, scope.row)" type="text">发货</el-button></el-dropdown-item>
+								<el-dropdown-item><el-button @click="showImgs(scope.$index, scope.row)" type="text">查看图片</el-button></el-dropdown-item>
 								<!--<el-dropdown-item><el-button @click="editVisible = true" type="text">详情</el-button></el-dropdown-item>-->
 								<!--<el-button @click="editVisible = true">贴标</el-button>-->
 							</el-dropdown-menu>
@@ -53,10 +66,21 @@
 		<!-- 编辑弹出框 -->
 		<el-dialog title="编辑" :visible.sync="editVisible" width="30%">
 			<el-form ref="form" :model="form" label-width="80px">
-				<el-form-item label="入库数量">
-					<el-input v-model="form.arrive_sum"></el-input>
+				<el-form-item label="箱子数量">
+					<el-input v-model="form.box_sum"></el-input>
 				</el-form-item>
-				<el-form-item label="备注">
+				<el-form-item label="箱子重量">
+					<el-input v-model="form.weight"></el-input>
+				</el-form-item>
+				<el-form-item label="装箱长度">
+					<el-input v-model="form.length"></el-input>
+				</el-form-item>
+				<el-form-item label="装箱宽度">
+					<el-input v-model="form.width"></el-input>
+				</el-form-item><el-form-item label="装箱高度">
+					<el-input v-model="form.height"></el-input>
+				</el-form-item>
+				</el-form-item><el-form-item label="备注">
 					<el-input v-model="form.remark"></el-input>
 				</el-form-item>
 				<!--<el-form-item label="日期">
@@ -65,7 +89,20 @@
 			</el-form>
 			<span slot="footer" class="dialog-footer">
                 <el-button @click="editVisible = false">取 消</el-button>
-                <el-button type="primary" @click="saveEdit('form')">确 定</el-button>
+                <el-button type="primary" @click="saveEdit">确 定</el-button>
+            </span>
+		</el-dialog>
+		
+		<!-- 编辑弹出框 -->
+		<el-dialog title="编辑" :visible.sync="showImg" width="30%">
+			<el-carousel :interval="4000" type="card" height="200px">
+				<el-carousel-item v-for="item in form.pictures">
+					<img :src="'http://47.74.177.128:3000'+item.url.url" />
+				</el-carousel-item>
+			</el-carousel>
+			<span slot="footer" class="dialog-footer">
+                <!--<el-button @click="showImg = false">取 消</el-button>-->
+                <el-button type="primary" @click="showImg = false">确 定</el-button>
             </span>
 		</el-dialog>
 
@@ -89,6 +126,7 @@
 				tableData: [],
 				cur_page: 1,
 				pagesize: 10,
+				totals: 0,
 				multipleSelection: [],
 				select_cate: '',
 				select_word: '',
@@ -96,7 +134,7 @@
 				is_search: false,
 				editVisible: false,
 				delVisible: false,
-				totals: 0,
+				showImg: false,
 				form: {
 					order: 'rr',
 					total_fnsku: '',
@@ -108,9 +146,7 @@
 					remarks: '',
 					name: '',
 					date: '',
-					address: '',
-					arrive_sum: '',
-					id: ''
+					address: ''
 				},
 				idx: -1
 			}
@@ -153,9 +189,13 @@
 //					this.url = '/ms/table/list';
 				};
 				let token = localStorage.getItem('token')
-				this.$axios.get('http://47.74.177.128:3000/admin/store_ins', {
-					headers: {'Authorization': token},
+				let params = {
+					o_type: 2,
 					page: this.cur_page
+				}
+				this.$axios.get('http://47.74.177.128:3000/admin/orders', {
+					headers: {'Authorization': token},
+					params
 				}).then((res) => {
 					this.tableData = res.data.data;
 					this.totals = this.tableData.length
@@ -175,8 +215,12 @@
 				const item = this.tableData[index];
 				this.form = {
 					id: item.id,
-					arrive_sum: item.arrive_sum,
-					remark: item.remark
+					remark: item.remark,
+					box_sum: item.box_sum,
+					weight: item.weight,
+					length: item.length,
+					width: item.width,
+					height: item.height,
 				}
 				this.editVisible = true;
 			},
@@ -199,23 +243,36 @@
 			},
 			// 保存编辑
 			saveEdit(form) {
-//				this.$set(this.tableData, this.idx, this.form);
 				let token = localStorage.getItem('token')
-				let id = this.form.id
-				let sum = this.form.arrive_sum
-				this.$axios.post('http://47.74.177.128:3000/admin/store_ins/'+id+'/done', {
-					sum: sum,
-					remark: this.form.remark
-				},{
-					headers: {'Authorization': token},
+				let params = {
+					remark: this.form.remark,
+					box_sum: this.form.box_sum,
+					weight: this.form.weight,
+					length: this.form.length,
+					width: this.form.width,
+					height: this.form.height
+				}
+				this.$axios.post('http://47.74.177.128:3000/admin/orders/' + this.form.id + '/done',params, {
+					headers: {
+						'Authorization': token
+					},
 				}).then((res) => {
-					let data = res.data.data
-					console.log(res)
+					if(res.data.code == 200) {
+						this.$message.success("换标成功!")
+					}
 				}).catch((res) => {
 					this.$message.error(res)
 				})
 				this.editVisible = false;
-				this.$message.success(`修改第 ${this.idx+1} 行成功`);
+			},
+			showImgs(index, row) {
+				this.idx = index;
+				const item = this.tableData[index];
+				this.form = {
+					id: item.id,
+					pictures: item.pictures
+				}
+				this.showImg = true;
 			},
 			// 确定删除
 			deleteRow() {
@@ -226,8 +283,10 @@
 			getStatusName(status){
             	if(status == 1){
             		return "正常"
-            	}else{
+            	}else if(status ==4){
             		return "已完成"
+            	}else{
+            		return '包装完成'
             	}
             }
 		}

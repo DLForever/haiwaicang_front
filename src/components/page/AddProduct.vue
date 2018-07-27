@@ -166,7 +166,9 @@
 					//				{
 					//					headers: {'Authorization': token}
 				).then((res) => {
-					this.$message.success('提交成功！')
+					if(res.data.code == 200){
+						this.$message.success('提交成功！');
+					}
 					console.log(res)
 					this.$refs['form'].resetFields()
 //					if(res.data.code == 200) {

@@ -16,23 +16,22 @@
 				<el-input v-model="select_word" placeholder="筛选关键词" class="handle-input mr10"></el-input>
 				<el-button type="primary" icon="search" @click="search">搜索</el-button>
 			</div>
-			<el-table :data="data" border style="width: 100%" model="form" ref="multipleTable" @selection-change="handleSelectionChange">
+			<el-table :data="data.slice((cur_page-1)*pagesize, cur_page*pagesize)" border style="width: 100%" model="form" ref="multipleTable" @selection-change="handleSelectionChange">
 				<el-table-column type="selection" width="55"></el-table-column>
-				<el-table-column prop="order" v-model="form.order" label="入库单号" width="150">
+				<el-table-column prop="fnsku" label="fnsku" width="150">
 				</el-table-column>
-				<el-table-column prop="" label="FNSKU总数" width="150">
+				<el-table-column prop="dst_fnsku" label="新fnsku" width="150">
 				</el-table-column>
-				<el-table-column prop="" label="产品在途数量" width="150">
+				<el-table-column prop="sum" label="数量" width="150">
 				</el-table-column>
-				<el-table-column prop="" label="已收到数量" width="120">
+				<!--<el-table-column prop="done_sum" label="已发出数量" width="120">
+				</el-table-column>-->
+				<el-table-column prop="status" label="状态" width="120">
+                	<template slot-scope="scope">{{getStatusName(scope.row.status)}}</template>
+                </el-table-column>
+				<el-table-column prop="user_remark" label="用户备注">
 				</el-table-column>
-				<el-table-column prop="" label="上架数量" width="120">
-				</el-table-column>
-				<el-table-column prop="" label="已发出/剩余" width="120">
-				</el-table-column>
-				<el-table-column prop="" label="状态" width="120">
-				</el-table-column>
-				<el-table-column prop="" label="备注" :formatter="formatter">
+				<el-table-column prop="manager_remark" label="仓库备注">
 				</el-table-column>
 				<el-table-column label="操作" width="100">
 					<template slot-scope="scope">
@@ -43,8 +42,10 @@
 								操作<i class="el-icon-arrow-down el-icon--right"></i>
 							</el-button>
 							<el-dropdown-menu slot="dropdown">
-								<el-dropdown-item><el-button @click="handleEdit(scope.$index, scope.row)" type="text">贴标</el-button></el-dropdown-item>
-								<el-dropdown-item><el-button @click="editVisible = true" type="text">详情</el-button></el-dropdown-item>
+								<el-dropdown-item>
+									<el-button @click="handleEdit(scope.$index, scope.row)" type="text">贴标</el-button>
+								</el-dropdown-item>
+								<el-dropdown-item><el-button @click="showImgs(scope.$index, scope.row)" type="text">查看图片</el-button></el-dropdown-item>
 								<!--<el-button @click="editVisible = true">贴标</el-button>-->
 							</el-dropdown-menu>
 						</el-dropdown>
@@ -52,7 +53,7 @@
 				</el-table-column>
 			</el-table>
 			<div class="pagination">
-				<el-pagination @current-change="handleCurrentChange" layout="prev, pager, next" :total="1000">
+				<el-pagination @current-change="handleCurrentChange" :page-sizes="[10, 20, 30, 50]" layout="sizes, prev, pager, next" :total="totals">
 				</el-pagination>
 			</div>
 		</div>
@@ -60,17 +61,8 @@
 		<!-- 编辑弹出框 -->
 		<el-dialog title="编辑" :visible.sync="editVisible" width="30%">
 			<el-form ref="form" :model="form" label-width="80px">
-				<el-form-item label="入库单号">
-					<el-input v-model="form.address"></el-input>
-				</el-form-item>
-				<el-form-item label="新FNSKU">
-					<el-input v-model="form.address"></el-input>
-				</el-form-item>
-				<el-form-item label="数量">
-					<el-input v-model="form.address"></el-input>
-				</el-form-item>
-				<el-form-item label="新标PDF">
-					<el-upload>上传</el-upload>
+				<el-form-item label="备注">
+					<el-input v-model="form.remark"></el-input>
 				</el-form-item>
 				<!--<el-form-item label="日期">
 					<el-date-picker type="date" placeholder="选择日期" v-model="form.date" value-format="yyyy-MM-dd" style="width: 100%;"></el-date-picker>
@@ -78,7 +70,20 @@
 			</el-form>
 			<span slot="footer" class="dialog-footer">
                 <el-button @click="editVisible = false">取 消</el-button>
-                <el-button type="primary" @click="saveEdit">确 定</el-button>
+                <el-button type="primary" @click="saveEdit('form')">确 定</el-button>
+            </span>
+		</el-dialog>
+		
+		<!-- 编辑弹出框 -->
+		<el-dialog title="编辑" :visible.sync="showImg" width="30%">
+			<el-carousel :interval="4000" type="card" height="200px">
+				<el-carousel-item v-for="item in form.pictures">
+					<img :src="'http://47.74.177.128:3000'+item.url.url" />
+				</el-carousel-item>
+			</el-carousel>
+			<span slot="footer" class="dialog-footer">
+                <!--<el-button @click="showImg = false">取 消</el-button>-->
+                <el-button type="primary" @click="showImg = false">确 定</el-button>
             </span>
 		</el-dialog>
 
@@ -101,6 +106,8 @@
 				url: './static/vuetable.json',
 				tableData: [],
 				cur_page: 1,
+				pagesize: 10,
+				totals: 0,
 				multipleSelection: [],
 				select_cate: '',
 				select_word: '',
@@ -108,6 +115,7 @@
 				is_search: false,
 				editVisible: false,
 				delVisible: false,
+				showImg: false,
 				form: {
 					order: 'rr',
 					total_fnsku: '',
@@ -116,7 +124,7 @@
 					amounts_ground: '',
 					amounts_send: '',
 					status: '',
-					remarks: '',
+					remark: '',
 					name: '',
 					date: '',
 					address: ''
@@ -130,21 +138,22 @@
 		computed: {
 			data() {
 				return this.tableData.filter((d) => {
-					let is_del = false;
-					for(let i = 0; i < this.del_list.length; i++) {
-						if(d.name === this.del_list[i].name) {
-							is_del = true;
-							break;
-						}
-					}
-					if(!is_del) {
-						if(d.address.indexOf(this.select_cate) > -1 &&
-							(d.name.indexOf(this.select_word) > -1 ||
-								d.address.indexOf(this.select_word) > -1)
-						) {
-							return d;
-						}
-					}
+					return d
+					//					let is_del = false;
+					//					for(let i = 0; i < this.del_list.length; i++) {
+					//						if(d.name === this.del_list[i].name) {
+					//							is_del = true;
+					//							break;
+					//						}
+					//					}
+					//					if(!is_del) {
+					//						if(d.address.indexOf(this.select_cate) > -1 &&
+					//							(d.name.indexOf(this.select_word) > -1 ||
+					//								d.address.indexOf(this.select_word) > -1)
+					//						) {
+					//							return d;
+					//						}
+					//					}
 				})
 			}
 		},
@@ -158,12 +167,21 @@
 			getData() {
 				// 开发环境使用 easy-mock 数据，正式环境使用 json 文件
 				if(process.env.NODE_ENV === 'development') {
-					this.url = '/ms/table/list';
+					//					this.url = '/ms/table/list';
 				};
-				this.$axios.post(this.url, {
+				let token = localStorage.getItem('token')
+				let params = {
+					o_type: 1,
 					page: this.cur_page
+				}
+				this.$axios.get('http://47.74.177.128:3000/admin/orders', {
+					headers: {
+						'Authorization': token
+					},
+					params
 				}).then((res) => {
-					this.tableData = res.data.list;
+					this.tableData = res.data.data;
+					this.totals = this.tableData.length
 				})
 			},
 			search() {
@@ -179,11 +197,19 @@
 				this.idx = index;
 				const item = this.tableData[index];
 				this.form = {
-					name: item.name,
-					date: item.date,
-					address: item.address
+					id: item.id,
+					remark: item.remark
 				}
 				this.editVisible = true;
+			},
+			showImgs(index, row) {
+				this.idx = index;
+				const item = this.tableData[index];
+				this.form = {
+					id: item.id,
+					pictures: item.pictures
+				}
+				this.showImg = true;
 			},
 			handleDelete(index, row) {
 				this.idx = index;
@@ -203,18 +229,43 @@
 				this.multipleSelection = val;
 			},
 			// 保存编辑
-			saveEdit() {
-				this.$set(this.tableData, this.idx, this.form);
+			saveEdit(form) {
+				let token = localStorage.getItem('token')
+				let params = {
+					remark: this.form.remark,
+					page: this.cur_page
+				}
+				this.$axios.post('http://47.74.177.128:3000/admin/orders/' + this.form.id + '/done',params
+				, {
+					headers: {
+						'Authorization': token
+					},
+				}).then((res) => {
+					if(res.data.code == 200) {
+						this.$message.success("换标成功!")
+					}
+				}).catch((res) => {
+					this.$message.error(res)
+				})
 				this.editVisible = false;
-				this.$message.success(`修改第 ${this.idx+1} 行成功`);
 			},
 			// 确定删除
 			deleteRow() {
 				this.tableData.splice(this.idx, 1);
 				this.$message.success('删除成功');
 				this.delVisible = false;
-			}
-		}
+			},
+			getStatusName(status){
+            	if(status == 1){
+            		return "正常"
+            	}else if(status ==4){
+            		return "已完成"
+            	}else{
+            		return '包装完成'
+            	}
+            }
+		},
+
 	}
 </script>
 

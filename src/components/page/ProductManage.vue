@@ -21,12 +21,16 @@
                 </el-table-column>
                 <el-table-column prop="name" label="产品名称">
                 </el-table-column>
-                <el-table-column prop="length" label="长*宽*高(CM)" width="180">
+                <el-table-column prop="length" label="长(CM)" width="180">
+                </el-table-column>
+                <el-table-column prop="width" label="宽(CM)" width="180">
+                </el-table-column>
+                <el-table-column prop="height" label="高(CM)" width="180">
                 </el-table-column>
                 <el-table-column prop="weight" label="重量" width="150">
                 </el-table-column>
-                <el-table-column prop="" label="状态" width="120">
-                </el-table-column>                
+                <!--<el-table-column prop="status" label="状态" width="120">
+                </el-table-column>                -->
                 <!--<el-table-column prop="date" label="日期" sortable width="150">
                 </el-table-column>
                 <el-table-column prop="name" label="姓名" width="120">

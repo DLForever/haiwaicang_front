@@ -31,6 +31,9 @@
 									</tbody>		
 								</table>
 							</el-form-item>
+							<el-form-item label="备注">
+								<el-input v-model="remark"></el-input>
+							</el-form-item>
 							<div class="newOrder">
 								<el-button @click="createOrder">添加更多</el-button>
 							</div>
@@ -73,7 +76,7 @@
 				select_cate: '',
 				options: [],
 				product_id: '',
-				fnsku: '',
+				remark: '',
 				form: [{
 					plan_sum: [],
 					logistics_number: []
@@ -123,7 +126,8 @@
 					product_id: this.product_id,
 					fnsku: this.fnsku,
 					plan_sum: plan_sum,
-					logistics_number: logistics_number
+					logistics_number: logistics_number,
+					remark: this.remark
 					},]
 //					{
 //					product_id: this.product_id,
@@ -143,7 +147,9 @@
 				
 				}).then((res) =>{
 					console.log(res)
-					this.$message.success('提交成功！');
+					if(res.data.code == 200){
+						this.$message.success('提交成功！');
+					}
 				}).catch((res) => {
 					this.$message.error('提交失败！');
 				})
