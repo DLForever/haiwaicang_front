@@ -1,8 +1,8 @@
 <template>
 	<div class="login-wrap">
-		<div class="ms-title">深圳闪速供应链有限公司</div>
+		<div class="ms-title">海外仓系统</div>
 		<div class="ms-login">
-			<el-form :model="ruleForm" :rules="rules" ref="ruleForm" label-width="0px" class="demo-ruleForm">
+			<el-form :model="ruleForm" :rules="rules" status-icon ref="ruleForm" label-width="0px" class="demo-ruleForm">
 				<el-form-item prop="username">
 					<el-input v-model.trim="ruleForm.username" placeholder="用户名"></el-input>
 				</el-form-item>
@@ -12,14 +12,27 @@
 				<el-form-item prop="checkpass">
 					<el-input type="password" v-model.trim="ruleForm.checkpass" placeholder="确认密码" @keyup.enter.native="submitForm('ruleForm')"></el-input>
 				</el-form-item>
+				<el-form-item prop="name">
+					<el-input v-model.trim="ruleForm.name" placeholder="姓名"></el-input>
+				</el-form-item>
 				<el-form-item prop="email">
 					<el-input type="email" v-model.trim="ruleForm.email" placeholder="邮箱" @keyup.enter.native="submitForm('ruleForm')"></el-input>
 				</el-form-item>
-				<el-form-item prop="company">
+				<!--<el-form-item prop="company">
 					<el-input type="company" v-model.trim="ruleForm.company" placeholder="公司" @keyup.enter.native="submitForm('ruleForm')"></el-input>
+				</el-form-item>-->
+				<el-form-item prop="phone">
+					<el-input type="tel" v-model.trim="ruleForm.phone" placeholder="手机号码" @keyup.enter.native="submitForm('ruleForm')"></el-input>
 				</el-form-item>
-				<el-form-item prop="tel">
-					<el-input type="tel" v-model.trim="ruleForm.tel" placeholder="电话" @keyup.enter.native="submitForm('ruleForm')"></el-input>
+				<el-form-item prop="card">
+					<el-input type="tel" v-model.trim="ruleForm.card" placeholder="身份证" @keyup.enter.native="submitForm('ruleForm')"></el-input>
+				</el-form-item>
+				<el-form-item prop="remark">
+					<el-input type="tel" v-model.trim="ruleForm.remark" placeholder="备注" @keyup.enter.native="submitForm('ruleForm')"></el-input>
+				</el-form-item>
+				<el-form-item>
+					<el-radio v-model="ruleForm.radio" label="true">男</el-radio>
+					<el-radio v-model="ruleForm.radio" label="false">女</el-radio>
 				</el-form-item>
 				<div class="login-btn">
 					<el-button type="primary" @click="submitForm('ruleForm')">注册</el-button>
@@ -45,17 +58,17 @@
 					cb()
 				}
 			};
-			var vaildatePass = (rule, value, callback) => {
-				if(value === '') {
-					callback(new Error('请输入密码'));
-				} else {
-					if(this.ruleForm.checkpass !== '') {
-						this.$refs.ruleForm.validateField('checkPass');
-					}
-					callback();
-				}
-			};
-			var validatePass2 = (rule, value, callback) => {
+//			var vaildatePass = (rule, value, callback) => {
+//				if(value === '') {
+//					callback(new Error('请输入密码'));
+//				} else {
+//					if(this.ruleForm.checkpass !== '') {
+//						this.$refs.ruleForm.validateField('checkPass');
+//					}
+//					callback();
+//				}
+//			};
+			let validatePass2 = (rule, value, callback) => {
 				if(value === '') {
 					callback(new Error('请再次输入密码'));
 				} else if(value !== this.ruleForm.pass) {
@@ -65,7 +78,7 @@
 				}
 			};
 			var validateEmail = (rule, value, callback) => {
-				var regEmail = /^[A-Za-zd]+([-_.][A-Za-zd]+)*@([A-Za-zd]+[-.])+[A-Za-zd]{2,5}$/;
+				var regEmail = /^[a-zA-Z0-9_-]+@[a-zA-Z0-9_-]+(\.[a-zA-Z0-9_-]+)+$/;
 				if(value === '') {
 					callback(new Error('请输入邮箱'));
 				} else if(!regEmail.test(value)) {
@@ -83,16 +96,31 @@
 				} else {
 					callback();
 				}
-			}
+			};
+			var vaildateCard = (rule, value, callback) => {
+				var reg = /(^\d{15}$)|(^\d{18}$)|(^\d{17}(\d|X|x)$)/;
+				if(value === '') {
+					callback(new Error("请输入身份证号码"))
+				} else if(!reg.test(value)) {
+					callback(new Error("身份证格式不对"))
+				} else {
+					callback()
+				}
+			};
 			return {
 				ruleForm: {
 					username: '',
 					pass: '',
 					checkpass: '',
+					name: '',
 					email: '',
-					company: '',
-					tel: '',
+					phone: '',
+					card: '',
+					sex: '',
+					radio: 'true',
+					remark: ''
 				},
+
 				rules: {
 					username: [{
 						required: true,
@@ -101,12 +129,22 @@
 					}],
 					pass: [{
 						required: true,
-						validator: vaildatePass,
+						message: '请输入密码',
 						trigger: 'blur'
+					}, {
+						min: 6,
+						max: 16,
+						message: '密码长度不能必须是3~16位',
+						trigger: 'change'
 					}],
 					checkpass: [{
 						required: true,
 						validator: validatePass2,
+						trigger: 'blur'
+					}],
+					name: [{
+						required: true,
+						message: '请输入姓名',
 						trigger: 'blur'
 					}],
 					email: [{
@@ -119,9 +157,14 @@
 						message: '请输入公司名称',
 						trigger: 'blur'
 					}],
-					tel: [{
+					phone: [{
 						required: true,
 						validator: vaildatePhone,
+						trigger: 'blur'
+					}],
+					card: [{
+						required: true,
+						validator: vaildateCard,
 						trigger: 'blur'
 					}],
 				}
@@ -129,20 +172,53 @@
 		},
 		methods: {
 			submitForm(formName) {
-				this.$axios.post('http://47.74.177.128:3000/users', {
-					username: this.ruleForm.username,
-					password: this.ruleForm.pass,
-					email: this.ruleForm.email
-				}, {
-					headers: {
-						'Content-Type': 'application/json; charset=UTF-8'
+				//				username= this.ruleForm.username,
+				//				password= this.ruleForm.pass,
+				//				name= this.ruleForm.name,
+				//				email= this.ruleForm.email,
+				//				phone= this.ruleForm.phone,
+				//				card= this.ruleForm.card,
+				//				remark= this.ruleForm.remark,
+				//				sex= this.ruleForm.radio,
+				this.$refs[formName].validate((valid) => {
+					if(valid) {
+						this.$axios.post('/users', {
+							username: this.ruleForm.username,
+							password: this.ruleForm.pass,
+							name: this.ruleForm.name,
+							email: this.ruleForm.email,
+							phone: this.ruleForm.phone,
+							card: this.ruleForm.card,
+							remark: this.ruleForm.remark,
+							sex: this.ruleForm.radio
+						}, {
+							headers: {
+								'Content-Type': 'application/json; charset=UTF-8'
+							}
+						}).then((res) => {
+							localStorage.setItem('ms_username', this.ruleForm.username);
+							localStorage.setItem('token', res.data.data.token);
+							console.log(res)
+							this.$router.push('/');
+						})
+					} else {
+						this.$message.error('请填写完整信息')
 					}
-				}).then((res) => {
-					localStorage.setItem('ms_username', this.ruleForm.username);
-					localStorage.setItem('token', res.data.data.token);
-					console.log(res)
-					this.$router.push('/');
 				})
+				//				this.$axios.post('/users', {
+				//					username: this.ruleForm.username,
+				//					password: this.ruleForm.pass,
+				//					email: this.ruleForm.email
+				//				}, {
+				//					headers: {
+				//						'Content-Type': 'application/json; charset=UTF-8'
+				//					}
+				//				}).then((res) => {
+				//					localStorage.setItem('ms_username', this.ruleForm.username);
+				//					localStorage.setItem('token', res.data.data.token);
+				//					console.log(res)
+				//					this.$router.push('/');
+				//				})
 				//              this.$refs[formName].validate((valid) => {
 				//                  if (valid) {
 				//                  	this.$axios.post('47.74.177.128:3000/authentication', 
@@ -180,7 +256,7 @@
 		position: absolute;
 		top: 50%;
 		width: 100%;
-		margin-top: -230px;
+		margin-top: -310px;
 		text-align: center;
 		font-size: 30px;
 		color: #fff;
@@ -191,8 +267,8 @@
 		left: 50%;
 		top: 50%;
 		width: 300px;
-		height: 350px;
-		margin: -150px 0 0 -190px;
+		height: 500px;
+		margin: -240px 0 0 -190px;
 		padding: 40px;
 		border-radius: 5px;
 		background: #fff;

@@ -2,36 +2,45 @@
 	<div class="table">
 		<div class="crumbs">
 			<el-breadcrumb separator="/">
-				<el-breadcrumb-item><i class="el-icon-tickets"></i> WMS订单管理</el-breadcrumb-item>
-				<el-breadcrumb-item>订单管理</el-breadcrumb-item>
+				<el-breadcrumb-item><i class="el-icon-tickets"></i> WMS换标订单</el-breadcrumb-item>
+				<el-breadcrumb-item>换标管理</el-breadcrumb-item>
 			</el-breadcrumb>
 		</div>
 		<div class="container">
 			<div class="handle-box">
-				<el-button type="primary" icon="delete" class="handle-del mr10" @click="delAll">批量删除</el-button>
-				<el-select v-model="select_cate" placeholder="筛选省份" class="handle-select mr10">
-					<el-option key="1" label="广东省" value="广东省"></el-option>
-					<el-option key="2" label="湖南省" value="湖南省"></el-option>
+				<!--<el-button type="primary" icon="delete" class="handle-del mr10" @click="delAll">批量删除</el-button>-->
+				<el-select v-model="select_cate" placeholder="选择用户" class="handle-select mr10" @change="getUserDatasFirst">
+					<el-option v-for="item in options" :key="item.id" :label="item.name" :value="item.id"></el-option>
+					<infinite-loading :on-infinite="onInfinite" ref="infiniteLoading"></infinite-loading>
 				</el-select>
-				<el-input v-model="select_word" placeholder="筛选关键词" class="handle-input mr10"></el-input>
-				<el-button type="primary" icon="search" @click="search">搜索</el-button>
+				<el-button type="primary" icon="search" @click="allUser">所有用户</el-button>
+				<!--<el-button type="primary" icon="search" @click="search">搜索</el-button>-->
+
 			</div>
-			<el-table :data="data.slice((cur_page-1)*pagesize, cur_page*pagesize)" border style="width: 100%" model="form" ref="multipleTable" @selection-change="handleSelectionChange">
+			<el-table :data="data" border style="width: 100%" model="form" ref="multipleTable" @selection-change="handleSelectionChange">
 				<el-table-column type="selection" width="55"></el-table-column>
-				<el-table-column prop="fnsku" label="fnsku" width="150">
+				<el-table-column prop="fnsku" label="fnsku" width="200">
 				</el-table-column>
-				<el-table-column prop="dst_fnsku" label="新fnsku" width="150">
+				<el-table-column prop="dst_fnsku" label="新fnsku" width="200">
 				</el-table-column>
 				<el-table-column prop="sum" label="数量" width="150">
 				</el-table-column>
 				<!--<el-table-column prop="done_sum" label="已发出数量" width="120">
 				</el-table-column>-->
-				<el-table-column prop="status" label="状态" width="120">
-                	<template slot-scope="scope">{{getStatusName(scope.row.status)}}</template>
-                </el-table-column>
-				<el-table-column prop="user_remark" label="用户备注">
+				<el-table-column prop="created_at" label="创建时间" :formatter="formatter_created_at" width="150">
 				</el-table-column>
-				<el-table-column prop="manager_remark" label="仓库备注">
+				<el-table-column prop="updated_at" label="更新时间" :formatter="formatter_updated_at" width="150">
+				</el-table-column>
+				<el-table-column prop="user_remark" label="用户备注" show-overflow-tooltip>
+				</el-table-column>
+				<el-table-column prop="manager_remark" label="仓库备注" show-overflow-tooltip>
+				</el-table-column>
+				<el-table-column prop="remove_remark" label="用户删除备注" show-overflow-tooltip>
+				</el-table-column>
+				<el-table-column prop="status" label="状态" width="120">
+					<template slot-scope="scope">
+						<el-tag :type="scope.row.status | statusFilter">{{getStatusName(scope.row.status)}}</el-tag>
+					</template>
 				</el-table-column>
 				<el-table-column label="操作" width="100">
 					<template slot-scope="scope">
@@ -43,9 +52,17 @@
 							</el-button>
 							<el-dropdown-menu slot="dropdown">
 								<el-dropdown-item>
-									<el-button @click="handleEdit(scope.$index, scope.row)" type="text">贴标</el-button>
+									<el-button @click="detailsShow(scope.$index, scope.row)" type="text">&nbsp&nbsp&nbsp详&nbsp情&nbsp&nbsp&nbsp</el-button>
 								</el-dropdown-item>
-								<el-dropdown-item><el-button @click="showImgs(scope.$index, scope.row)" type="text">查看图片</el-button></el-dropdown-item>
+								<el-dropdown-item>
+									<el-button @click="handleEdit(scope.$index, scope.row)" type="text">&nbsp&nbsp&nbsp贴&nbsp标&nbsp&nbsp&nbsp</el-button>
+								</el-dropdown-item>
+								<el-dropdown-item>
+									<el-button @click="showImgs(scope.$index, scope.row)" type="text">查看附件</el-button>
+								</el-dropdown-item>
+								<el-dropdown-item>
+									<el-button @click="handleDelete(scope.$index, scope.row)" type="text">&nbsp&nbsp&nbsp删&nbsp除&nbsp&nbsp&nbsp</el-button>
+								</el-dropdown-item>
 								<!--<el-button @click="editVisible = true">贴标</el-button>-->
 							</el-dropdown-menu>
 						</el-dropdown>
@@ -53,34 +70,84 @@
 				</el-table-column>
 			</el-table>
 			<div class="pagination">
-				<el-pagination @current-change="handleCurrentChange" :page-sizes="[10, 20, 30, 50]" layout="sizes, prev, pager, next" :total="totals">
+				<el-pagination v-if="paginationShow" @current-change="handleCurrentChange" :current-page='cur_page' :page-size="pagesize" layout="prev, pager, next" :total="totals">
 				</el-pagination>
 			</div>
 		</div>
 
-		<!-- 编辑弹出框 -->
-		<el-dialog title="编辑" :visible.sync="editVisible" width="30%">
+		<!-- 贴标 -->
+		<el-dialog title="贴标" :visible.sync="editVisible" width="50%" @close="closeStick">
+			<el-table :data="warehouse_info" border style="width: 100%">
+				<el-table-column prop="fnsku" label="fnsku"></el-table-column>
+				<el-table-column prop="plan_sum" label="计划贴标数量"></el-table-column>
+				<!--<el-table-column prop="ware_sum" label="库位剩余数量"></el-table-column>-->
+				<el-table-column label="库位选择（括号里面为库存数量）">
+					<template slot-scope="scope">
+						<el-select v-model="old_ware" placeholder="选择库位" class="handle-select mr10" multiple>
+							<el-option v-for="item in scope.row.cargo_ware_houses" :label="item.ware_house_name" :value="item.ware_house_id"></el-option>
+							<!--<infinite-loading :on-infinite="onInfinite_ware" ref="infiniteWareHouseLoading"></infinite-loading>-->
+						</el-select>
+					</template>
+				</el-table-column>
+				<el-table-column label="处理数量">
+					<template scope="scope">
+						<el-input class="input-new-tag" v-model="old_count" ref="saveTagInput" size="small">
+						</el-input>
+					</template>
+				</el-table-column>
+			</el-table>			
+			<br>
+			<el-table :data="ware_temp" border style="width: 100%">
+				<el-table-column label="库位选择" width="308">
+					<template slot-scope="scope">
+						<el-select v-model="dst_wareoptions" placeholder="选择库位" class="handle-select mr10" multiple>
+							<el-option v-for="item in wareoptions" :label="item.name" :value="item.id"></el-option>
+							<infinite-loading :on-infinite="onInfinite_ware" ref="infiniteWareHouseLoading"></infinite-loading>
+						</el-select>
+					</template>
+				</el-table-column>
+				<el-table-column label="处理数量">
+					<template slot-scope="scope">
+						<el-input type="text" v-model="change_count"></el-input>
+					</template>
+				</el-table-column>
+			</el-table>
+			<span class="el-upload__tip">温馨提示：如果一个产品选择多个库位，处理数量请用‘/’分开，格式为 66/88，确保库位和数据一一对应</span>
+			<br />
 			<el-form ref="form" :model="form" label-width="80px">
 				<el-form-item label="备注">
-					<el-input v-model="form.remark"></el-input>
+					<el-input v-model="form.remark" placeholder="贴标备注"></el-input>
 				</el-form-item>
-				<!--<el-form-item label="日期">
-					<el-date-picker type="date" placeholder="选择日期" v-model="form.date" value-format="yyyy-MM-dd" style="width: 100%;"></el-date-picker>
-				</el-form-item>-->
 			</el-form>
 			<span slot="footer" class="dialog-footer">
-                <el-button @click="editVisible = false">取 消</el-button>
+                <el-button @click="closeStick">取 消</el-button>
                 <el-button type="primary" @click="saveEdit('form')">确 定</el-button>
             </span>
 		</el-dialog>
-		
-		<!-- 编辑弹出框 -->
-		<el-dialog title="编辑" :visible.sync="showImg" width="30%">
-			<el-carousel :interval="4000" type="card" height="200px">
+
+		<!-- 详情提示框 -->
+		<el-dialog title="详情" :visible.sync="detailVisible" width="65%">
+			<el-table :data="order_ware_houses" border style="width: 100%">
+				<el-table-column prop="fnsku" label="fnsku"></el-table-column>
+				<el-table-column prop="ware_house_name" label="库位"></el-table-column>
+				<el-table-column prop="in_ware_house" label="状态">
+					<template slot-scope="scope">{{getInorOut(scope.row.in_ware_house)}}</template>
+				</el-table-column>
+				<el-table-column prop="sum" label="取(入)数量"></el-table-column>
+			</el-table>
+			<br />
+		</el-dialog>
+
+		<!-- 查看图片 -->
+		<el-dialog title="附件详情" :visible.sync="showImg" width="30%">
+			<el-carousel :interval="4000" type="card" height="200px" v-if="img_show">
 				<el-carousel-item v-for="item in form.pictures">
-					<img :src="'http://47.74.177.128:3000'+item.url.url" />
+					<img :src="$axios.defaults.baseURL+item.url.url" />
 				</el-carousel-item>
 			</el-carousel>
+			<div v-if="pdf_show" v-for="item in form.pictures">
+				<a target="_blank" :href="$axios.defaults.baseURL+item.url.url">{{'查看' + item.id + '.pdf'}}</a>
+			</div>
 			<span slot="footer" class="dialog-footer">
                 <!--<el-button @click="showImg = false">取 消</el-button>-->
                 <el-button type="primary" @click="showImg = false">确 定</el-button>
@@ -99,15 +166,32 @@
 </template>
 
 <script>
+	import VueInfiniteLoading from "vue-infinite-loading"
 	export default {
-		name: 'basetable',
+		//				name: 'wms_ordersmanage',
 		data() {
 			return {
 				url: './static/vuetable.json',
+				img_show: 1,
+				pdf_show: 0,
 				tableData: [],
+				warehouse_info: [],
+				wareoptions: [],
+				dst_wareoptions: [],
+				options: [],
+				old_ware: [],
+				order_ware_houses: [],
+				old_count: '',
+				change_count: '',
 				cur_page: 1,
-				pagesize: 10,
+				user_page: 1,
+				ware_page: 1,
+				pagesize: 20,
 				totals: 0,
+				user_total: 0,
+				ware_temp: [{
+					temp: []
+				}],
 				multipleSelection: [],
 				select_cate: '',
 				select_word: '',
@@ -116,7 +200,10 @@
 				editVisible: false,
 				delVisible: false,
 				showImg: false,
+				detailVisible: false,
+				paginationShow: true,
 				form: {
+					id: '',
 					order: 'rr',
 					total_fnsku: '',
 					amounts_way: '',
@@ -134,34 +221,48 @@
 		},
 		created() {
 			this.getData();
+			this.getUser();
+			this.getWarehouse()
+		},
+		watch: {
+			"$route": "getData"
 		},
 		computed: {
 			data() {
-				return this.tableData.filter((d) => {
-					return d
-					//					let is_del = false;
-					//					for(let i = 0; i < this.del_list.length; i++) {
-					//						if(d.name === this.del_list[i].name) {
-					//							is_del = true;
-					//							break;
-					//						}
-					//					}
-					//					if(!is_del) {
-					//						if(d.address.indexOf(this.select_cate) > -1 &&
-					//							(d.name.indexOf(this.select_word) > -1 ||
-					//								d.address.indexOf(this.select_word) > -1)
-					//						) {
-					//							return d;
-					//						}
-					//					}
-				})
+				return this.tableData
+//				return this.tableData.filter((d) => {
+//					return d
+//					let is_del = false
+//					if(!is_del) {
+//						if((d.fnsku.indexOf(this.select_word) > -1 ||
+//								d.dst_fnsku.indexOf(this.select_word) > -1)) {
+//							return d;
+//						}
+//					}
+//				})
 			}
+		},
+		filters: {
+			//类型转换
+			statusFilter(status) {
+				const statusMap = {
+					2: 'info',
+					1: 'warning',
+					4: 'success',
+					5: 'danger'
+				}
+				return statusMap[status]
+			},
 		},
 		methods: {
 			// 分页导航
 			handleCurrentChange(val) {
 				this.cur_page = val;
-				this.getData();
+				if(!this.select_cate) {
+					this.getData();
+				} else {
+					this.getUserDatas()
+				}
 			},
 			// 获取 easy-mock 的模拟数据
 			getData() {
@@ -169,26 +270,104 @@
 				if(process.env.NODE_ENV === 'development') {
 					//					this.url = '/ms/table/list';
 				};
-				let token = localStorage.getItem('token')
 				let params = {
-					o_type: 1,
-					page: this.cur_page
+					o_type: 1
 				}
-				this.$axios.get('http://47.74.177.128:3000/admin/orders', {
+				this.$axios.get('/admin/orders?page=' + this.cur_page, {
 					headers: {
-						'Authorization': token
+						'Authorization': this.cookie.token_admin
 					},
 					params
 				}).then((res) => {
-					this.tableData = res.data.data;
-					this.totals = this.tableData.length
+					this.tableData = res.data.data
+					this.totals = res.data.count
+					this.paginationShow = true
 				})
+			},
+			allUser() {
+				this.paginationShow = false
+				this.cur_page = 1
+				this.getData()
+				this.select_cate = ''
+			},
+			getUser(callback = undefined) {
+				this.$axios.get('/admin/users?page=' + this.user_page, {
+					headers: {
+						'Authorization': this.cookie.token_admin
+					},
+				}).then((res) => {
+					if(res.data.code == 200) {
+						this.options = this.options.concat(res.data.data)
+						this.user_total = res.data.count
+						if(callback) {
+							callback()
+						}
+					}
+				})
+			},
+			getUserDatasFirst() {
+				this.paginationShow = false
+				this.cur_page = 1
+				this.$axios.get('/admin/orders?page=' + this.cur_page + '&user_id=' + this.select_cate, {
+					headers: {
+						'Authorization': this.cookie.token_admin
+					},
+				}).then((res) => {
+					this.tableData = res.data.data
+					this.totals = res.data.count
+					this.paginationShow = true
+				})
+			},
+			getUserDatas() {
+				this.$axios.get('/admin/orders?page=' + this.cur_page + '&user_id=' + this.select_cate, {
+					headers: {
+						'Authorization': this.cookie.token_admin
+					},
+				}).then((res) => {
+					this.tableData = res.data.data
+					this.totals = res.data.count
+				})
+			},
+			getWarehouse(callback = undefined) {
+				this.$axios.get('/admin/warehouses?page=' + this.ware_page, {
+					headers: {
+						'Authorization': this.cookie.token_admin
+					},
+				}).then((res) => {
+					if(res.data.code == 200) {
+						this.wareoptions = this.wareoptions.concat(res.data.data)
+						this.ware_total = res.data.count
+						if(callback) {
+							callback()
+						}
+					}
+
+				})
+			},
+			onInfinite(obj) {
+				if((this.user_page * 20) < this.user_total) {
+					this.user_page += 1
+					this.getUser(obj.loaded)
+				} else {
+					obj.complete()
+				}
+			},
+			onInfinite_ware(obj) {
+				if((this.ware_page * 20) < this.ware_total) {
+					this.ware_page += 1
+					this.getWarehouse(obj.loaded)
+				} else {
+					obj.complete()
+				}
 			},
 			search() {
 				this.is_search = true;
 			},
-			formatter(row, column) {
-				return row.address;
+			formatter_created_at(row, column) {
+				return row.created_at.substr(0, 19);
+			},
+			formatter_updated_at(row, column) {
+				return row.updated_at.substr(0, 19);
 			},
 			filterTag(value, row) {
 				return row.tag === value;
@@ -198,8 +377,34 @@
 				const item = this.tableData[index];
 				this.form = {
 					id: item.id,
-					remark: item.remark
+					remark: item.remark,
+					sum: item.sum
 				}
+				let ids = []
+				ids.push(item.cargo_id)
+				let params = {
+					ids: ids
+				}
+				this.$axios.get('/admin/cargos/warehouse_info', {
+					headers: {
+						'Authorization': this.cookie.token_admin
+					},
+					params
+				}).then((res) => {
+					if(res.data.code == 200) {
+						res.data.data.forEach((data) => {
+							//							data.ware_sum = ''
+							data.warehouse = []
+							data.plan_sum = item.sum
+							data.cargo_ware_houses.forEach((data2) => {
+								//								data.ware_sum = data.ware_sum.concat(data2.ware_house_name + '(' + data2.sum + ') ')
+								data2.ware_house_name = data2.ware_house_name + '(' + data2.sum + ')'								
+							})
+						})
+						this.warehouse_info = res.data.data
+						this.editVisible = true;
+					}
+				})
 				this.editVisible = true;
 			},
 			showImgs(index, row) {
@@ -208,6 +413,17 @@
 				this.form = {
 					id: item.id,
 					pictures: item.pictures
+				}
+				if(item.pictures.length == 0) {
+					this.$message.error('抱歉，该用户暂未提供附件')
+					return false
+				}
+				if(item.pictures[0].url.url.endsWith('.pdf')) {
+					this.img_show = 0
+					this.pdf_show = 1
+				}else {
+					this.img_show = 1
+					this.pdf_show = 0
 				}
 				this.showImg = true;
 			},
@@ -230,42 +446,124 @@
 			},
 			// 保存编辑
 			saveEdit(form) {
-				let token = localStorage.getItem('token')
-				let params = {
-					remark: this.form.remark,
-					page: this.cur_page
-				}
-				this.$axios.post('http://47.74.177.128:3000/admin/orders/' + this.form.id + '/done',params
-				, {
+				this.$confirm('确认已贴标？', '提示', {
+					confirmButtonText: '确定',
+					cancelButtonText: '取消',
+					type: 'warning',
+					center: true
+				}).then(() => {
+					if(this.judge_inbound(this.old_count) && this.judge_inbound(this.change_count)) {
+						
+					}else {
+						return false
+					}
+					let ware_houses = this.old_ware
+					let sum = this.old_count.split('/').map(Number)
+					let dst_ware_house = this.dst_wareoptions
+					let dst_sum = this.change_count.split('/').map(Number)
+					let params = {
+						remark: this.form.remark,
+						ware_houses: ware_houses,
+						sum: sum,
+						dst_ware_houses: dst_ware_house,
+						dst_sum: dst_sum
+					}
+					this.$axios.post('/admin/orders/' + this.form.id + '/done', params, {
+						headers: {
+							'Authorization': this.cookie.token_admin
+						},
+					}).then((res) => {
+						if(res.data.code == 200) {
+							this.$message.success("换标成功!")
+							this.getData()
+							this.editVisible = false;
+							this.old_ware = []
+							this.old_count = ''
+							this.dst_wareoptions = []
+							this.change_count = ''
+						}
+					}).catch((res) => {
+						this.$message.error(res)
+					})
+				}).catch(() => {
+					this.$message({
+						type: 'info',
+						message: '已取消贴标'
+					})
+				})
+
+			},
+			//取消贴标
+			closeStick() {
+				this.editVisible = false
+				this.old_ware = []
+				this.old_count = ''
+				this.dst_wareoptions = []
+				this.change_count = ''
+			},
+			detailsShow(index, row) {
+				this.$axios.get('/admin/orders/' + row.id, {
 					headers: {
-						'Authorization': token
+						'Authorization': this.cookie.token_admin
 					},
 				}).then((res) => {
-					if(res.data.code == 200) {
-						this.$message.success("换标成功!")
-					}
-				}).catch((res) => {
-					this.$message.error(res)
+					this.order_ware_houses = res.data.data.order_ware_houses
+					//					res.data.data.product_store_ins.forEach((data) => {
+					//						data.ware_count = ''
+					//						data.store_in_ware_houses.forEach((data2) => {
+					//							data.ware_count += data2.ware_house_name + '(' + data2.sum + ') '
+					//						})
+					//						this.ware_details = res.data.data.product_store_ins
+					//					})
+					this.detailVisible = true
 				})
-				this.editVisible = false;
 			},
 			// 确定删除
 			deleteRow() {
-				this.tableData.splice(this.idx, 1);
-				this.$message.success('删除成功');
+				let index = this.idx
+				const item = this.tableData[index];
+				this.form = {
+					id: item.id
+				}
+				this.$axios.delete('/admin/orders/' + this.form.id, {
+					headers: {
+						'Authorization': this.cookie.token_admin
+					}
+				}).then((res) => {
+					if(res.data.code == 200) {
+						this.tableData.splice(this.idx, 1)						
+						this.getData()
+						this.$message.success("删除成功")
+					}
+				}).catch((res) => {
+					this.$message.error("删除失败")
+				})
 				this.delVisible = false;
 			},
-			getStatusName(status){
-            	if(status == 1){
-            		return "正常"
-            	}else if(status ==4){
-            		return "已完成"
-            	}else{
-            		return '包装完成'
-            	}
-            }
+			getStatusName(status) {
+				if(status == 1) {
+					return "等待换标"
+				} else if(status == 4) {
+					return "已完成"
+				}else if(status == 5) {
+					return "删除待审核"
+				} else {
+					return '包装完成'
+				}
+			},
+			getInorOut(status) {
+				if(status == true) {
+					return "放入"
+				} else if(status == false) {
+					return "取出"
+				} else {
+					return "暂未贴标"
+				}
+			},
 		},
-
+		components: {
+			"infinite-loading": VueInfiniteLoading
+		}
 	}
 </script>
 
@@ -298,5 +596,10 @@
 	
 	.el-icon-arrow-down {
 		font-size: 12px;
+	}
+	
+	a{
+		display: block;
+		text-align: center;
 	}
 </style>

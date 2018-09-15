@@ -1,7 +1,7 @@
 <template>
     <div>
         <el-row :gutter="20">
-            <el-col :span="8">
+            <el-col :span="10">
                 <el-row>
                     <el-col>
                         <el-card shadow="hover" class="mgb20">
@@ -12,10 +12,10 @@
                                     <div>{{role}}</div>
                                 </div>
                             </div>
-                            <div class="user-info-list">上次登录时间：<span>2018-01-01</span></div>
-                            <div class="user-info-list">上次登录地点：<span>东莞</span></div>
+                            <!--<div class="user-info-list">上次登录时间：<span>2018-01-01</span></div>-->
+                            <!--<div class="user-info-list">上次登录地点：<span>东莞</span></div>-->
                         </el-card>
-                        <el-card shadow="hover">
+                        <!--<el-card shadow="hover">
                             <div slot="header" class="clearfix">
                                 <span>语言详情</span>
                             </div>
@@ -27,11 +27,11 @@
                             <el-progress :percentage="11.9"></el-progress>
                             HTML
                             <el-progress :percentage="1.1" color="#f56c6c"></el-progress>
-                        </el-card>
+                        </el-card>-->
                     </el-col>
                 </el-row>
             </el-col>
-            <el-col :span="16">
+            <!--<el-col :span="16">
                 <el-row :gutter="20" class="mgb20">
                     <el-col :span="8">
                         <el-card shadow="hover" :body-style="{padding: '0px'}">
@@ -66,8 +66,8 @@
                             </div>
                         </el-card>
                     </el-col>
-                </el-row>
-                <el-card shadow="hover" :body-style="{ height: '304px'}">
+                </el-row>-->
+                <!--<el-card shadow="hover" :body-style="{ height: '304px'}">
                     <div slot="header" class="clearfix">
                         <span>待办事项</span>
                         <el-button style="float: right; padding: 3px 0" type="text">添加</el-button>
@@ -90,7 +90,7 @@
                             </template>
                         </el-table-column>
                     </el-table>
-                </el-card>
+                </el-card>-->
 
             </el-col>
         </el-row>
@@ -132,7 +132,12 @@
         },
         computed: {
             role() {
-                return this.name === 'admin' ? '超级管理员' : '普通用户';
+            	const isAdmin = localStorage.getItem('token_admin')
+            	if(isAdmin){
+            		return '管理员'
+            	}else {
+            		return'普通用户'
+            	}
             }
         }
     }

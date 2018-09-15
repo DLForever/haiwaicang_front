@@ -6,18 +6,28 @@ import ElementUI from 'element-ui';
 import 'element-ui/lib/theme-chalk/index.css';    // 默认主题
 // import '../static/css/theme-green/index.css';       // 浅绿色主题
 import "babel-polyfill";
+import judge from '../static/js/judge_number.js'
+import cookie_ from './components/common/cookie'
 
 Vue.use(ElementUI, { size: 'small' });
 Vue.prototype.$axios = axios;
+Vue.use(judge)
+Vue.prototype.cookie = cookie_
 
 //使用钩子函数对路由进行权限跳转
 router.beforeEach((to, from, next) => {
     const role = localStorage.getItem('ms_username');
+    const isAdmin = localStorage.getItem('token_admin')
     if(!role && to.path !== '/login' && to.path !== "/register"){
         next('/login');
     }else if(to.meta.permission){
         // 如果是管理员权限则可进入，这里只是简单的模拟管理员权限而已
-        role === 'admin' ? next() : next('/403');
+        if(isAdmin){
+        	next()
+        }else {
+        	next('/403')
+        }
+//      role === 'admin' ? next() : next('/403');
     }else{
         // 简单的判断IE10及以下不进入富文本编辑器，该组件不兼容
         if(navigator.userAgent.indexOf('MSIE') > -1 && to.path === '/editor'){
@@ -29,6 +39,10 @@ router.beforeEach((to, from, next) => {
         }
     }
 })
+
+//var defaultHost = window.location.protocol + "//" + window.location.hostname + ":3000"
+var defaultHost = 'http://47.74.177.128:3000'
+axios.defaults.baseURL = defaultHost
 
 axios.interceptors.response.use((config) => {
 	console.log(config)

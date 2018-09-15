@@ -7,27 +7,34 @@
         </div>
         <div class="container">
             <div class="handle-box">
-                <el-button type="primary" icon="delete" class="handle-del mr10" @click="delAll">批量删除</el-button>
+                <!--<el-button type="primary" icon="delete" class="handle-del mr10" @click="delAll">批量删除</el-button>-->
                 <!--<el-select v-model="select_cate" placeholder="筛选省份" class="handle-select mr10">
                     <el-option key="1" label="广东省" value="广东省"></el-option>
                     <el-option key="2" label="湖南省" value="湖南省"></el-option>
                 </el-select>-->
-                <el-input v-model="select_word" placeholder="筛选关键词" class="handle-input mr10"></el-input>
-                <el-button type="primary" icon="search" @click="search">搜索</el-button>
+                <el-input v-model="select_word" placeholder="筛选fnsku/产品名称" class="handle-input mr10"></el-input>
+                <!--<el-button type="primary" icon="search" @click="search">搜索</el-button>-->
             </div>
-            <el-table :data="data.slice((cur_page-1)*pagesize, cur_page*pagesize)" border style="width: 100%" ref="multipleTable" @selection-change="handleSelectionChange">
+            <!--<el-table :data="data.slice((cur_page-1)*pagesize, cur_page*pagesize)" border style="width: 100%" ref="multipleTable" @selection-change="handleSelectionChange">-->
+            <el-table :data="data" border style="width: 100%" ref="multipleTable" @selection-change="handleSelectionChange">
                 <el-table-column type="selection" width="55"></el-table-column>
-                <el-table-column prop="fnsku" label="FNSKU" width="180">
+                <el-table-column prop="fnsku" label="FNSKU" width="200">
                 </el-table-column>
                 <el-table-column prop="name" label="产品名称">
                 </el-table-column>
-                <el-table-column prop="length" label="长(CM)" width="180">
+                <el-table-column prop="length" label="长(英寸)" width="110">
                 </el-table-column>
-                <el-table-column prop="width" label="宽(CM)" width="180">
+                <el-table-column prop="width" label="宽(英寸)" width="110">
                 </el-table-column>
-                <el-table-column prop="height" label="高(CM)" width="180">
+                <el-table-column prop="height" label="高(英寸)" width="110">
                 </el-table-column>
-                <el-table-column prop="weight" label="重量" width="150">
+                <el-table-column prop="weight" label="重量" width="110">
+                </el-table-column>
+                <el-table-column prop="created_at" label="创建时间" :formatter="formatter_created_at" sortable width="150">
+                </el-table-column>
+                <el-table-column prop="updated_at" label="更新时间" :formatter="formatter_updated_at" sortable width="150">
+                </el-table-column>
+                <el-table-column prop="remark" label="备注" width="180" show-overflow-tooltip>
                 </el-table-column>
                 <!--<el-table-column prop="status" label="状态" width="120">
                 </el-table-column>                -->
@@ -37,15 +44,15 @@
                 </el-table-column>-->
                 <!--<el-table-column prop="address" label="地址" :formatter="formatter">
                 </el-table-column>-->
-                <el-table-column label="操作" width="100">
+                <!--<el-table-column label="操作" width="100">
                     <template slot-scope="scope">
-                        <!--<el-button size="small" @click="handleEdit(scope.$index, scope.row)">编辑</el-button>-->
+                        <el-button size="small" @click="handleEdit(scope.$index, scope.row)">编辑</el-button>
                         <el-button size="small" type="danger" @click="handleDelete(scope.$index, scope.row)">删除</el-button>
                     </template>
-                </el-table-column>
+                </el-table-column>-->
             </el-table>
             <div class="pagination">
-                <el-pagination @current-change="handleCurrentChange" @size-change="handleSizeChange" :page-sizes="[10, 20, 30, 50]" layout="sizes, prev, pager, next" :total="totals">
+                <el-pagination @current-change="handleCurrentChange" @size-change="handleSizeChange" :page-size="pagesize" layout="prev, pager, next" :total="totals">
                 </el-pagination>
             </div>
         </div>
@@ -83,14 +90,14 @@
 
 <script>
     export default {
-        name: 'basetable',
+//      name: 'product_manage',
         data() {
             return {
                 url: './static/vuetable.json',
 //              url: 'package.json',
                 tableData: [],
                 cur_page: 1,
-                pagesize: 10,
+                pagesize: 20,
 //              pagesizes:'',
                 multipleSelection: [],
                 select_cate: '',
@@ -111,26 +118,27 @@
         created() {
             this.getData();
         },
+        watch: {
+        	"$route": "getData"
+        },
         computed: {
             data() {
                 return this.tableData.filter((d) => {
 //              	let totals = tableData.length
-                	return d
-//                  let is_del = false;
+                    let is_del = false;
 //                  for (let i = 0; i < this.del_list.length; i++) {
 //                      if (d.name === this.del_list[i].name) {
 //                          is_del = true;
 //                          break;
 //                      }
 //                  }
-//                  if (!is_del) {
-//                      if (d.address.indexOf(this.select_cate) > -1 &&
-//                          (d.name.indexOf(this.select_word) > -1 ||
-//                              d.address.indexOf(this.select_word) > -1)
-//                      ) {
-//                          return d;
-//                      }
-//                  }
+                    if (!is_del) {
+                        if ((d.name.indexOf(this.select_word) > -1 ||
+                                d.fnsku.indexOf(this.select_word) > -1)
+                        ) {
+                            return d;
+                        }
+                    }
                 })
             }
         },
@@ -141,7 +149,7 @@
             // 分页导航
             handleCurrentChange(val) {
                 this.cur_page = val;
-//              this.getData();
+                this.getData();
             },
             // 获取 easy-mock 的模拟数据
             getData() {
@@ -149,25 +157,24 @@
                 if (process.env.NODE_ENV === 'development') {
 //                  this.url = '/ms/table/list';
                 };
-                let token = localStorage.getItem('token')
-                console.log(token)
-                this.$axios.get( 'http://47.74.177.128:3000/products', {
-                	headers: {'Authorization': token},
-                    params:{
-                    	page: this.cur_page
-                    },
+                this.$axios.get( '/products?page='+this.cur_page, {
+                	headers: {'Authorization': this.cookie.token}
                 },
-//              {
-//              	headers: {'Authorization': token}
-//              }
                 ).then((res) => {
                     this.tableData = res.data.data
-                    this.totals = this.tableData.length
+//					this.totals = this.tableData.length
+                    this.totals = res.data.count
                     console.log(res)
                 }).catch((res) => {
                 	this.$message.error(res)
                 })
             },
+            formatter_created_at(row, column) {
+				return row.created_at.substr(0, 19);
+			},
+			formatter_updated_at(row, column) {
+				return row.updated_at.substr(0, 19);
+			},
             search() {
                 this.is_search = true;
             },
@@ -212,8 +219,24 @@
             },
             // 确定删除
             deleteRow(){
-                this.tableData.splice(this.idx, 1);
-                this.$message.success('删除成功');
+            	let index = this.idx
+            	const item = this.tableData[index];
+            	this.form = {
+            		id: item.id
+            	}
+            	this.$axios.delete('/products/'+this.form.id, 
+            	{
+            		headers: {'Authorization': this.cookie.token}
+            	}
+            ).then((res) => {
+            	if(res.data.code == 200){
+            		this.tableData.splice(this.idx, 1)
+            		this.getData()
+            		this.$message.success("删除成功")           		
+            	}
+            }).catch((res) => {
+            	this.$message.error("删除失败")
+            })
                 this.delVisible = false;
             }
         }

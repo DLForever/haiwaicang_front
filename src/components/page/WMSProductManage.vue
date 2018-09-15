@@ -2,73 +2,116 @@
     <div class="table">
         <div class="crumbs">
             <el-breadcrumb separator="/">
-                <el-breadcrumb-item><i class="el-icon-tickets"></i> 产品管理</el-breadcrumb-item>
+                <el-breadcrumb-item><i class="el-icon-tickets"></i> WMS货物订单</el-breadcrumb-item>
+                <el-breadcrumb-item>货物管理</el-breadcrumb-item>
             </el-breadcrumb>
         </div>
         <div class="container">
             <div class="handle-box">
-                <el-button type="primary" icon="delete" class="handle-del mr10" @click="delAll">批量删除</el-button>
-                <!--<el-select v-model="select_cate" placeholder="筛选省份" class="handle-select mr10">
+                <!--<el-button type="primary" icon="delete" class="handle-del mr10" @click="delAll">批量删除</el-button>
+                <el-select v-model="select_cate" placeholder="筛选省份" class="handle-select mr10">
                     <el-option key="1" label="广东省" value="广东省"></el-option>
                     <el-option key="2" label="湖南省" value="湖南省"></el-option>
                 </el-select>-->
-                <el-input v-model="select_word" placeholder="筛选关键词" class="handle-input mr10"></el-input>
-                <el-button type="primary" icon="search" @click="search">搜索</el-button>
+                <el-select v-model="select_cate" placeholder="选择用户" class="handle-select mr10" @change="getUserDatasFirst">
+					<el-option v-for="item in options" :key="item.id" :label="item.name" :value="item.id"></el-option>
+					<infinite-loading :on-infinite="onInfinite" ref="infiniteLoading"></infinite-loading>
+				</el-select>
+				<el-button type="primary" icon="search" @click="allUser">所有用户</el-button>
+                <!--<el-input v-model="select_word" placeholder="筛选fnsku" class="handle-input mr10"></el-input>-->
+                <!--<el-button type="primary" icon="search" @click="search">搜索</el-button>-->
             </div>
-            <el-table :data="data.slice((cur_page-1)*pagesize, cur_page*pagesize)" border style="width: 100%" ref="multipleTable" @selection-change="handleSelectionChange">
+            <el-table :data="data" border style="width: 100%" ref="multipleTable" @selection-change="handleSelectionChange">
                 <el-table-column type="selection" width="55"></el-table-column>
                 <el-table-column prop="fnsku" label="fnsku" width="200">
+                </el-table-column>
+                <el-table-column prop="arrive_sum" label="未上架数量" width="150">
                 </el-table-column>
                 <el-table-column prop="stock_sum" label="库存数量" width="150">
                 </el-table-column>
                 <el-table-column prop="done_sum" label="已发出数量" width="150">
                 </el-table-column>
                 <el-table-column prop="lock_sum" label="已锁定数量" width="120">
-				</el-table-column>
-                <el-table-column prop="status" label="状态" width="120">
-                	<template slot-scope="scope">{{getStatusName(scope.row.status)}}</template>
+				</el-table-column>				
+				<el-table-column prop="created_at" :formatter="formatter_created_at" label="创建时间" width="150">
+                </el-table-column>
+                <el-table-column prop="updated_at" :formatter="formatter_updated_at" label="更新时间" width="150">
                 </el-table-column>
                 <el-table-column prop="remark" label="备注">
-                </el-table-column>                
-                <!--<el-table-column prop="date" label="日期" sortable width="150">
                 </el-table-column>
-                <el-table-column prop="name" label="姓名" width="120">
-                </el-table-column>-->
-                <!--<el-table-column prop="address" label="地址" :formatter="formatter">
-                </el-table-column>-->
+                <el-table-column prop="status" label="状态" width="120">
+                	<template slot-scope="scope">
+                		<el-tag :type="scope.row.status | statusFilter">{{getStatusName(scope.row.status)}}</el-tag>
+                	</template>
+                </el-table-column>
+
                 <el-table-column label="操作" width="100">
-                    <template slot-scope="scope">
-                        <!--<el-button size="small" @click="handleEdit(scope.$index, scope.row)">编辑</el-button>-->
-                        <el-button size="small" type="danger" @click="handleDelete(scope.$index, scope.row)">删除</el-button>
-                    </template>
-                </el-table-column>
+					<template slot-scope="scope">
+						<el-dropdown>
+							<el-button type="primary">
+								操作<i class="el-icon-arrow-down el-icon--right"></i>
+							</el-button>
+							<el-dropdown-menu slot="dropdown">
+								<el-dropdown-item>
+									<el-button @click="detailsShow(scope.$index, scope.row)" type="text">详情</el-button>
+								</el-dropdown-item>
+								<el-dropdown-item>
+									<el-button @click="grounding(scope.$index, scope.row)" type="text">上架</el-button>
+								</el-dropdown-item>
+							</el-dropdown-menu>
+						</el-dropdown>
+					</template>
+				</el-table-column>
             </el-table>
             <div class="pagination">
-                <el-pagination @current-change="handleCurrentChange" @size-change="handleSizeChange" :page-sizes="[10, 20, 30, 50]" layout="sizes, prev, pager, next" :total="totals">
+                <el-pagination v-if="paginationShow" @current-change="handleCurrentChange" :current-page='cur_page' :page-size="20" layout="prev, pager, next" :total="totals">
                 </el-pagination>
             </div>
         </div>
-
-        <!-- 编辑弹出框 -->
+        
+        <!-- 入库弹出框 -->
         <el-dialog title="编辑" :visible.sync="editVisible" width="30%">
-            <el-form ref="form" :model="form" label-width="50px">
-                <el-form-item label="日期">
-                    <el-date-picker type="date" placeholder="选择日期" v-model="form.date" value-format="yyyy-MM-dd" style="width: 100%;"></el-date-picker>
-                </el-form-item>
-                <el-form-item label="姓名">
-                    <el-input v-model="form.name"></el-input>
-                </el-form-item>
-                <el-form-item label="地址">
-                    <el-input v-model="form.address"></el-input>
-                </el-form-item>
-
-            </el-form>
-            <span slot="footer" class="dialog-footer">
+			<el-table :data="product_store_ins" border style="width: 100%">
+				<el-table-column prop="fnsku" label="fnsku"></el-table-column>
+				<el-table-column prop="arrive_sum" label="到达数量"></el-table-column>
+				<el-table-column label="库位选择">
+					<template slot-scope="scope">
+						<el-select v-model="ware_house_ids" placeholder="选择库位" class="handle-select mr10" multiple>
+							<el-option v-for="item in wareoptions" :label="item.name" :value="item.id"></el-option>
+							<infinite-loading :on-infinite="onInfinite_ware" ref="infiniteLoading"></infinite-loading>
+						</el-select>
+					</template>
+				</el-table-column>
+				<el-table-column label="实际上架数量" width="133">
+					<template scope="scope">
+						<el-input class="input-new-tag" v-model="bround_sum" ref="saveTagInput" size="small">
+						</el-input>
+					</template>
+				</el-table-column>
+			</el-table>
+			<span class="el-upload__tip">温馨提示：如果一个产品入多个库，到货数量请用‘/’分开，格式为 66/88，确保库位和数据一一对应</span>
+			<br><br>
+			<el-form ref="form" :model="form" label-width="40px">
+				<el-form-item label="备注">
+					<el-input v-model="form.remark"></el-input>
+				</el-form-item>
+			</el-form>
+			<span slot="footer" class="dialog-footer">
                 <el-button @click="editVisible = false">取 消</el-button>
-                <el-button type="primary" @click="saveEdit">确 定</el-button>
+                <el-button type="primary" @click="saveEdit('form')">确 定</el-button>
             </span>
-        </el-dialog>
-
+		</el-dialog>
+        
+        <!-- 详情提示框 -->
+        <el-dialog title="详情" :visible.sync="detailVisible" width="50%">
+			<el-table :data="form.cargo_ware_houses" border style="width: 100%">
+				<el-table-column prop="fnsku" label="fnsku"></el-table-column>
+				<el-table-column prop="ware_house_name" label="所在库位"></el-table-column>
+				<el-table-column prop="sum" label="数量"></el-table-column>
+				<el-table-column prop="lock_sum" label="锁定数量"></el-table-column>
+			</el-table>
+		</el-dialog>
+        
         <!-- 删除提示框 -->
         <el-dialog title="提示" :visible.sync="delVisible" width="300px" center>
             <div class="del-dialog-cnt">删除不可恢复，是否确定删除？</div>
@@ -81,58 +124,69 @@
 </template>
 
 <script>
+	import VueInfiniteLoading from "vue-infinite-loading"
     export default {
-        name: 'basetable',
+//      name: 'wms_productsmanage',
         data() {
             return {
                 url: './static/vuetable.json',
 //              url: 'package.json',
                 tableData: [],
+                options: [],
+                wareoptions: [],
+                ware_total: 0,
+                ware_house_ids: [],
+                bround_sum: '',
+                product_store_ins_change: [],
                 cur_page: 1,
-                pagesize: 10,
+                user_page: 1,
+                ware_page: 1,
+                pagesize: 20,
 //              pagesizes:'',
-                multipleSelection: [],
+                multipleSelection: [],               
                 select_cate: '',
                 select_word: '',
                 del_list: [],
                 is_search: false,
                 editVisible: false,
                 delVisible: false,
-                totals: 1,
+                detailVisible: false,
+                paginationShow: true,
+                totals: 0,
+                user_total: 0,
+                product_store_ins: [],
                 form: {
-                    name: '',
-                    date: '',
-                    address: '',
+                	fnsku: ''
+//              	product_store_ins: [],
                 },
                 idx: -1
             }
         },
         created() {
             this.getData();
+            this.getUser();
+            this.getWarehouse();
+        },
+        watch: {
+        	"$route": "getData"
         },
         computed: {
             data() {
                 return this.tableData.filter((d) => {
-//              	let totals = tableData.length
                 	return d
-//                  let is_del = false;
-//                  for (let i = 0; i < this.del_list.length; i++) {
-//                      if (d.name === this.del_list[i].name) {
-//                          is_del = true;
-//                          break;
-//                      }
-//                  }
-//                  if (!is_del) {
-//                      if (d.address.indexOf(this.select_cate) > -1 &&
-//                          (d.name.indexOf(this.select_word) > -1 ||
-//                              d.address.indexOf(this.select_word) > -1)
-//                      ) {
-//                          return d;
-//                      }
-//                  }
                 })
             }
         },
+        filters: {
+			//类型转换
+			statusFilter(status) {
+				const statusMap = {
+					1: 'success',
+					2: 'danger'
+				}
+				return statusMap[status]
+			},
+		},
         methods: {
         	handleSizeChange(val) {
         		this.pagesize = val;
@@ -140,51 +194,151 @@
             // 分页导航
             handleCurrentChange(val) {
                 this.cur_page = val;
-//              this.getData();
+                if(!this.select_cate) {
+					this.getData();
+				} else {
+					this.getUserDatas()
+				}
             },
             // 获取 easy-mock 的模拟数据
             getData() {
-                // 开发环境使用 easy-mock 数据，正式环境使用 json 文件
-                if (process.env.NODE_ENV === 'development') {
-//                  this.url = '/ms/table/list';
-                };
-                let token = localStorage.getItem('token')
-                console.log(token)
-                this.$axios.get( 'http://47.74.177.128:3000/admin/cargos', {
-                	headers: {'Authorization': token},
-                    params:{
-                    	page: this.cur_page
-                    },
+                this.$axios.get( '/admin/cargos?page='+this.cur_page, {
+                	headers: {'Authorization': this.cookie.token_admin}
                 },
-//              {
-//              	headers: {'Authorization': token}
-//              }
-                ).then((res) => {
+               ).then((res) => {                	
                     this.tableData = res.data.data
-                    this.totals = this.tableData.length
-                    console.log(res)
+                    this.totals = res.data.count
+                    this.paginationShow = true
                 }).catch((res) => {
                 	this.$message.error(res)
                 })
             },
+            getWarehouse(callback = undefined) {
+				this.$axios.get('/admin/warehouses?page=' + this.ware_page, {
+					headers: {
+						'Authorization': this.cookie.token_admin
+					},
+				}).then((res) => {
+					if(res.data.code == 200) {
+						this.wareoptions = this.wareoptions.concat(res.data.data)
+						this.ware_total = res.data.count
+						if(callback) {
+							callback()
+						}
+					}
+
+				})
+			},
+			grounding(index, row) {
+				this.idx = index;
+				const item = this.tableData[index]
+				this.product_store_ins = [this.tableData[index]]
+				this.form = {
+						id: item.id,
+						arrive_sum: item.arrive_sum
+					}
+				console.log(this.product_store_ins)
+				this.editVisible = true;
+			},
+			// 上架
+            saveEdit(form) {
+            	let sum = []
+            	if(this.ware_house_ids.length == 1) {
+						sum.push(parseInt(this.bround_sum))
+					} else {
+						sum = this.bround_sum.split('/').map(Number)
+					}
+            	let params = {
+            		sum: sum,
+            		ware_house_ids: this.ware_house_ids
+            	}
+            	this.$axios.post('/admin/cargos/' + this.form.id + '/putaway', params, {
+            		headers: {
+						'Authorization': this.cookie.token_admin
+					},
+            	}).then((res) => {
+            		if(res.data.code == 200) {
+						this.editVisible = false;
+						this.$message.success('入库完成')
+						this.getData()
+					}
+            	}).catch((res) => {
+					this.$message.error(res)
+				})
+                this.editVisible = false;
+            },
+            allUser() {
+            	this.paginationShow = false
+            	this.cur_page = 1
+				this.getData()
+				this.select_cate = ''
+			},
+			getUser(callback = undefined) {
+				this.$axios.get('/admin/users?page=' + this.user_page, {
+					headers: {
+						'Authorization': this.cookie.token_admin
+					},
+				}).then((res) => {
+					if(res.data.code == 200) {
+						this.options = this.options.concat(res.data.data)
+						this.user_total = res.data.count
+						if(callback) {
+							callback()
+						}
+					}
+				})
+			},
+			getUserDatasFirst() {
+				this.paginationShow = false
+				this.cur_page = 1
+				this.$axios.get('/admin/cargos?page=' + this.cur_page + '&user_id=' + this.select_cate, {
+					headers: {
+						'Authorization': this.cookie.token_admin
+					},
+				}).then((res) => {
+					this.tableData = res.data.data
+					this.totals = res.data.count
+					this.paginationShow = true
+				})
+			},
+			getUserDatas() {
+				this.$axios.get('/admin/cargos?page=' + this.cur_page + '&user_id=' + this.select_cate, {
+					headers: {
+						'Authorization': this.cookie.token_admin
+					},
+				}).then((res) => {
+					this.tableData = res.data.data
+					this.totals = res.data.count
+				})
+			},
+			onInfinite(obj) {
+				if((this.user_page * 20) < this.user_total) {
+					this.user_page += 1
+					this.getUser(obj.loaded)
+				} else {
+					obj.complete()
+				}
+			},
+			detailsShow(index, row) {
+				this.idx = index;
+				const item = this.tableData[index];
+				this.form = {
+					cargo_ware_houses: item.cargo_ware_houses,
+				}
+				this.detailVisible = true;
+			},
+			
             search() {
                 this.is_search = true;
             },
-            formatter(row, column) {
-                return row.address;
-            },
+            formatter_created_at(row, column) {
+				return row.created_at.substr(0, 19);
+			},
+			formatter_updated_at(row, column) {
+				return row.updated_at.substr(0, 19);
+			},
             filterTag(value, row) {
                 return row.tag === value;
-            },
-            handleEdit(index, row) {
-                this.idx = index;
-                const item = this.tableData[index];
-                this.form = {
-                    name: item.name,
-                    date: item.date,
-                    address: item.address
-                }
-                this.editVisible = true;
             },
             handleDelete(index, row) {
                 this.idx = index;
@@ -203,12 +357,6 @@
             handleSelectionChange(val) {
                 this.multipleSelection = val;
             },
-            // 保存编辑
-            saveEdit() {
-                this.$set(this.tableData, this.idx, this.form);
-                this.editVisible = false;
-                this.$message.success(`修改第 ${this.idx+1} 行成功`);
-            },
             // 确定删除
             deleteRow(){
                 this.tableData.splice(this.idx, 1);
@@ -217,12 +365,24 @@
             },
             getStatusName(status){
             	if(status == 1){
-            		return "正常"
+            		return "有库存"
             	}else{
             		return "无库存"
             	}
-            }
-        }
+            },
+            onInfinite_ware(obj) {
+				if((this.ware_page * 20) < this.ware_total) {
+					this.ware_page += 1
+					this.getWarehouse(obj.loaded)
+					//					obj.loaded()
+				} else {
+					obj.complete()
+				}
+			},
+        },       
+        components: {
+			"infinite-loading": VueInfiniteLoading
+		}
     }
 
 </script>

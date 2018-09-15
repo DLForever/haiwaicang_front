@@ -71,24 +71,39 @@ export default new Router({
                     meta: { title: 'FBA管理' }
                 },
                 {
+                    path: '/WMSaddware',
+                    component: resolve => require(['../components/page/WMSAddWare.vue'], resolve),
+                    meta: { title: 'WMS新建库位', permission: true  }
+                },
+                {
+                    path: '/WMSwaremanage',
+                    component: resolve => require(['../components/page/WMSWareManage.vue'], resolve),
+                    meta: { title: 'WMS库位管理', permission: true  }
+                },
+                {
                     path: '/WMSinmanage',
                     component: resolve => require(['../components/page/WMSInBoundManage.vue'], resolve),
-                    meta: { title: 'WMS入库管理' }
+                    meta: { title: 'WMS入库管理', permission: true  }
+                },
+                {
+                    path: '/WMSbatchinmanage',
+                    component: resolve => require(['../components/page/WMSBatchInBoundManage.vue'], resolve),
+                    meta: { title: 'WMS批量入库管理', permission: true  }
                 },
                 {
                     path: '/WMSordermanage',
                     component: resolve => require(['../components/page/WMSOrderManage.vue'], resolve),
-                    meta: { title: 'WMS换标订单管理' }
+                    meta: { title: 'WMS换标订单管理', permission: true  }
                 },
                 {
                     path: '/WMSordersendmanage',
                     component: resolve => require(['../components/page/WMSOrderSendManage.vue'], resolve),
-                    meta: { title: 'WMS发货订单管理' }
+                    meta: { title: 'WMS发货订单管理', permission: true  }
                 },
                 {
                     path: '/WMSproductmanage',
                     component: resolve => require(['../components/page/WMSProductManage.vue'], resolve),
-                    meta: { title: 'WMS货物管理' }
+                    meta: { title: 'WMS货物管理', permission: true }
                 },
                 {
                     // 权限页面
@@ -101,6 +116,10 @@ export default new Router({
         {
             path: '/login',
             component: resolve => require(['../components/page/Login.vue'], resolve),
+        },
+        {
+            path: '/loginadmin',
+            component: resolve => require(['../components/page/AdminLogin.vue'], resolve),
         },
         {
             path: '/register',
@@ -120,3 +139,4 @@ export default new Router({
         }
     ]
 })
+

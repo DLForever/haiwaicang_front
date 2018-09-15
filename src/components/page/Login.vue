@@ -1,6 +1,6 @@
 <template>
 	<div class="login-wrap">
-		<div class="ms-title">深圳闪速供应链有限公司</div>
+		<div class="ms-title">海外仓系统</div>
 		<div class="ms-login">
 			<el-form :model="ruleForm" :rules="rules" ref="ruleForm" label-width="0px" class="demo-ruleForm">
 				<el-form-item prop="username">
@@ -9,7 +9,10 @@
 				<el-form-item prop="password">
 					<el-input type="password" placeholder="password" v-model.trim="ruleForm.password" @keyup.enter.native="submitForm('ruleForm')"></el-input>
 				</el-form-item>
+				<el-checkbox v-model="checked">记住密码</el-checkbox>
+				<br><br>
 				<div class="login-btn">
+					<!--<el-button type="primary" @click="submitForm('ruleForm')">普通用户登录</el-button>-->
 					<el-col :span="12">
 						<el-button type="primary" @click="submitForm('ruleForm')">普通用户登录</el-button>
 					</el-col>
@@ -29,6 +32,7 @@
 	export default {
 		data: function() {
 			return {
+				checked: true,
 				ruleForm: {
 					username: '',
 					password: ''
@@ -47,11 +51,19 @@
 				}
 			}
 		},
+		mounted() {
+			this.getCookie()
+		},
 		methods: {
 			submitForm(formName) {
+				if(this.checked == true) {
+					this.setCookie(this.ruleForm.username, this.ruleForm.password, 7)
+				}else {
+					this.clearCookie()
+				}
 				this.$refs[formName].validate((valid) => {
 					if(valid) {
-						this.$axios.post('http://47.74.177.128:3000/authentication', {
+						this.$axios.post('/authentication', {
 								username: this.ruleForm.username,
 								password: this.ruleForm.password
 						},
@@ -70,15 +82,20 @@
 				});
 			},
 			submitAdmin(formName) {
+				if(this.checked == true) {
+					this.setCookie(this.ruleForm.username, this.ruleForm.password, 7)
+				}else {
+					this.clearCookie()
+				}
 				this.$refs[formName].validate((valid) => {
 					if(valid) {
-						this.$axios.post('http://47.74.177.128:3000/admin/authentication', {
+						this.$axios.post('/admin/authentication', {
 								username: this.ruleForm.username,
 								password: this.ruleForm.password
 						},
 						).then((res) => {
 							localStorage.setItem('ms_username', this.ruleForm.username);
-							localStorage.setItem('token', res.data.data.token);
+							localStorage.setItem('token_admin', res.data.data.token);
 							console.log(res)
 							this.$router.push('/');
 						}).catch((res) => {
@@ -89,6 +106,31 @@
 						return false;
 					}
 				});
+			},
+			//设置cookie
+			setCookie(c_name, c_pwd, exdays) {
+				let exdate = new Date()
+				exdate.setTime(exdate.getTime() + 24 * 60 * 60 * 100 * exdays)
+				window.document.cookie = "username" + "=" + c_name + ";path=/;expires=" + exdate.toGMTString()
+				window.document.cookie = "userPwd" + "=" + c_pwd + ";path/;expires=" + exdate.toGMTString()
+			},
+			//读取cookie
+			getCookie: function() {
+				if (document.cookie.length > 0) {
+					let arr = document.cookie.split(';')
+					for(let i=0; i < arr.length; i++) {
+						let arr2 = arr[i].split('=')
+						if(arr2[0] == 'username') {
+							this.ruleForm.username = arr2[1]
+						}else if(arr2[0] == ' userPwd') {
+							this.ruleForm.password = arr2[1]
+						}
+					}
+				}
+			},
+			//清除cookie
+			clearCookie: function() {
+				this.setCookie('', '', -1)
 			},
 			//注册
 			register() {
@@ -120,7 +162,7 @@
 		left: 50%;
 		top: 50%;
 		width: 300px;
-		height: 160px;
+		height: 170px;
 		margin: -150px 0 0 -190px;
 		padding: 40px;
 		border-radius: 5px;

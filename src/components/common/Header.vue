@@ -4,7 +4,7 @@
         <div class="collapse-btn" @click="collapseChage">
             <i class="el-icon-menu"></i>
         </div>
-        <div class="logo">订单管理系统</div>
+        <div class="logo">海外仓系统</div>
         <div class="header-right">
             <div class="header-user-con">
                 <!-- 全屏显示 -->
@@ -66,6 +66,9 @@
                 if(command == 'loginout'){
                     localStorage.removeItem('ms_username')
                     localStorage.removeItem('token')
+                    localStorage.removeItem('token_admin')
+                    this.cookie.token = ''
+                    this.cookie.token_admin = ''
                     this.$router.push('/login');
                 }
             },
