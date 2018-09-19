@@ -11,12 +11,18 @@
 				<el-tab-pane label="创建入库单" name="first">
 					<div class="form-box">
 						<el-form :rules="rules" label-width="115px">
-							<el-form-item label="产品" required>
+							<el-form-item label="批次" required>
+								<el-select v-model="select_batch" placeholder="选择批次" class="handle-select mr10">
+									<el-option v-for="item in batch_options" :key="item.id" :label="item.batch_number" :value="item.id"></el-option>
+									<infinite-loading :on-infinite="onInfiniteBatch" ref="infiniteLoading"></infinite-loading>
+								</el-select>
+							</el-form-item>
+							<!--<el-form-item label="产品" required>
 								<el-select v-model="select_cate" placeholder="选择产品" multiple class="handle-select mr10">
 									<el-option v-for="item in options" :key="item.id" :label="item.name" :value="item.id"></el-option>
 									<infinite-loading :on-infinite="onInfinite" ref="infiniteLoading"></infinite-loading>
 								</el-select>
-							</el-form-item>
+							</el-form-item>-->
 							<el-form-item label="物流编号+数量" required>
 								<table class="table text-center">
 
@@ -24,6 +30,13 @@
 										<tr v-for="p in form">
 											<td>
 												<el-input v-model.trim="p.logistics_number" placeholder="物流编号"></el-input>
+											</td>
+											<el-col class="line" :span="1">-</el-col>
+											<td>
+												<el-select v-model="p.select_cate" placeholder="选择产品" class="handle-select mr10">
+													<el-option v-for="item in options" :key="item.id" :label="item.name" :value="item.id"></el-option>
+													<infinite-loading :on-infinite="onInfinite" ref="infiniteLoading"></infinite-loading>
+												</el-select>
 											</td>
 											<el-col class="line" :span="1">-</el-col>
 											<td>
@@ -40,7 +53,7 @@
 											<td><el-input v-model="p.plan_sum" placeholder="计划数量"></el-input></td>-->
 										</tr>
 									</tbody>
-									<div slot="tip" class="el-upload__tip">如果一个物流编号有多个产品,数量格式为 66/88</div>
+									<!--<div slot="tip" class="el-upload__tip">如果一个物流编号有多个产品,数量格式为 66/88</div>-->
 								</table>
 
 							</el-form-item>
@@ -84,14 +97,19 @@
 				url: './static/vuetable.json',
 				message: 'first',
 				totals: 0,
+				batch_totals: 0,
 				cur_page: 1,
-				select_cate: [],
+				batch_page: 1,
+				
 				options: [],
+				batch_options: [],
+				select_batch: '',
 				product_id: '',
 				remark: '',
 				form: [{
 					plan_sum: '',
-					logistics_number: ''
+					logistics_number: '',
+					select_cate: ''
 				}],
 				newForm: {
 					fnskus: [],
@@ -116,6 +134,7 @@
 		},
 		created() {
 			this.getData();
+			this.getBatchInbound()
 		},
 		computed: {
 			isDisableBu() {
@@ -137,10 +156,29 @@
 					this.totals = res.data.count
 				})
 			},
+			getBatchInbound() {
+				this.$axios.get('/batch_store_ins/available_index?page=' + this.batch_page, {
+					headers: {
+						'Authorization': this.cookie.token
+					}
+				}).then((res) => {
+					this.batch_options = this.batch_options.concat(res.data.data)
+					this.batch_totals = res.data.count
+				})
+			},
 			onInfinite(obj) {
 				if((this.cur_page * 20) < this.totals) {
 					this.cur_page += 1
 					this.getData(obj.loaded)
+				} else {
+					obj.complete()
+				}
+			},
+			//批次翻页
+			onInfiniteBatch(obj) {
+				if((this.batch_page * 20) < this.batch_totals) {
+					this.batch_page += 1
+					this.getBatchInbound(obj.loaded)
 				} else {
 					obj.complete()
 				}
@@ -174,7 +212,9 @@
 						store_ins.push(store_tmp)
 					}
 					let params = {
-						store_ins
+						store_ins: store_ins,
+						batch_store_in_id: this.select_batch,
+						remark: this.remark
 					}
 					this.$axios.post('/store_ins', params, {
 						headers: {

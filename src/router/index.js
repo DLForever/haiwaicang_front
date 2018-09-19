@@ -41,6 +41,16 @@ export default new Router({
                 },
                 //创建入库
                 {
+                    path: '/applyinbound',
+                    component: resolve => require(['../components/page/ApplyInBound.vue'], resolve),
+                    meta: { title: '入库申请' }
+                },
+                {
+                    path: '/applyinboundmanage',
+                    component: resolve => require(['../components/page/ApplyInBoundManage.vue'], resolve),
+                    meta: { title: '申请管理' }
+                },
+                {
                     path: '/inbound',
                     component: resolve => require(['../components/page/InBound.vue'], resolve),
                     meta: { title: '创建入库单' }
@@ -79,6 +89,11 @@ export default new Router({
                     path: '/WMSwaremanage',
                     component: resolve => require(['../components/page/WMSWareManage.vue'], resolve),
                     meta: { title: 'WMS库位管理', permission: true  }
+                },
+                {
+                    path: '/WMSapplyinmanage',
+                    component: resolve => require(['../components/page/WMSApplyInBoundManage.vue'], resolve),
+                    meta: { title: 'WMS入库申请管理', permission: true  }
                 },
                 {
                     path: '/WMSinmanage',

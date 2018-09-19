@@ -21,6 +21,8 @@
 				<el-table-column type="selection" width="55"></el-table-column>
 				<el-table-column prop="logistics_number" label="物流编号" width="150">
 				</el-table-column>
+				<el-table-column prop="batch_number" label="申请批次" width="100">
+				</el-table-column>
 				<el-table-column prop="total_plan_sum" label="计划数量" width="120">
 				</el-table-column>
 				<el-table-column prop="total_arrive_sum" label="接收数量" width="120">

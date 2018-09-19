@@ -13,28 +13,21 @@
 					<el-option v-for="item in options" :key="item.id" :label="item.name" :value="item.id"></el-option>
 					<infinite-loading :on-infinite="onInfinite" ref="infiniteLoading"></infinite-loading>
 				</el-select>
-				<el-button type="primary" icon="search" @click="allUser">所有用户</el-button>
+				<!--<el-button type="primary" icon="search" @click="allUser">所有用户</el-button>-->
 			</div>
 			<!--<el-table :data="data.slice((cur_page-1)*pagesize, cur_page*pagesize)" border style="width: 100%" model="form" ref="multipleTable" @selection-change="handleSelectionChange">-->
 			<el-table :data="data" border style="width: 100%" model="form" ref="multipleTable" @selection-change="handleSelectionChange">
 				<el-table-column type="selection" width="55"></el-table-column>
-				<el-table-column prop="logistics_number" label="入库单号" width="200">
+				<el-table-column label="文件">
+					<template slot-scope="scope">
+						<a :href="$axios.defaults.baseURL+scope.row.url.url">查看文件</a>
+					</template>
 				</el-table-column>
-				<el-table-column prop="batch_number" label="申请批次" width="100">
+				<el-table-column prop="created_at" :formatter="formatter_created_at" label="创建时间">
 				</el-table-column>
-				<el-table-column prop="total_plan_sum" label="计划总数量" width="150">
+				<el-table-column prop="updated_at" :formatter="formatter_updated_at" label="更新时间">
 				</el-table-column>
-				<el-table-column prop="total_arrive_sum" label="已收到数量" width="120">
-				</el-table-column>				
-				<el-table-column prop="user_remark" label="用户备注" show-overflow-tooltip>
-				</el-table-column>
-				<el-table-column prop="manager_remark" label="仓库备注" show-overflow-tooltip>
-				</el-table-column>
-				<el-table-column prop="remove_remark" label="用户删除备注" show-overflow-tooltip>
-				</el-table-column>
-				<el-table-column prop="created_at" :formatter="formatter_created_at" label="创建时间" width="150">
-				</el-table-column>
-				<el-table-column prop="updated_at" :formatter="formatter_updated_at" label="更新时间" width="150">
+				<el-table-column prop="remark" label="备注">
 				</el-table-column>
 				<el-table-column prop="status" label="状态">
 					<template slot-scope="scope">
@@ -43,24 +36,20 @@
 				</el-table-column>
 				<el-table-column label="操作" width="100">
 					<template slot-scope="scope">
-						<!--<el-button size="small" @click="handleEdit(scope.$index, scope.row)">编辑</el-button>-->
-						<!--<el-button size="small" type="danger" @click="handleDelete(scope.$index, scope.row)">删除</el-button>-->
 						<el-dropdown>
 							<el-button type="primary">
 								操作<i class="el-icon-arrow-down el-icon--right"></i>
 							</el-button>
 							<el-dropdown-menu slot="dropdown">
 								<el-dropdown-item>
-									<el-button @click="detailsShow(scope.$index, scope.row)" type="text">详情</el-button>
+									<el-button @click="detailsShow(scope.$index, scope.row)" type="text">&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp详情&nbsp&nbsp&nbsp</el-button>
 								</el-dropdown-item>
 								<el-dropdown-item>
-									<el-button @click="handleEdit(scope.$index, scope.row)" type="text">入库</el-button>
+									<el-button @click="handleEdit(scope.$index, scope.row)" type="text">创建用户批次</el-button>
 								</el-dropdown-item>
-								<el-dropdown-item>
+								<!--<el-dropdown-item>
 									<el-button @click="handleDelete(scope.$index, scope.row)" type="text">删除</el-button>
-								</el-dropdown-item>
-								<!--<el-dropdown-item><el-button @click="editVisible = true" type="text">详情</el-button></el-dropdown-item>-->
-								<!--<el-button @click="editVisible = true">贴标</el-button>-->
+								</el-dropdown-item>-->
 							</el-dropdown-menu>
 						</el-dropdown>
 					</template>
@@ -71,53 +60,26 @@
 				</el-pagination>
 			</div>
 		</div>
-
-		<!-- 入库弹出框 -->
+			
+		
+		<!-- 创建批次弹出框 -->
 		<el-dialog title="编辑" :visible.sync="editVisible" width="30%">
-			<el-table :data="form.product_store_ins" border style="width: 100%">
-				<el-table-column prop="fnsku" label="fnsku"></el-table-column>
-				<el-table-column prop="plan_sum" label="预计入库"></el-table-column>
-				<!--<el-table-column label="库位选择">
-					<template slot-scope="scope">
-						<el-select v-model="scope.row.warehouse" placeholder="选择库位" class="handle-select mr10" multiple>
-							<el-option v-for="item in wareoptions" :label="item.name" :value="item.id"></el-option>
-							<infinite-loading :on-infinite="onInfinite_ware" ref="infiniteWareHouseLoading"></infinite-loading>
-						</el-select>
-					</template>
-				</el-table-column>-->
-				<el-table-column label="实际到货数量" width="133">
-					<template scope="scope">
-						<el-input class="input-new-tag" v-model="scope.row.arrive_sum" ref="saveTagInput" size="small">
-						</el-input>
-					</template>
-				</el-table-column>
-			</el-table>
-			<!--<span class="el-upload__tip">温馨提示：如果一个产品入多个库，到货数量请用‘/’分开，格式为 66/88，确保库位和数据一一对应</span>-->
-			<br><br>
-			<el-form ref="form" :model="form" label-width="40px">
-				<!--<el-form-item label="选择库位">
-					<el-input v-model="form.ware"></el-input>
-				</el-form-item>
-				<el-form-item label="推荐库位">
-					<el-input v-model="form.ware"></el-input>
-				</el-form-item>-->
-				<el-form-item label="备注">
-					<el-input v-model="form.remark"></el-input>
-				</el-form-item>
-			</el-form>
+			<span>确定创建批次吗？</span>
 			<span slot="footer" class="dialog-footer">
                 <el-button @click="editVisible = false">取 消</el-button>
                 <el-button type="primary" @click="saveEdit('form')">确 定</el-button>
             </span>
 		</el-dialog>
-
+		
 		<!-- 详情提示框 -->
 		<el-dialog title="详情" :visible.sync="detailVisible" width="65%">
-			<el-table :data="ware_details" border style="width: 100%">
+			<el-table :data="batch_list" border style="width: 100%">
 				<!--<el-table-column prop="ware_house_id" label="库位"></el-table-column>-->
-				<el-table-column prop="fnsku" label="产品名称" width="150"></el-table-column>
-				<el-table-column prop="plan_sum" label="计划入库数量" width="150"></el-table-column>
-				<el-table-column prop="arrive_sum" label="实际入库数量" show-overflow-tooltip></el-table-column>
+				<el-table-column prop="batch_number" label="批次编号" width="150"></el-table-column>
+				<el-table-column prop="created_at" :formatter="formatter_created_at" label="创建时间">
+				</el-table-column>
+				<el-table-column prop="updated_at" :formatter="formatter_updated_at" label="更新时间">
+				</el-table-column>
 			</el-table>
 			<br />
 		</el-dialog>
@@ -143,8 +105,7 @@
 				paginationShow: true,
 				tableData: [],
 				options: [],
-				wareoptions: [],
-				ware_details: [],
+				batch_list: [],
 				cur_page: 1,
 				user_page: 1,
 				ware_page: 1,
@@ -185,7 +146,6 @@
 		created() {
 			this.getData();
 			this.getUser();
-			this.getWarehouse();
 		},
 		watch: {
 			"$route": "getData",
@@ -206,7 +166,7 @@
 				const statusMap = {
 //					2: 'info',
 					1: 'warning',
-					4: 'success',
+					3: 'success',
 					5: 'danger'
 				}
 				return statusMap[status]
@@ -222,26 +182,14 @@
 					this.getUserDatas()
 				}				
 			},
-			// 获取 easy-mock 的模拟数据
-			getData() {
-				// 开发环境使用 easy-mock 数据，正式环境使用 json 文件
-				if(process.env.NODE_ENV === 'development') {
-					//					this.url = '/ms/table/list';
-				};				
-				this.$axios.get('/admin/store_ins?page=' + this.cur_page, {
+			
+			getData() {			
+				this.$axios.get('/admin/apply_store_ins?page=' + this.cur_page + '&user_id=' + this.select_cate, {
 					headers: {
 						'Authorization': this.cookie.token_admin
 					},
-					//					page: this.cur_page
 				}).then((res) => {
-					//					res.data.data.forEach((data) => {
-					//						data.product_store_ins.forEach((data2) => {
-					//							data2.warehouse = []
-					//						})
-					//					})
 					this.tableData = res.data.data;
-					//					let test = res.data.data[1].product_store_ins
-					//					this.totals = this.tableData.length
 					this.totals = res.data.count
 					this.paginationShow = true
 				})
@@ -270,7 +218,7 @@
 			getUserDatasFirst() {
 				this.paginationShow = false				
 				this.cur_page = 1
-				this.$axios.get('/admin/store_ins?page=' + this.cur_page + '&user_id=' + this.select_cate, {
+				this.$axios.get('/admin/apply_store_ins?page=' + this.cur_page + '&user_id=' + this.select_cate, {
 					headers: {
 						'Authorization': this.cookie.token_admin
 					},
@@ -281,7 +229,7 @@
 				})
 			},
 			getUserDatas() {
-				this.$axios.get('/admin/store_ins?page=' + this.cur_page + '&user_id=' + this.select_cate, {
+				this.$axios.get('/admin/apply_store_ins?page=' + this.cur_page + '&user_id=' + this.select_cate, {
 					headers: {
 						'Authorization': this.cookie.token_admin
 					},
@@ -338,27 +286,11 @@
 			handleEdit(index, row) {
 				this.idx = index;
 				const item = this.tableData[index];
-				this.$axios.get('/admin/store_ins/' + item.id, {
-					headers: {
-						'Authorization': this.cookie.token_admin
-					},
-				}).then((res) => {
-					res.data.data.product_store_ins.forEach((data) => {
-						data.warehouse = []
-						//						data.product_store_ins.forEach((data2) => {
-						//							data2.warehouse = []
-						//						})
-					})
-					this.product_store_ins_change = res.data.data.product_store_ins
-					this.form = {
-						id: item.id,
-						arrive_sum: item.arrive_sum,
-						remark: item.remark,
-						product_store_ins: this.product_store_ins_change
-					}
-					this.editVisible = true;
-				})
-
+				this.form = {
+					apply_store_in_id: item.id,
+					user_id: item.user_id
+				}
+				this.editVisible = true;
 			},
 			
 			delAll() {
@@ -376,38 +308,11 @@
 			},
 			// 入库
 			saveEdit(form) {
-				let id = this.form.id
-				let product_store_ins = []
-				let sum = []
-				let ware = []
-				for(let i = 0; i < this.form.product_store_ins.length; i++) {
-					if(this.judge_inbound((this.form.product_store_ins[i].arrive_sum))){
-						
-					}else {
-						return false
-					}
-//					if(this.form.product_store_ins[i].warehouse.length == 0) {
-//						this.$message.error('请核对格式是否正确')
-//						return false
-//					}
-					product_store_ins.push(this.form.product_store_ins[i].id)
-					let sum_temp = []
-					sum_temp.push(parseInt(this.form.product_store_ins[i].arrive_sum))
-					sum.push(sum_temp)
-//					if(this.form.product_store_ins[i].warehouse.length == 1) {
-//						let sum_temp = []
-//						sum_temp.push(parseInt(this.form.product_store_ins[i].arrive_sum))
-//						sum.push(sum_temp)
-//					} else {
-//						sum.push(this.form.product_store_ins[i].arrive_sum.split('/').map(Number))
-//					}
-//					ware.push(this.form.product_store_ins[i].warehouse)
-				}
-				this.$axios.post('/admin/store_ins/' + id + '/done', {
-					sum: sum,
-					product_store_ins: product_store_ins,
-					remark: this.form.remark,
-//					ware_houses: ware
+				let apply_store_in_id = this.form.apply_store_in_id
+				let user_id = this.form.user_id
+				this.$axios.post('/admin/batch_store_ins', {
+					apply_store_in_id: apply_store_in_id,
+					user_id: user_id,
 				}, {
 					headers: {
 						'Authorization': this.cookie.token_admin
@@ -415,7 +320,7 @@
 				}).then((res) => {
 					if(res.data.code == 200) {
 						this.editVisible = false;
-						this.$message.success('入库完成')
+						this.$message.success('创建成功')
 						this.getData()
 					}
 				}).catch((res) => {
@@ -450,26 +355,20 @@
 			},
 			getStatusName(status) {
 				if(status == 1) {
-					return "待入库"
-				}else if(status == 5) {
-					return "删除待审核"
+					return "待通过"
+				}else if(status == 3) {
+					return "已通过"
 				} else {
-					return "已入库"
+					return "其他"
 				}
 			},
 			detailsShow(index, row) {
-				this.$axios.get('/admin/store_ins/' + row.id, {
+				this.$axios.get('/admin/batch_store_ins?apply_store_in_id=' + row.id, {
 					headers: {
 						'Authorization': this.cookie.token_admin
 					},
 				}).then((res) => {
-					res.data.data.product_store_ins.forEach((data) => {
-//						data.ware_count = ''
-//						data.store_in_ware_houses.forEach((data2) => {
-//							data.ware_count += data2.ware_house_name + '(' + data2.sum + ') '
-//						})
-						this.ware_details = res.data.data.product_store_ins
-					})
+					this.batch_list = res.data.data
 					this.detailVisible = true
 				})
 			},

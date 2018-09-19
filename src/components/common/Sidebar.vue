@@ -52,6 +52,14 @@
 						index: '2',
 						title: '入库管理',
 						subs: [{
+								index: 'applyinbound',
+								title: '创建入库申请'
+							},
+							{
+								index: 'applyinboundmanage',
+								title: '入库申请管理'
+							},
+							{
 								index: 'inbound',
 								title: '创建入库单'
 							},
@@ -162,25 +170,27 @@
 						icon: 'el-icon-printer',
 						index: '8',
 						title: 'WMS库位管理',
-						subs: [
-							{
-								index: 'WMSwaremanage',
-								title: 'WMS库位管理'
-							}
-						]
+						subs: [{
+							index: 'WMSwaremanage',
+							title: 'WMS库位管理'
+						}]
 					},
 					{
 						icon: 'el-icon-printer',
 						index: '6',
 						title: 'WMS入库管理',
 						subs: [{
-							index: 'WMSinmanage',
-							title: 'WMS入库管理'
-						}, 
-//						{
-//							index: 'WMSbatchinmanage',
-//							title: 'WMS批量入库'
-//						}
+								index: 'WMSapplyinmanage',
+								title: 'WMS入库申请'
+							},
+							{
+								index: 'WMSinmanage',
+								title: 'WMS入库管理'
+							},
+							//						{
+							//							index: 'WMSbatchinmanage',
+							//							title: 'WMS批量入库'
+							//						}
 						]
 					},
 					{
