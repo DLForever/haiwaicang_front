@@ -23,36 +23,44 @@
 									<infinite-loading :on-infinite="onInfinite" ref="infiniteLoading"></infinite-loading>
 								</el-select>
 							</el-form-item>-->
-							<el-form-item label="物流单" required>
+							<el-form-item label="物流编号+数量" required>
 								<table class="table text-center">
-									<tbody v-for="(p,index) in form">
-										<td>
-											<el-input v-model.trim="p.logistics_number" placeholder="物流编号"></el-input>
-										</td>
-										<i class="el-icon-circle-plus" @click="orderAdd(index)" :disabled="false"></i>
-										<span>&nbsp</span>
-										<i class="el-icon-remove" @click="orderDel(index)"></i>
-										<tr v-for="(q,index) in p['form_branch']">
+
+									<tbody>
+										<tr v-for="p in form">
 											<td>
-												<el-select v-model="q.product_id" placeholder="选择产品" class="handle-select mr10">
+												<el-input v-model.trim="p.logistics_number" placeholder="物流编号"></el-input>
+											</td>
+											<el-col class="line" :span="1">-</el-col>
+											<td>
+												<el-select v-model="p.select_cate" placeholder="选择产品" class="handle-select mr10">
 													<el-option v-for="item in options" :key="item.id" :label="item.name" :value="item.id"></el-option>
 													<infinite-loading :on-infinite="onInfinite" ref="infiniteLoading"></infinite-loading>
 												</el-select>
 											</td>
-											<!--<el-col class="line" :span="1">&nbsp-</el-col>-->
+											<el-col class="line" :span="1">-</el-col>
 											<td>
 												<td>
-													<el-input v-model.trim="q.plan_sum" placeholder="计划数量"></el-input>
+													<el-input v-model.trim="p.plan_sum" placeholder="计划数量"></el-input>
 												</td>
 											</td>
+											<span @click="orderAdd">加</span>
+											<!--<span>减</span>-->
+											<!--<td><el-input v-model="p.plan_sum" placeholder="计划数量"></el-input></td>-->
+											<!--<el-form-item prop="name2">
+												<td><el-input v-model="p.plan_sum" placeholder="计划数量"></el-input></td>
+											</el-form-item>-->
+											<!--<td><el-input v-model="p.logistics_number" placeholder="物流编号" prop="name"></el-input></td>-->
+											<!--
+											<td><el-input v-model="p.plan_sum" placeholder="计划数量"></el-input></td>-->
 										</tr>
-										<span>-----</span>
 									</tbody>
+									<!--<div slot="tip" class="el-upload__tip">如果一个物流编号有多个产品,数量格式为 66/88</div>-->
 								</table>
 
 							</el-form-item>
 							<div class="newOrder">
-								<el-button @click="createOrder">添加物流单</el-button>
+								<el-button @click="createOrder">添加更多</el-button>
 								<el-button @click="back" :disabled="isDisableBu" type="danger">撤销</el-button>
 							</div>
 							<br>
@@ -100,22 +108,20 @@
 				product_id: '',
 				remark: '',
 				form: [{
-					logistics_number: '',
+					plan_sum: '',
 					form_branch: [{
-						product_id: '',
-						plan_sum: ''
-					}],
+						logistics_number: '',
+						select_cate: ''
+					},
+					{
+						logistics_number: '',
+						select_cate: ''
+					},
+					],
 				}],
 				newForm: {
-					product_id: '',
-					plan_sum: ''
-				},
-				newForm2: {
-					logistics_number: '',
-					form_branch: [{
-						product_id: '',
-						plan_sum: ''
-					}]
+					fnskus: [],
+					amounts: []
 				},
 				inputVisible: false,
 				inputVisible2: false,
@@ -186,107 +192,108 @@
 				}
 			},
 			createOrder() {
-				this.form.push(this.newForm2);
+				this.form.push(this.newForm);
 				// 添加完newPerson对象后，重置newPerson对象
-				this.newForm2 = {
-					plan_sum: '',
-					form_branch: [{
-						logistics_number: '',
-						select_cate: ''
-					}],
-				}
-
-			},
-			orderAdd(index) {
-				this.form[index]['form_branch'].push(this.newForm)
 				this.newForm = {
-					product_id: '',
-					plan_sum: ''
+					fnskus: '',
+					amounts: ''
 				}
-				console.log(this.form)
 			},
-			orderDel(index) {
-				if(this.form[index]['form_branch'].length == 1) {
-					this.$message.error("至少保留一项哦")
-					return false;
+			orderAdd() {
+				this.form[0]['form_branch'].push(this.newForm)
+				this.newForm = {
+					fnskus: '',
+					amounts: ''
 				}
-				this.form[index]['form_branch'].pop(this.newForm)
-				console.log(this.form)
 			},
 			back() {
-				this.form.pop(this.newForm2)
+				this.form.pop(this.newForm)
 			},
 			onSubmit() {
-				let logistics_number = []
-				let product_id = []
-				let plan_sum = []
-				let store_ins = []
-				this.form.forEach((data) => {
-					let temp_product_id = []
-					let temp_plan_sum = []
-					data.form_branch.forEach((data2) => {
-						temp_product_id.push(data2['product_id'])
-						temp_plan_sum.push(Number(data2['plan_sum']))
-					})
-//					product_id.push(temp_product_id)
-//					plan_sum.push(temp_plan_sum)
-					let params_temp = {
-						logistics_number: data['logistics_number'],
-						plan_sum: temp_plan_sum,
-						product_id: temp_product_id
-					}
-					store_ins.push(params_temp)
-				})
+				if(this.select_cate.length !== 0 && this.form.length !== 0) {
+					let store_ins = []
+					for(let i = 0; i < this.form.length; i++) {
+						if(this.judge_inbound(this.form[i].plan_sum)) {
 
-				
-				let params = {
-					store_ins: store_ins,
-					batch_store_in_id: this.select_batch,
-					remark: this.remark
+						} else {
+							return false
+						}
+						let store_tmp = {
+							product_id: this.select_cate,
+							plan_sum: this.form[i].plan_sum.split('/'),
+							logistics_number: this.form[i].logistics_number,
+							remark: this.remark
+						}
+						store_ins.push(store_tmp)
+					}
+					let params = {
+						store_ins: store_ins,
+						batch_store_in_id: this.select_batch,
+						remark: this.remark
+					}
+					this.$axios.post('/store_ins', params, {
+						headers: {
+							'Authorization': this.cookie.token
+						}
+					}).then((res) => {
+						console.log(res)
+						if(res.data.code == 200) {
+							this.$message.success('提交成功！')
+							this.remark = ''
+							this.form = [{
+								plan_sum: '',
+								logistics_number: ''
+							}]
+							this.$router.push('/inboundmanage')
+						}
+					}).catch((res) => {
+						this.$message.error('提交失败！');
+					})
+				} else {
+					this.$message.error('请确认格式是否正确')
+					return false
 				}
-				//				if(this.select_cate.length !== 0 && this.form.length !== 0) {
-				//					let store_ins = []
-				//					for(let i = 0; i < this.form.length; i++) {
-				//						if(this.judge_inbound(this.form[i].plan_sum)) {
-				//
-				//						} else {
-				//							return false
-				//						}
-				//						let store_tmp = {
-				//							product_id: this.select_cate,
-				//							plan_sum: this.form[i].plan_sum.split('/'),
-				//							logistics_number: this.form[i].logistics_number,
-				//							remark: this.remark
-				//						}
-				//						store_ins.push(store_tmp)
-				//					}
-				//					let params = {
-				//						store_ins: store_ins,
-				//						batch_store_in_id: this.select_batch,
-				//						remark: this.remark
-				//					}
-				this.$axios.post('/store_ins', params, {
-					headers: {
-						'Authorization': this.cookie.token
-					}
-				}).then((res) => {
-					console.log(res)
-					if(res.data.code == 200) {
-						this.$message.success('提交成功！')
-						this.remark = ''
-						this.form = [{
-							plan_sum: '',
-							logistics_number: ''
-						}]
-						this.$router.push('/inboundmanage')
-					}
-				}).catch((res) => {
-					this.$message.error('提交失败！');
-				})
-				//				} else {
-				//					this.$message.error('请确认格式是否正确')
-				//					return false
+				//				let params = {
+				//					store_ins:[{
+				//					product_id: this.product_id,
+				//					fnsku: this.fnsku,
+				//					plan_sum: plan_sum,
+				//					logistics_number: logistics_number,
+				//					remark: this.remark
+				//					},
+				//					{
+				//					product_id: this.product_id,
+				//					fnsku: this.fnsku,
+				//					plan_sum: plan_sum,
+				//					logistics_number: logistics_number
+				//					}]
 				//				}
+				//				formData.append("store_ins[]",{
+				//					product_id: this.product_id,
+				//					fnsku: this.fnsku,
+				//					plan_sum: plan_sum,
+				//					logistics_number: logistics_number
+				//				})
+				//				this.$axios.post('/store_ins', params, {
+				//					headers: {
+				//						'Authorization': token
+				//					}
+				//
+				//				}).then((res) => {
+				//					console.log(res)
+				//					if(res.data.code == 200) {
+				//						this.$message.success('提交成功！')
+				//						this.remark = ''
+				//						this.form = [{
+				//							plan_sum: '',
+				//							logistics_number: ''
+				//						}]
+				//						this.$router.push('/inboundmanage')
+				//					}
+				//				}).catch((res) => {
+				//					this.$message.error('提交失败！');
+				//				})
+
 			},
 		},
 		components: {
