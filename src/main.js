@@ -12,7 +12,9 @@ import cookie_ from './components/common/cookie'
 Vue.use(ElementUI, { size: 'small' });
 Vue.prototype.$axios = axios;
 Vue.use(judge)
-Vue.prototype.cookie = cookie_
+//Vue.prototype.cookie = cookie_
+//Vue.prototype.token_admin = localStorage.getItem('token_admin')
+//Vue.prototype.token = localStorage.getItem('token')
 
 //使用钩子函数对路由进行权限跳转
 router.beforeEach((to, from, next) => {
@@ -40,8 +42,8 @@ router.beforeEach((to, from, next) => {
     }
 })
 
-var defaultHost = window.location.protocol + "//" + window.location.hostname + ":3000"
-//var defaultHost = 'http://47.74.177.128:3000'
+//var defaultHost = window.location.protocol + "//" + window.location.hostname + ":3000"
+var defaultHost = 'http://47.74.177.128:3000'
 axios.defaults.baseURL = defaultHost
 
 axios.interceptors.response.use((config) => {

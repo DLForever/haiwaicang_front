@@ -9,6 +9,11 @@
 		<div class="container">
 			<el-table :data="data" border style="width: 100%" model="form" ref="multipleTable" @selection-change="handleSelectionChange">
 				<el-table-column type="selection" width="55"></el-table-column>
+				<el-table-column label="申请文件">
+					<template slot-scope="scope">
+						<a :href="$axios.defaults.baseURL+scope.row.url.url">查看文件</a>
+					</template>
+				</el-table-column>
 				<el-table-column prop="created_at" label="创建时间" :formatter="formatter_created_at">
 				</el-table-column>
 				<el-table-column prop="updated_at" label="更新时间" :formatter="formatter_updated_at">
@@ -106,6 +111,7 @@
 			statusFilter(status) {
 				const statusMap = {
 					3: 'success',
+					2: 'warning',
 					1: 'danger'
 				}
 				return statusMap[status]
@@ -124,7 +130,7 @@
 			getData() {
 				this.$axios.get('/apply_store_ins?page=' + this.cur_page, {
 					headers: {
-						'Authorization': this.cookie.token
+						'Authorization': localStorage.getItem('token')
 					}
 				}).then((res) => {
 					this.tableData = res.data.data
@@ -190,6 +196,8 @@
 			getStatusName(status) {
 				if(status == 1) {
 					return "待通过"
+				}else if(status == 2) {
+					return "申请失败"
 				} else {
 					return "已通过"
 				}
@@ -204,7 +212,7 @@
 				}
 				this.$axios.get('/batch_store_ins', {
 					headers: {
-						'Authorization': this.cookie.token
+						'Authorization': localStorage.getItem('token')
 					},
 					params
 				}).then((res) => {

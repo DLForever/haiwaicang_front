@@ -9,10 +9,15 @@
 		<div class="container">
 			<div class="handle-box">
 				<!--<el-button type="primary" icon="delete" class="handle-del mr10" @click="delAll">批量删除</el-button>-->
-				<el-select v-model="select_cate" placeholder="选择用户" class="handle-select mr10" @change="getUserDatasFirst">
+				<el-select v-model="select_cate" filterable remote placeholder="选择用户" :loading="loading" class="handle-select mr10" @visible-change="selectVisble" @change="getUserDatasFirst" :remote-method="remoteMethod">
 					<el-option v-for="item in options" :key="item.id" :label="item.name" :value="item.id"></el-option>
 					<infinite-loading :on-infinite="onInfinite" ref="infiniteLoading"></infinite-loading>
 				</el-select>
+				
+				<!--<el-select v-model="select_cate" filterable placeholder="选择用户" class="handle-select mr10" @change="getUserDatasFirst">
+					<el-option v-for="item in options" :key="item.id" :label="item.name" :value="item.id"></el-option>
+					<infinite-loading :on-infinite="onInfinite" ref="infiniteLoading"></infinite-loading>
+				</el-select>-->
 				<!--<el-button type="primary" icon="search" @click="allUser">所有用户</el-button>-->
 			</div>
 			<!--<el-table :data="data.slice((cur_page-1)*pagesize, cur_page*pagesize)" border style="width: 100%" model="form" ref="multipleTable" @selection-change="handleSelectionChange">-->
@@ -45,7 +50,7 @@
 									<el-button @click="detailsShow(scope.$index, scope.row)" type="text">&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp详情&nbsp&nbsp&nbsp</el-button>
 								</el-dropdown-item>
 								<el-dropdown-item>
-									<el-button @click="handleEdit(scope.$index, scope.row)" type="text">创建用户批次</el-button>
+									<el-button @click="handleEdit(scope.$index, scope.row)" type="text">处理用户批次</el-button>
 								</el-dropdown-item>
 								<!--<el-dropdown-item>
 									<el-button @click="handleDelete(scope.$index, scope.row)" type="text">删除</el-button>
@@ -67,6 +72,7 @@
 			<span>确定创建批次吗？</span>
 			<span slot="footer" class="dialog-footer">
                 <el-button @click="editVisible = false">取 消</el-button>
+                <el-button type="danger" @click="refuseEdit('form')">拒 绝</el-button>
                 <el-button type="primary" @click="saveEdit('form')">确 定</el-button>
             </span>
 		</el-dialog>
@@ -103,6 +109,7 @@
 			return {
 				url: './static/vuetable.json',
 				paginationShow: true,
+				query: undefined,
 				tableData: [],
 				options: [],
 				batch_list: [],
@@ -115,6 +122,7 @@
 				select_cate: '',
 				select_word: '',
 				del_list: [],
+				loading: false,
 				is_search: false,
 				editVisible: false,
 				delVisible: false,
@@ -145,7 +153,7 @@
 		},
 		created() {
 			this.getData();
-			this.getUser();
+//			this.getUser();
 		},
 		watch: {
 			"$route": "getData",
@@ -186,7 +194,7 @@
 			getData() {			
 				this.$axios.get('/admin/apply_store_ins?page=' + this.cur_page + '&user_id=' + this.select_cate, {
 					headers: {
-						'Authorization': this.cookie.token_admin
+						'Authorization': localStorage.getItem('token_admin')
 					},
 				}).then((res) => {
 					this.tableData = res.data.data;
@@ -200,10 +208,13 @@
 				this.getData()
 				this.select_cate = ''
 			},
+			searchUser() {
+				
+			},
 			getUser(callback = undefined) {
 				this.$axios.get('/admin/users?page=' + this.user_page, {
 					headers: {
-						'Authorization': this.cookie.token_admin
+						'Authorization': localStorage.getItem('token_admin')
 					},
 				}).then((res) => {
 					if(res.data.code == 200) {
@@ -215,12 +226,53 @@
 					}
 				})
 			},
+			selectVisble(visible) {
+				if(visible){
+					this.query = undefined
+				  	this.remoteMethod("")
+				}  
+			},
+			remoteMethod(query,callback=undefined) {
+				if(query != "" || this.query != "" || callback){
+					let reload = false
+					if(this.query != query){
+						this.loading = true
+						this.user_page = 1
+						this.query = query
+						reload = true
+						if(this.$refs.infiniteLoading.isComplete){
+							this.$refs.infiniteLoading.stateChanger.reset()
+						}
+					}
+					this.$axios.get("/admin/users/search_user?query=" + query.trim()+"&page="+this.user_page, {
+						headers: {
+						'Authorization': localStorage.getItem('token_admin')
+					},
+					}).then((res) => {
+						if(res.data.code == 200){
+							this.loading = false
+//							this.options = res.data.data							
+							if(reload){
+								this.options = res.data.data
+							}else{
+								this.options = this.options.concat(res.data.data)
+							}
+							this.user_total = res.data.count
+							if(callback){
+								callback()
+							}
+						}
+					}).catch((res) => {
+						console.log('失败')
+					})
+				}
+			},
 			getUserDatasFirst() {
 				this.paginationShow = false				
 				this.cur_page = 1
 				this.$axios.get('/admin/apply_store_ins?page=' + this.cur_page + '&user_id=' + this.select_cate, {
 					headers: {
-						'Authorization': this.cookie.token_admin
+						'Authorization': localStorage.getItem('token_admin')
 					},
 				}).then((res) => {
 					this.tableData = res.data.data
@@ -231,7 +283,7 @@
 			getUserDatas() {
 				this.$axios.get('/admin/apply_store_ins?page=' + this.cur_page + '&user_id=' + this.select_cate, {
 					headers: {
-						'Authorization': this.cookie.token_admin
+						'Authorization': localStorage.getItem('token_admin')
 					},
 				}).then((res) => {
 					this.tableData = res.data.data
@@ -241,7 +293,7 @@
 			getWarehouse(callback = undefined) {
 				this.$axios.get('/admin/warehouses?page=' + this.ware_page, {
 					headers: {
-						'Authorization': this.cookie.token_admin
+						'Authorization': localStorage.getItem('token_admin')
 					},
 				}).then((res) => {
 					if(res.data.code == 200) {
@@ -257,7 +309,8 @@
 			onInfinite(obj) {
 				if((this.user_page * 20) < this.user_total) {
 					this.user_page += 1
-					this.getUser(obj.loaded)
+//					this.getUser(obj.loaded)
+					this.remoteMethod(this.query,obj.loaded)
 				} else {
 					obj.complete()
 				}
@@ -315,7 +368,7 @@
 					user_id: user_id,
 				}, {
 					headers: {
-						'Authorization': this.cookie.token_admin
+						'Authorization': localStorage.getItem('token_admin')
 					},
 				}).then((res) => {
 					if(res.data.code == 200) {
@@ -325,6 +378,21 @@
 					}
 				}).catch((res) => {
 					this.$message.error(res)
+				})
+			},
+			refuseEdit(form) {
+				this.$axios.delete('/admin/apply_store_ins/' + this.form.apply_store_in_id, {
+					headers: {
+						'Authorization': localStorage.getItem('token_admin')
+					}
+				}).then((res) => {
+					if(res.data.code == 200) {
+						this.editVisible = false;
+						this.$message.success("已拒绝")
+						this.getData()
+					}
+				}).catch((res) => {
+					this.$message.error(res.data.message)
 				})
 			},
 			handleDelete(index, row) {
@@ -340,7 +408,7 @@
 				}
 				this.$axios.delete('/admin/store_ins/' + this.form.id, {
 					headers: {
-						'Authorization': this.cookie.token_admin
+						'Authorization': localStorage.getItem('token_admin')
 					}
 				}).then((res) => {
 					if(res.data.code == 200) {
@@ -365,7 +433,7 @@
 			detailsShow(index, row) {
 				this.$axios.get('/admin/batch_store_ins?apply_store_in_id=' + row.id, {
 					headers: {
-						'Authorization': this.cookie.token_admin
+						'Authorization': localStorage.getItem('token_admin')
 					},
 				}).then((res) => {
 					this.batch_list = res.data.data

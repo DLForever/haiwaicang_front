@@ -174,7 +174,7 @@
 				};
 				this.$axios.get('/store_ins?page=' + this.cur_page, {
 					headers: {
-						'Authorization': this.cookie.token
+						'Authorization': localStorage.getItem('token')
 					},
 					//                  page: this.cur_page
 				}).then((res) => {
@@ -234,7 +234,7 @@
 				}
 				this.$axios.delete('/store_ins/' + this.form.id, {
 					headers: {
-						'Authorization': this.cookie.token
+						'Authorization': localStorage.getItem('token')
 					}
 				}).then((res) => {
 					if(res.data.code == 200) {
@@ -265,7 +265,7 @@
 						}
 						this.$axios.delete('/store_ins/' + this.form.id, {
 							headers: {
-								'Authorization': this.cookie.token
+								'Authorization': localStorage.getItem('token')
 							},
 							params
 						}).then((res) => {

@@ -158,7 +158,7 @@
 //                  this.url = '/ms/table/list';
                 };
                 this.$axios.get( '/products?page='+this.cur_page, {
-                	headers: {'Authorization': this.cookie.token}
+                	headers: {'Authorization': localStorage.getItem('token')}
                 },
                 ).then((res) => {
                     this.tableData = res.data.data
@@ -226,7 +226,7 @@
             	}
             	this.$axios.delete('/products/'+this.form.id, 
             	{
-            		headers: {'Authorization': this.cookie.token}
+            		headers: {'Authorization': localStorage.getItem('token')}
             	}
             ).then((res) => {
             	if(res.data.code == 200){

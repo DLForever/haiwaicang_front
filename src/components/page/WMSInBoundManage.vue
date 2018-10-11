@@ -9,12 +9,18 @@
 		<div class="container">
 			<div class="handle-box">
 				<!--<el-button type="primary" icon="delete" class="handle-del mr10" @click="delAll">批量删除</el-button>-->
-				<el-select v-model="select_cate" placeholder="选择用户" class="handle-select mr10" @change="getUserDatasFirst">
+				<el-select v-model="select_cate" filterable remote placeholder="选择用户" :loading="loading" class="handle-select mr10" @visible-change="test" @change="getUserDatasFirst" :remote-method="remoteMethod">
 					<el-option v-for="item in options" :key="item.id" :label="item.name" :value="item.id"></el-option>
 					<infinite-loading :on-infinite="onInfinite" ref="infiniteLoading"></infinite-loading>
 				</el-select>
-				<el-button type="primary" icon="search" @click="allUser">所有用户</el-button>
+				
+				<el-select v-model="select_batch" filterable remote placeholder="选择批次" :loading="loading2" class="handle-select mr10 batch_box" @visible-change="batchVisible" @change="getBatchsDatas" :remote-method="remoteMethodBatch">
+					<el-option v-for="item in batchoptions" :key="item.id" :label="item.batch_number" :value="item.id"></el-option>
+					<infinite-loading :on-infinite="onInfinite_batch" ref="infiniteLoading2"></infinite-loading>
+				</el-select>
+				<!--<el-button type="primary" icon="search" @click="allUser">所有用户</el-button>-->
 			</div>
+			
 			<!--<el-table :data="data.slice((cur_page-1)*pagesize, cur_page*pagesize)" border style="width: 100%" model="form" ref="multipleTable" @selection-change="handleSelectionChange">-->
 			<el-table :data="data" border style="width: 100%" model="form" ref="multipleTable" @selection-change="handleSelectionChange">
 				<el-table-column type="selection" width="55"></el-table-column>
@@ -141,23 +147,33 @@
 			return {
 				url: './static/vuetable.json',
 				paginationShow: true,
+				batchDisabled: true,
 				tableData: [],
-				options: [],
+				options: [{id: -1, name: "所有用户"},],
+				options2: [{id: -1, name: "所有用户"},],
+				batchoptions: [],
+				batch_total: 0,
 				wareoptions: [],
 				ware_details: [],
 				cur_page: 1,
 				user_page: 1,
 				ware_page: 1,
+				batch_page: 1,
 				ware_total: 0,
 				pagesize: 20,
 				multipleSelection: [],
 				select_cate: '',
+				select_batch: '',
 				select_word: '',
 				del_list: [],
 				is_search: false,
 				editVisible: false,
 				delVisible: false,
 				detailVisible: false,
+				query: undefined,
+				query2: undefined,
+				loading: false,
+				loading2: false,
 				totals: 0,
 				user_total: 0,
 				product_store_ins_change: [],
@@ -198,6 +214,13 @@
 				return this.tableData.filter((d) => {
 					return d
 				})
+			},
+			batchDisableds(){
+				if(this.select_cate != "") {
+				return this.batchDisabled = false
+			}else {
+				return this.batchDisabled = true
+			}
 			}
 		},
 		filters: {
@@ -230,7 +253,7 @@
 				};				
 				this.$axios.get('/admin/store_ins?page=' + this.cur_page, {
 					headers: {
-						'Authorization': this.cookie.token_admin
+						'Authorization': localStorage.getItem('token_admin')
 					},
 					//					page: this.cur_page
 				}).then((res) => {
@@ -255,7 +278,7 @@
 			getUser(callback = undefined) {
 				this.$axios.get('/admin/users?page=' + this.user_page, {
 					headers: {
-						'Authorization': this.cookie.token_admin
+						'Authorization': localStorage.getItem('token_admin')
 					},
 				}).then((res) => {
 					if(res.data.code == 200) {
@@ -267,12 +290,126 @@
 					}
 				})
 			},
+			test(visible){
+				if(visible){
+					this.query = undefined
+				  	this.remoteMethod("")
+				}  
+			},
+			batchVisible(visible){
+				if(visible){
+					this.query2 = undefined
+				  	this.remoteMethodBatch("")
+				}  
+			},
+			remoteMethod(query,callback=undefined) {
+				this.select_batch = ''
+				console.log("remote")
+				console.log(query)
+				console.log(this.query)
+				if(query != "" || this.query != "" || callback){
+					let reload = false
+					if(this.query != query){
+						this.loading = true
+						this.user_page = 1
+						this.query = query
+						reload = true
+						if(this.$refs.infiniteLoading.isComplete){
+							this.$refs.infiniteLoading.stateChanger.reset()
+						}
+					}
+					console.log(this.user_page)
+					this.$axios.get("/admin/users/search_user?query=" + query.trim()+"&page="+this.user_page, {
+						headers: {
+						'Authorization': localStorage.getItem('token_admin')
+					},
+					}).then((res) => {
+						if(res.data.code == 200){
+							this.loading = false
+//							this.options = res.data.data
+							if(reload){
+//								this.user_page = 1
+								this.options = this.options2.concat(res.data.data)
+							}else{
+								this.options = this.options.concat(res.data.data)
+							}
+//							this.options = this.options.concat(res.data.data)
+							this.user_total = res.data.count
+							if(callback){
+								callback()
+							}
+						}
+					}).catch((res) => {
+						console.log('失败')
+					})
+				}
+			},
+			remoteMethodBatch(query,callback=undefined){
+				this.select_cate = ''
+				console.log("remote")
+				console.log(query)
+				console.log(this.query2)
+				if(query != "" || this.query2 != "" || callback){
+					let reload = false
+					if(this.query2 != query){
+						this.loading2 = true
+						this.batch_page = 1
+						this.query2 = query
+						reload = true
+						if(this.$refs.infiniteLoading2.isComplete){
+							this.$refs.infiniteLoading2.stateChanger.reset()
+						}
+					}
+					console.log(this.user_page)
+					this.$axios.get("/admin/batch_store_ins/search_batch?query=" + query.trim()+"&page="+this.batch_page, {
+						headers: {
+						'Authorization': localStorage.getItem('token_admin')
+					},
+					}).then((res) => {
+						if(res.data.code == 200){
+							console.log(res.data.data)
+							this.loading2 = false
+//							this.options = res.data.data
+							if(reload){
+//								this.user_page = 1
+								this.batchoptions = res.data.data
+							}else{
+								this.batchoptions = this.batchoptions.concat(res.data.data)
+							}
+//							this.options = this.options.concat(res.data.data)
+							this.batch_total = res.data.count
+							if(callback){
+								callback()
+							}
+						}
+					}).catch((res) => {
+						console.log('失败')
+					})
+				}
+			},
 			getUserDatasFirst() {
+				if(this.select_cate == -1) {
+					this.getData()
+					return
+				}
 				this.paginationShow = false				
 				this.cur_page = 1
 				this.$axios.get('/admin/store_ins?page=' + this.cur_page + '&user_id=' + this.select_cate, {
 					headers: {
-						'Authorization': this.cookie.token_admin
+						'Authorization': localStorage.getItem('token_admin')
+					},
+				}).then((res) => {
+					this.tableData = res.data.data
+					this.totals = res.data.count
+					this.paginationShow = true
+				})
+			},
+			getBatchsDatas() {
+				this.paginationShow = false				
+				this.cur_page = 1
+				this.$axios.get('/admin/store_ins/search_by_batch?page=' + this.cur_page + '&batch_id=' + this.select_batch, {
+					headers: {
+						'Authorization': localStorage.getItem('token_admin')
 					},
 				}).then((res) => {
 					this.tableData = res.data.data
@@ -283,7 +420,7 @@
 			getUserDatas() {
 				this.$axios.get('/admin/store_ins?page=' + this.cur_page + '&user_id=' + this.select_cate, {
 					headers: {
-						'Authorization': this.cookie.token_admin
+						'Authorization': localStorage.getItem('token_admin')
 					},
 				}).then((res) => {
 					this.tableData = res.data.data
@@ -293,7 +430,7 @@
 			getWarehouse(callback = undefined) {
 				this.$axios.get('/admin/warehouses?page=' + this.ware_page, {
 					headers: {
-						'Authorization': this.cookie.token_admin
+						'Authorization': localStorage.getItem('token_admin')
 					},
 				}).then((res) => {
 					if(res.data.code == 200) {
@@ -309,9 +446,21 @@
 			onInfinite(obj) {
 				if((this.user_page * 20) < this.user_total) {
 					this.user_page += 1
-					this.getUser(obj.loaded)
+					this.remoteMethod(this.query,obj.loaded)
+//					this.getUser(obj.loaded)
 				} else {
 					obj.complete()
+					console.log(obj.complete())
+				}
+			},
+			onInfinite_batch(obj) {
+				if((this.batch_page * 20) < this.batch_total) {
+					this.batch_page += 1
+					this.remoteMethodBatch(this.query2,obj.loaded)
+//					this.getUser(obj.loaded)
+				} else {
+					obj.complete()
+					console.log(obj.complete())
 				}
 			},
 			onInfinite_ware(obj) {
@@ -340,7 +489,7 @@
 				const item = this.tableData[index];
 				this.$axios.get('/admin/store_ins/' + item.id, {
 					headers: {
-						'Authorization': this.cookie.token_admin
+						'Authorization': localStorage.getItem('token_admin')
 					},
 				}).then((res) => {
 					res.data.data.product_store_ins.forEach((data) => {
@@ -410,7 +559,7 @@
 //					ware_houses: ware
 				}, {
 					headers: {
-						'Authorization': this.cookie.token_admin
+						'Authorization': localStorage.getItem('token_admin')
 					},
 				}).then((res) => {
 					if(res.data.code == 200) {
@@ -435,7 +584,7 @@
 				}
 				this.$axios.delete('/admin/store_ins/' + this.form.id, {
 					headers: {
-						'Authorization': this.cookie.token_admin
+						'Authorization': localStorage.getItem('token_admin')
 					}
 				}).then((res) => {
 					if(res.data.code == 200) {
@@ -460,7 +609,7 @@
 			detailsShow(index, row) {
 				this.$axios.get('/admin/store_ins/' + row.id, {
 					headers: {
-						'Authorization': this.cookie.token_admin
+						'Authorization': localStorage.getItem('token_admin')
 					},
 				}).then((res) => {
 					res.data.data.product_store_ins.forEach((data) => {
@@ -484,6 +633,10 @@
 <style scoped>
 	.handle-box {
 		margin-bottom: 20px;
+	}
+	
+	.batch_box {
+		float: right;
 	}
 	
 	.handle-select {

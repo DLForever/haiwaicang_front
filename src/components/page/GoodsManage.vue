@@ -251,7 +251,7 @@
 				};
 				this.$axios.get('/cargos?page=' + this.cur_page, {
 					headers: {
-						'Authorization': this.cookie.token
+						'Authorization': localStorage.getItem('token')
 					}
 				}).then((res) => {
 					this.tableData = res.data.data
@@ -342,7 +342,7 @@
 						formData.append('remark', this.form.remark)
 						let config = {
 							headers: {
-								'Authorization': this.cookie.token
+								'Authorization': localStorage.getItem('token')
 							}
 						}
 						this.$axios.post('/orders', formData, config).then((res) => {
@@ -376,7 +376,7 @@
 						}
 						let config = {
 							headers: {
-								'Authorization': this.cookie.token
+								'Authorization': localStorage.getItem('token')
 							}
 						}
 						this.$axios.post('/store_outs', params, config).then((res) => {
@@ -450,7 +450,7 @@
 				}
 				let config = {
 					headers: {
-						'Authorization': this.cookie.token
+						'Authorization': localStorage.getItem('token')
 					}
 				}
 				this.$axios.post('/store_outs', params, config).then((res) => {

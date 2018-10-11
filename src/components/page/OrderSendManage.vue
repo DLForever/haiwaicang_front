@@ -208,7 +208,7 @@
 				};
 				this.$axios.get('/store_outs?page' + this.cur_page, {
 					headers: {
-						'Authorization': this.cookie.token
+						'Authorization': localStorage.getItem('token')
 					},
 				}).then((res) => {
 					this.tableData = res.data.data;
@@ -273,7 +273,7 @@
 						}
 						this.$axios.delete('/store_outs/' + this.form.id, {
 							headers: {
-								'Authorization': this.cookie.token
+								'Authorization': localStorage.getItem('token')
 							},
 							params
 						}).then((res) => {
@@ -316,7 +316,7 @@
 				})
 				let config = {
 					headers: {
-						'Authorization': this.cookie.token
+						'Authorization': localStorage.getItem('token')
 					}
 				}
 				this.$axios.post('/store_outs/' + this.form.id + '/upload_image', formData, config).then((res) => {
@@ -375,7 +375,7 @@
 				//				this.detailVisible = true;
 				this.$axios.get('/store_outs/' + row.id, {
 					headers: {
-						'Authorization': this.cookie.token
+						'Authorization': localStorage.getItem('token')
 					},
 				}).then((res) => {
 					res.data.data.store_out_boxes.forEach((data) => {

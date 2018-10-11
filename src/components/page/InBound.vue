@@ -35,7 +35,7 @@
 										<tr v-for="(q,index) in p['form_branch']">
 											<td>
 												<el-select v-model="q.product_id" placeholder="选择产品" class="handle-select mr10">
-													<el-option v-for="item in options" :key="item.id" :label="item.name" :value="item.id"></el-option>
+													<el-option v-for="item in options" :key="item.id" :label="item.fnsku" :value="item.id"></el-option>
 													<infinite-loading :on-infinite="onInfinite" ref="infiniteLoading"></infinite-loading>
 												</el-select>
 											</td>
@@ -65,18 +65,21 @@
 						</el-form>
 					</div>
 				</el-tab-pane>
-				<!--<el-tab-pane label="批量上传" name="second">
+				<el-tab-pane label="批量上传" name="second">
 					<el-form label-width="85px">
 						<el-form-item label="批量上传">
-							<el-upload class="upload-demo" drag action="https://jsonplaceholder.typicode.com/posts/" multiple>
+							<el-upload class="upload-demo" drag action="" :file-list="fileList" :on-remove="handleRemove" :on-exceed="exceed" :auto-upload="false" :on-change="changeFile" :limit="1" multiple>
 								<i class="el-icon-upload"></i>
 								<div class="el-upload__text">将文件拖到此处，或<em>点击上传</em></div>
-								<div class="el-upload__tip" slot="tip">只能上传xls文件</div>
+								<div class="el-upload__tip" slot="tip">只能上传xls/xlsx文件</div>
 							</el-upload>
 							<a href="">模板下载</a>
 						</el-form-item>
+						<el-form-item>
+							<el-button type="primary" @click="addFile">上传</el-button>
+						</el-form-item>
 					</el-form>
-				</el-tab-pane>-->
+				</el-tab-pane>
 			</el-tabs>
 		</div>
 	</div>
@@ -96,6 +99,7 @@
 				batch_page: 1,
 				options: [],
 				batch_options: [],
+				fileList: [],
 				select_batch: '',
 				product_id: '',
 				remark: '',
@@ -151,7 +155,7 @@
 			getData() {
 				this.$axios.get('/products?page=' + this.cur_page, {
 					headers: {
-						'Authorization': this.cookie.token
+						'Authorization': localStorage.getItem('token')
 					}
 				}).then((res) => {
 					this.options = this.options.concat(res.data.data)
@@ -161,7 +165,7 @@
 			getBatchInbound() {
 				this.$axios.get('/batch_store_ins/available_index?page=' + this.batch_page, {
 					headers: {
-						'Authorization': this.cookie.token
+						'Authorization': localStorage.getItem('token')
 					}
 				}).then((res) => {
 					this.batch_options = this.batch_options.concat(res.data.data)
@@ -228,8 +232,6 @@
 						temp_product_id.push(data2['product_id'])
 						temp_plan_sum.push(Number(data2['plan_sum']))
 					})
-//					product_id.push(temp_product_id)
-//					plan_sum.push(temp_plan_sum)
 					let params_temp = {
 						logistics_number: data['logistics_number'],
 						plan_sum: temp_plan_sum,
@@ -237,37 +239,14 @@
 					}
 					store_ins.push(params_temp)
 				})
-
-				
 				let params = {
 					store_ins: store_ins,
 					batch_store_in_id: this.select_batch,
 					remark: this.remark
 				}
-				//				if(this.select_cate.length !== 0 && this.form.length !== 0) {
-				//					let store_ins = []
-				//					for(let i = 0; i < this.form.length; i++) {
-				//						if(this.judge_inbound(this.form[i].plan_sum)) {
-				//
-				//						} else {
-				//							return false
-				//						}
-				//						let store_tmp = {
-				//							product_id: this.select_cate,
-				//							plan_sum: this.form[i].plan_sum.split('/'),
-				//							logistics_number: this.form[i].logistics_number,
-				//							remark: this.remark
-				//						}
-				//						store_ins.push(store_tmp)
-				//					}
-				//					let params = {
-				//						store_ins: store_ins,
-				//						batch_store_in_id: this.select_batch,
-				//						remark: this.remark
-				//					}
 				this.$axios.post('/store_ins', params, {
 					headers: {
-						'Authorization': this.cookie.token
+						'Authorization': localStorage.getItem('token')
 					}
 				}).then((res) => {
 					console.log(res)
@@ -283,11 +262,44 @@
 				}).catch((res) => {
 					this.$message.error('提交失败！');
 				})
-				//				} else {
-				//					this.$message.error('请确认格式是否正确')
-				//					return false
-				//				}
 			},
+			addFile() {
+				if(this.fileList.length == 0) {
+					this.$message.error("请选择xlsx文件")
+					return false;
+				}
+				let formData = new FormData()
+				let config = {
+					headers: {
+						'Authorization': localStorage.getItem('token')
+					}
+				}
+				this.fileList.forEach((item) => {
+					formData.append('file', item.raw)
+				})
+				formData.append('remark', this.remark)
+				this.$axios.post('', formData, config).then((res) => {
+					if(res.data.code == 200) {
+						this.$message.success("提交成功")
+						this.fileList = []
+						this.remark = ''
+					}
+				}).catch((res) => {
+					this.$message.error("失败，请核对无误后联系管理员")
+				})
+			},
+			uploadError(res, file, FileList) {
+				console.log('上传失败，请重试！')
+			},
+			changeFile(file) {
+				this.fileList.push(file)
+			},
+			handleRemove(a, b) {
+				this.fileList = b
+			},
+			exceed() {
+				this.$message.error("对不起，超过个数限制")
+			}
 		},
 		components: {
 			"infinite-loading": VueInfiniteLoading

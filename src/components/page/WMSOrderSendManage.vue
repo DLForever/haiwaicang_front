@@ -13,11 +13,15 @@
 					<el-option key="1" label="广东省" value="广东省"></el-option>
 					<el-option key="2" label="湖南省" value="湖南省"></el-option>
 				</el-select>-->
-				<el-select v-model="select_cate" placeholder="选择用户" class="handle-select mr10" @change="getUserDatasFirst">
+				<el-select v-model="select_cate" filterable remote placeholder="选择用户" class="handle-select mr10" :loading="loading" @change="getUserDatasFirst" @visible-change="selectVisble" :remote-method="remoteMethod">
 					<el-option v-for="item in options" :label="item.name" :value="item.id"></el-option>
 					<infinite-loading :on-infinite="onInfinite" ref="infiniteLoading"></infinite-loading>
 				</el-select>
-				<el-button type="primary" icon="search" @click="allUser">所有用户</el-button>
+				<div class="fnsku_filter">
+					<el-input style="width:150px" placeholder="请输入fnsku" v-model="search_fnsku"></el-input>
+					<el-button @click="filter_fnsku()" type="primary">查询</el-button>
+				</div>
+				<!--<el-button type="primary" icon="search" @click="allUser">所有用户</el-button>-->
 				<!--<el-input v-model="select_word" placeholder="筛选fnsku" class="handle-input mr10"></el-input>-->
 				<!--<el-button type="primary" icon="search" @click="search">搜索</el-button>-->
 			</div>
@@ -229,7 +233,8 @@
 				tableData: [],
 				store_outs_details: [],
 				box_store_details: [],
-				options: [],
+				options: [{id: -1, name: "所有用户"},],
+				options2: [{id: -1, name: "所有用户"},],
 				box_options: [],
 				boxes: [],
 				dynamicTags: [],
@@ -249,6 +254,7 @@
 				multipleSelection: [],
 				select_cate: '',
 				select_word: '',
+				search_fnsku: '',
 				del_list: [],
 				warehouse_info: [],
 				temp: [],
@@ -259,6 +265,8 @@
 				sendProductVisible: false,
 				detailVisible: false,
 				paginationShow: true,
+				loading: false,
+				query: undefined,
 				cargo_ids: [],
 				cargo_store_outs: [],
 				form: {
@@ -307,7 +315,7 @@
 		},
 		created() {
 			this.getData();
-			this.getUser()
+//			this.getUser()
 		},
 		watch: {
 			"$route": "getData"
@@ -356,7 +364,7 @@
 				};
 				this.$axios.get('/admin/store_outs?page=' + this.cur_page, {
 					headers: {
-						'Authorization': this.cookie.token_admin
+						'Authorization': localStorage.getItem('token_admin')
 					}
 				}).then((res) => {
 					//					res.data.data.forEach((data) => {
@@ -381,7 +389,7 @@
 			getUser(callback = undefined) {
 				this.$axios.get('/admin/users?page=' + this.user_page, {
 					headers: {
-						'Authorization': this.cookie.token_admin
+						'Authorization': localStorage.getItem('token_admin')
 					},
 				}).then((res) => {
 					if(res.data.code == 200) {
@@ -393,10 +401,71 @@
 					}
 				})
 			},
+			selectVisble(visible) {
+				if(visible){
+					this.query = undefined
+				  	this.remoteMethod("")
+				}  
+			},
+			remoteMethod(query,callback=undefined) {
+				if(query != "" || this.query != "" || callback){
+					let reload = false
+					if(this.query != query){
+						this.loading = true
+						this.user_page = 1
+						this.query = query
+						reload = true
+						if(this.$refs.infiniteLoading.isComplete){
+							this.$refs.infiniteLoading.stateChanger.reset()
+						}
+					}
+					this.$axios.get("/admin/users/search_user?query=" + query.trim()+"&page="+this.user_page, {
+						headers: {
+						'Authorization': localStorage.getItem('token_admin')
+					},
+					}).then((res) => {
+						if(res.data.code == 200){
+							this.loading = false
+//							this.options = res.data.data
+							if(reload){
+								this.options = this.options2.concat(res.data.data)
+							}else{
+								this.options = this.options.concat(res.data.data)
+							}
+							this.user_total = res.data.count
+							if(callback){
+								callback()
+							}
+						}
+					}).catch((res) => {
+						console.log('失败')
+					})
+				}
+			},
+			filter_fnsku() {
+				if(this.search_fnsku.trim() == '') {
+					this.$message.error("请输入fnsku")
+					return false
+				}
+				this.paginationShow = false
+				this.$axios.get("/admin/store_outs/search_by_fnsku?query=" + this.search_fnsku.trim() +"&page=" + this.user_page, {
+					headers: {
+						'Authorization': localStorage.getItem('token_admin')
+					},
+				}).then((res) => {
+					if(res.data.code == 200) {
+						this.tableData = res.data.data
+						this.totals = res.data.count
+						this.paginationShow = true
+					}
+				}).catch((res) => {
+					
+				})
+			},
 			getBoxs(callback = undefined) {
 				this.$axios.get('/admin/boxes?page=' + this.box_page, {
 					headers: {
-						'Authorization': this.cookie.token_admin
+						'Authorization': localStorage.getItem('token_admin')
 					},
 				}).then((res) => {
 					if(res.data.code == 200) {
@@ -409,11 +478,15 @@
 				})
 			},
 			getUserDatasFirst() {
+				if(this.select_cate == -1) {
+					this.getData()
+					return
+				}
 				this.paginationShow = false
 				this.cur_page = 1
 				this.$axios.get('/admin/store_outs?page=' + this.cur_page + '&user_id=' + this.select_cate, {
 					headers: {
-						'Authorization': this.cookie.token_admin
+						'Authorization': localStorage.getItem('token_admin')
 					},
 				}).then((res) => {
 					this.tableData = res.data.data
@@ -424,7 +497,7 @@
 			getUserDatas() {
 				this.$axios.get('/admin/store_outs?page=' + this.cur_page + '&user_id=' + this.select_cate, {
 					headers: {
-						'Authorization': this.cookie.token_admin
+						'Authorization': localStorage.getItem('token_admin')
 					},
 				}).then((res) => {
 					this.tableData = res.data.data
@@ -434,7 +507,8 @@
 			onInfinite(obj) {
 				if((this.user_page * 20) < this.user_total) {
 					this.user_page += 1
-					this.getUser(obj.loaded)
+					this.remoteMethod(this.query,obj.loaded)
+//					this.getUser(obj.loaded)
 				} else {
 					obj.complete()
 				}
@@ -464,7 +538,7 @@
 				const item = this.tableData[index];
 				this.$axios.get('/admin/store_outs/' + item.id, {
 					headers: {
-						'Authorization': this.cookie.token_admin
+						'Authorization': localStorage.getItem('token_admin')
 					},
 				}).then((res) => {
 					res.data.data.cargo_store_outs.forEach((data) => {
@@ -488,7 +562,7 @@
 					}
 					this.$axios.get('/admin/cargos/warehouse_info', {
 						headers: {
-							'Authorization': this.cookie.token_admin
+							'Authorization': localStorage.getItem('token_admin')
 						},
 						params
 					}).then((res) => {
@@ -596,7 +670,7 @@
 				}
 				this.$axios.post('/admin/store_outs/' + this.form.id + '/done_package', params, {
 					headers: {
-						'Authorization': this.cookie.token_admin
+						'Authorization': localStorage.getItem('token_admin')
 					},
 				}).then((res) => {
 					if(res.data.code == 200) {
@@ -630,7 +704,7 @@
 				}
 				this.$axios.post('/admin/store_outs/' + this.form.id + '/done', params, {
 					headers: {
-						'Authorization': this.cookie.token_admin
+						'Authorization': localStorage.getItem('token_admin')
 					},
 				}).then((res) => {
 					if(res.data.code == 200) {
@@ -675,7 +749,7 @@
 				}
 				this.$axios.delete('/admin/store_outs/' + this.form.id, {
 					headers: {
-						'Authorization': this.cookie.token_admin
+						'Authorization': localStorage.getItem('token_admin')
 					}
 				}).then((res) => {
 					if(res.data.code == 200) {
@@ -716,7 +790,7 @@
 				this.idx = index;
 				this.$axios.get('/admin/store_outs/' + row.id, {
 					headers: {
-						'Authorization': this.cookie.token_admin
+						'Authorization': localStorage.getItem('token_admin')
 					},
 				}).then((res) => {
 					res.data.data.store_out_boxes.forEach((data) => {
@@ -776,6 +850,10 @@
 <style scoped>
 	.handle-box {
 		margin-bottom: 20px;
+	}
+	
+	.fnsku_filter {
+		float: right;
 	}
 	
 	.handle-select {

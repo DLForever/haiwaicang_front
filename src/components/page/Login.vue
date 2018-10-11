@@ -70,7 +70,7 @@
 						).then((res) => {
 							localStorage.setItem('ms_username', this.ruleForm.username);
 							localStorage.setItem('token', res.data.data.token);
-							console.log(res)
+							console.log(localStorage.getItem('token'))
 							this.$router.push('/');
 						}).catch((res) => {
 							this.$message.error('用户名或密码错误')
@@ -97,6 +97,7 @@
 							localStorage.setItem('ms_username', this.ruleForm.username);
 							localStorage.setItem('token_admin', res.data.data.token);
 							console.log(res)
+							console.log('token:' + localStorage.getItem('token_admin'))
 							this.$router.push('/');
 						}).catch((res) => {
 							this.$message.error('用户名或密码错误')

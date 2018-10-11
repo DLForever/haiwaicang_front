@@ -83,7 +83,7 @@
 //						})
 //						let config = {
 //							headers: {
-//								'Authorization': this.cookie.token_admin
+//								'Authorization': this.token_admin
 //							}
 //						}
 //						this.$axios.post('http://47.74.177.128:3000/products', formData, config).then((res) => {

@@ -172,7 +172,7 @@
 				}
 				this.$axios.get('/orders?page=' + this.cur_page, {
 					headers: {
-						'Authorization': this.cookie.token
+						'Authorization': localStorage.getItem('token')
 					},
 					params
 				}).then((res) => {
@@ -231,7 +231,7 @@
 						}
 						this.$axios.delete('/orders/' + this.form.id, {
 							headers: {
-								'Authorization': this.cookie.token
+								'Authorization': localStorage.getItem('token')
 							},
 							params
 						}).then((res) => {

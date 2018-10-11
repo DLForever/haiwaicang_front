@@ -14,7 +14,7 @@
 							<el-upload class="upload-demo" drag action="" :file-list="fileList" :on-remove="handleRemove" :on-exceed="exceed" :auto-upload="false" :on-change="changeFile" :limit="1" multiple>
 								<i class="el-icon-upload"></i>
 								<div class="el-upload__text">将文件拖到此处，或<em>点击上传</em></div>
-								<div class="el-upload__tip" slot="tip">只能上传xlsx文件</div>
+								<div class="el-upload__tip" slot="tip">只能上传xls/xlsx文件</div>
 							</el-upload>
 							<!--<a href="">模板下载</a>-->
 						</el-form-item>
@@ -52,7 +52,7 @@
 				let formData = new FormData()
 				let config = {
 					headers: {
-						'Authorization': this.cookie.token
+						'Authorization': localStorage.getItem('token')
 					}
 				}
 				this.fileList.forEach((item) => {
@@ -68,10 +68,7 @@
 				}).catch((res) => {
 					this.$message.error("失败，请核对无误后联系管理员")
 				})
-			},
-			uploadError(res, file, FileList) {
-				console.log('上传失败，请重试！')
-			},
+			},			
 			beforeUpload(file) {
                 const extension = file.name.split('.')[1] === 'xls';
                 const extension2 = file.name.split('.')[1] === 'xlsx';
@@ -87,6 +84,9 @@
                     return false
                 }
             },
+            uploadError(res, file, FileList) {
+				console.log('上传失败，请重试！')
+			},
 			changeFile(file) {
 				this.fileList.push(file)
 			},

@@ -157,7 +157,7 @@
 			getData() {
 				this.$axios.get('/products?page=' + this.cur_page, {
 					headers: {
-						'Authorization': this.cookie.token
+						'Authorization': localStorage.getItem('token_admin')
 					}
 				}).then((res) => {
 					this.options = this.options.concat(res.data.data)
@@ -167,7 +167,7 @@
 			getBatchInbound() {
 				this.$axios.get('/batch_store_ins/available_index?page=' + this.batch_page, {
 					headers: {
-						'Authorization': this.cookie.token
+						'Authorization': localStorage.getItem('token_admin')
 					}
 				}).then((res) => {
 					this.batch_options = this.batch_options.concat(res.data.data)
@@ -233,7 +233,7 @@
 					}
 					this.$axios.post('/store_ins', params, {
 						headers: {
-							'Authorization': this.cookie.token
+							'Authorization': localStorage.getItem('token_admin')
 						}
 					}).then((res) => {
 						console.log(res)
@@ -276,7 +276,7 @@
 				//				})
 				//				this.$axios.post('/store_ins', params, {
 				//					headers: {
-				//						'Authorization': token
+				//						'Authorization': localStorage.getItem('token_admin')
 				//					}
 				//
 				//				}).then((res) => {

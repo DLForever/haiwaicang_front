@@ -67,8 +67,8 @@
                     localStorage.removeItem('ms_username')
                     localStorage.removeItem('token')
                     localStorage.removeItem('token_admin')
-                    this.cookie.token = ''
-                    this.cookie.token_admin = ''
+//                  this.token = ''
+//                  this.token_admin = ''
                     this.$router.push('/login');
                 }
             },

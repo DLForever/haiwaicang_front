@@ -193,7 +193,7 @@
 						})
 						let config = {
 							headers: {
-								'Authorization': this.cookie.token
+								'Authorization': localStorage.getItem('token')
 							}
 						}
 						this.$axios.post('/products', formData, config).then((res) => {

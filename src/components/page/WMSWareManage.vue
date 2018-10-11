@@ -47,6 +47,7 @@
 </template>
 
 <script>
+	import global_ from '../common/cookie'
 	export default {
 //		name: 'WareManage',
 		data: function() {
@@ -85,7 +86,7 @@
 			getData() {
 				this.$axios.get('/admin/warehouses?page=' + this.cur_page, {
 					headers: {
-						'Authorization': this.cookie.token_admin
+						'Authorization': localStorage.getItem('token_admin')
 					},
 				}).then((res) => {
 					res.data.data.forEach((data) => {
