@@ -76,6 +76,11 @@ export default new Router({
                     meta: { title: '发货订单管理' }
                 },
                 {
+                    path: '/outboundmanage',
+                    component: resolve => require(['../components/page/OutBoundManage.vue'], resolve),
+                    meta: { title: '出库单管理' }
+                },
+                {
                     path: '/fbamanage',
                     component: resolve => require(['../components/page/FBAManage.vue'], resolve),
                     meta: { title: 'FBA管理' }
@@ -106,15 +111,20 @@ export default new Router({
                     meta: { title: 'WMS批量入库管理', permission: true  }
                 },
                 {
-                    path: '/WMSordermanage',
-                    component: resolve => require(['../components/page/WMSOrderManage.vue'], resolve),
-                    meta: { title: 'WMS换标订单管理', permission: true  }
+                    path: '/WMSoutboundmanage',
+                    component: resolve => require(['../components/page/WMSOutBoundManage.vue'], resolve),
+                    meta: { title: 'WMS出库单管理', permission: true  }
                 },
-                {
-                    path: '/WMSordersendmanage',
-                    component: resolve => require(['../components/page/WMSOrderSendManage.vue'], resolve),
-                    meta: { title: 'WMS发货订单管理', permission: true  }
-                },
+//              {
+//                  path: '/WMSordermanage',
+//                  component: resolve => require(['../components/page/WMSOrderManage.vue'], resolve),
+//                  meta: { title: 'WMS换标订单管理', permission: true  }
+//              },
+//              {
+//                  path: '/WMSordersendmanage',
+//                  component: resolve => require(['../components/page/WMSOrderSendManage.vue'], resolve),
+//                  meta: { title: 'WMS发货订单管理', permission: true  }
+//              },
                 {
                     path: '/WMSproductmanage',
                     component: resolve => require(['../components/page/WMSProductManage.vue'], resolve),

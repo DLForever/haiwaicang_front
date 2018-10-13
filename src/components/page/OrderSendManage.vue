@@ -68,7 +68,7 @@
 			</div>
 		</div>
 
-		<!-- 编辑弹出框 -->
+		<!-- 贴标弹出框 -->
 		<el-dialog title="编辑" :visible.sync="editVisible" width="30%">
 			<el-form ref="form" :model="form" label-width="80px">
 				<el-form-item label="外箱标">

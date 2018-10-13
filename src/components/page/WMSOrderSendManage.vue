@@ -8,11 +8,6 @@
 		</div>
 		<div class="container">
 			<div class="handle-box">
-				<!--<el-button type="primary" icon="delete" class="handle-del mr10" @click="delAll">批量删除</el-button>
-				<el-select v-model="select_cate" placeholder="筛选省份" class="handle-select mr10">
-					<el-option key="1" label="广东省" value="广东省"></el-option>
-					<el-option key="2" label="湖南省" value="湖南省"></el-option>
-				</el-select>-->
 				<el-select v-model="select_cate" filterable remote placeholder="选择用户" class="handle-select mr10" :loading="loading" @change="getUserDatasFirst" @visible-change="selectVisble" :remote-method="remoteMethod">
 					<el-option v-for="item in options" :label="item.name" :value="item.id"></el-option>
 					<infinite-loading :on-infinite="onInfinite" ref="infiniteLoading"></infinite-loading>
@@ -21,9 +16,6 @@
 					<el-input style="width:150px" placeholder="请输入fnsku" v-model="search_fnsku"></el-input>
 					<el-button @click="filter_fnsku()" type="primary">查询</el-button>
 				</div>
-				<!--<el-button type="primary" icon="search" @click="allUser">所有用户</el-button>-->
-				<!--<el-input v-model="select_word" placeholder="筛选fnsku" class="handle-input mr10"></el-input>-->
-				<!--<el-button type="primary" icon="search" @click="search">搜索</el-button>-->
 			</div>
 			<el-table :data="data" border style="width: 100%" model="form" ref="multipleTable" @selection-change="handleSelectionChange">
 				<el-table-column type="selection" width="55"></el-table-column>

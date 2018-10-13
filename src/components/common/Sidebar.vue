@@ -82,13 +82,18 @@
 						icon: 'el-icon-news',
 						index: 'ordermanage',
 						title: '订单管理',
-						subs: [{
-								index: 'ordermanage',
-								title: '换标订单管理'
-							},
+						subs: [
+//						{
+//								index: 'ordermanage',
+//								title: '换标订单管理'
+//							},
+//							{
+//								index: 'ordersendmanage',
+//								title: '发货订单管理'
+//							},
 							{
-								index: 'ordersendmanage',
-								title: '发货订单管理'
+								index: 'outboundmanage',
+								title: '出库单管理'
 							},
 						]
 					},
@@ -198,13 +203,17 @@
 						index: '7',
 						title: 'WMS订单管理',
 						subs: [{
-								index: 'WMSordermanage',
-								title: 'WMS换标订单'
+								index: 'WMSoutboundmanage',
+								title: 'WMS出库单管理'
 							},
-							{
-								index: 'WMSordersendmanage',
-								title: 'WMS发货订单'
-							},
+//							{
+//								index: 'WMSordersendmanage',
+//								title: 'WMS发货订单'
+//							},
+//							{
+//								index: 'WMSordermanage',
+//								title: 'WMS换标订单'
+//							},
 						]
 					},
 					{

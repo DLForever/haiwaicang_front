@@ -241,7 +241,7 @@
 			// 分页导航
 			handleCurrentChange(val) {
 				this.cur_page = val;
-				if(!this.select_cate) {
+				if(!this.select_cate || this.select_cate == -1) {
 					this.getData();
 				} else {
 					this.getUserDatas()
@@ -254,8 +254,12 @@
 						'Authorization': localStorage.getItem('token_admin')
 					}
 				}, ).then((res) => {
-					this.tableData = res.data.data
-					this.totals = res.data.count
+					if(res.data.code == 200) {
+						this.tableData = res.data.data
+						this.totals = res.data.count
+					}else {
+						console.log(res.data.message)
+					}					
 					this.paginationShow = true
 				}).catch((res) => {
 					this.$message.error(res)
@@ -361,7 +365,6 @@
 					}).then((res) => {
 						if(res.data.code == 200) {
 							this.loading = false
-							//							this.options = res.data.data
 							if(reload) {
 								this.options = this.options2.concat(res.data.data)
 							} else {
@@ -399,6 +402,8 @@
 			},
 			getUserDatasFirst() {
 				if(this.select_cate == -1) {
+					this.paginationShow = false
+					this.cur_page = 1
 					this.getData()
 					return
 				}

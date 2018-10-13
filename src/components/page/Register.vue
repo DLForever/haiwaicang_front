@@ -181,7 +181,7 @@
 				//				remark= this.ruleForm.remark,
 				//				sex= this.ruleForm.radio,
 				this.$refs[formName].validate((valid) => {
-					if(!valid) {
+					if(valid) {
 						this.$axios.post('/users', {
 							username: this.ruleForm.username,
 							password: this.ruleForm.pass,

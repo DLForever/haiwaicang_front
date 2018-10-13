@@ -239,7 +239,7 @@
 			// 分页导航
 			handleCurrentChange(val) {
 				this.cur_page = val;
-				if(!this.select_cate) {
+				if(!this.select_cate || this.select_cate == -1) {
 					this.getData();
 				} else {
 					this.getUserDatas()
@@ -389,6 +389,8 @@
 			},
 			getUserDatasFirst() {
 				if(this.select_cate == -1) {
+					this.paginationShow = false
+					this.cur_page = 1
 					this.getData()
 					return
 				}
