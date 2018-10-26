@@ -7,11 +7,11 @@
 			</el-breadcrumb>
 		</div>
 		<div class="container">
-			<div class="handle-box">
+			<!-- <div class="handle-box">
 				<el-button type="primary" icon="search" @click="mixed">混装发货</el-button>
-			</div>
+			</div> -->
 			<el-table :data="data" border style="width: 100%" model="form" ref="multipleTable" @selection-change="handleSelectionChange">
-				<el-table-column type="selection" width="55"></el-table-column>
+				<!-- <el-table-column type="selection" width="55"></el-table-column> -->
 				<el-table-column prop="fnsku" label="FNSKU" width="250">
 				</el-table-column>
 				<el-table-column prop="stock_sum" label="库存" width="150">
@@ -33,10 +33,8 @@
 						<el-tag :type="scope.row.status | statusFilter">{{getStatusName(scope.row.status)}}</el-tag>
 					</template>
 				</el-table-column>
-				<el-table-column label="操作" width="100">
+				<!-- <el-table-column label="操作" width="100">
 					<template slot-scope="scope">
-						<!--<el-button size="small" @click="handleEdit(scope.$index, scope.row)">编辑</el-button>-->
-						<!--<el-button size="small" type="danger" @click="handleDelete(scope.$index, scope.row)">删除</el-button>-->
 						<el-dropdown>
 							<el-button type="primary">
 								操作<i class="el-icon-arrow-down el-icon--right"></i>
@@ -48,11 +46,10 @@
 								<el-dropdown-item>
 									<el-button @click="handleSendEdit(scope.$index, scope.row)" type="text">发货</el-button>
 								</el-dropdown-item>
-								<!--<el-button @click="editVisible = true">贴标</el-button>-->
 							</el-dropdown-menu>
 						</el-dropdown>
 					</template>
-				</el-table-column>
+				</el-table-column> -->
 			</el-table>
 			<div class="pagination">
 				<el-pagination @current-change="handleCurrentChange" @size-change="handleSizeChange" :page-size="pagesize" layout="prev, pager, next" :total="totals">

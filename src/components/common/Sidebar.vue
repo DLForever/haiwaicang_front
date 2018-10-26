@@ -95,6 +95,10 @@
 								index: 'outboundmanage',
 								title: '出库单管理'
 							},
+							{
+								index: 'batchoutboundmanage',
+								title: '批量出库'
+							},
 						]
 					},
 					//                  {

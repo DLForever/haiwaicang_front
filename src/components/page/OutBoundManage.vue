@@ -7,6 +7,8 @@
 			</el-breadcrumb>
 		</div>
 		<div class="container">
+			<!-- <el-tabs v-model="message">
+				<el-tab-pane label="新建产品" name="first"> -->
 			<div class="handle-box">
 				<el-button type="primary" @click="showOutBound">创建出库单</el-button>
 			</div>
@@ -42,7 +44,10 @@
 							</el-button>
 							<el-dropdown-menu slot="dropdown">
 								<el-dropdown-item>
-									<el-button @click="detailsShow(scope.$index, scope.row)" type="text">详情</el-button>
+									<el-button @click="detailsShow(scope.$index, scope.row)" type="text">&nbsp&nbsp&nbsp详情&nbsp</el-button>
+								</el-dropdown-item>
+								<el-dropdown-item>
+									<el-button @click="updateOutbound(scope.$index, scope.row)" type="text">&nbsp&nbsp&nbsp更新&nbsp</el-button>
 								</el-dropdown-item>
 								<el-dropdown-item>
 									<el-button size="small" @click="handleEdit(scope.$index, scope.row)" type="text">&nbsp外箱标</el-button>
@@ -51,15 +56,31 @@
 									<el-button @click="showImgs(scope.$index, scope.row)" type="text">查看附件</el-button>
 								</el-dropdown-item>
 								<el-dropdown-item>
-									<el-button @click="handleDelete(scope.$index, scope.row)" type="text">删除</el-button>
+									<el-button @click="handleDelete(scope.$index, scope.row)" type="text">&nbsp&nbsp&nbsp删除&nbsp</el-button>
 								</el-dropdown-item>
 							</el-dropdown-menu>
 						</el-dropdown>
 					</template>
 				</el-table-column>
 			</el-table>
+		<!-- </el-tab-pane>
+		<el-tab-pane label="批量上传" name="second">
+					<template v-if="message === 'second'">
+						<el-form ref="form" :model="form" label-width="85px">
+							<el-form-item label="批量上传">
+								<el-upload class="upload-demo" drag action="" :file-list="fileList2" :on-remove="handleRemove2" :auto-upload="false" :on-change="changeFile2" :limit="5" multiple>
+									<i class="el-icon-upload"></i>
+									<div class="el-upload__text">将文件拖到此处，或<em>点击上传</em></div>
+									<div class="el-upload__tip" slot="tip">只能上传xls文件</div>
+								</el-upload>
+								<a type="primary" href="">模板下载</a>
+							</el-form-item>
+						</el-form>
+					</template>
+				</el-tab-pane>
+	</el-tabs> -->
 			<!-- 添加出库弹出框 -->
-			<el-dialog title="创建出库单" :visible.sync="outboundVisible" width="50%">
+			<el-dialog title="创建出库单" :visible.sync="outboundVisible" width="60%" @close="closeOutbound">
 				<el-form :rules="rules" label-width="115px">
 					<el-form-item label="出库单" required>
 						<table class="table text-center">
@@ -73,22 +94,42 @@
 										</el-select>
 									</td>
 									<td>
-										<td>
+										<!-- <td> -->
 											<el-input v-model.trim="p.new_fnsku" placeholder="新的fnsku"></el-input>
-										</td>
+										<!-- </td> -->
 									</td>
 									<td>
-										<td>
+										<!-- <td> -->
 											<el-input v-model.trim="p.plan_sum" placeholder="计划数量"></el-input>
-										</td>
+										<!-- </td> -->
+									</td>
+									<td  @click="getIndex(index)">
+										<my-uploader :onChange="changeLabel.bind(null,index)"></my-uploader>
+										<!-- <el-upload :drag="false" :show-file-list="false" action="">
+											<el-button size="small" type="primary">点击上传</el-button>
+										</el-upload> -->
+										<!-- <el-upload action="" :auto-upload="false">
+											<el-button type="primary">上传</el-button>
+										</el-upload> -->		
+										<!-- <el-upload class="avatar-uploader" list-type="picture-card" action="" :before-upload="beforeAvatarUpload" :auto-upload="false" :on-remove="remove_label" :on-exceed="exceed" :limit="1" :on-change="changeLabel">
+  											<i class="el-icon-plus avatar-uploader-icon"></i>
+										</el-upload> -->
+<!-- 										<div class="uploader_containner">
+    										<input style="display:none" @change="addFile" :multiple="false" type="file" id="my-upload" ref="file_input"/>
+    										<img :src="img_url" class="upload_img" @click="chooseFile"/>
+    										<span v-for="item in fileList" v-if="item.type && !(item.type.match(/image/))">{{item.name}}</span>
+  										</div> -->
+										<!-- <el-dialog :visible.sync="pictureVisible">
+  											<img width="100%" alt>
+										</el-dialog> -->				
 									</td>
 									<!--<i class="el-icon-circle-plus" @click="orderAdd(index)" :disabled="false"></i>
 									<i class="el-icon-remove" @click="orderDel(index)"></i>-->
 								</tr>
-								<span>-----</span>
+								<!-- <span>------------------------</span> -->
 							</tbody>
 						</table>
-
+						<!-- <el-upload>上传</el-upload> -->
 					</el-form-item>
 					<div class="newOrder">
 						<el-button @click="createOrder">添加出库单</el-button>
@@ -102,9 +143,58 @@
 					<el-form-item label="备注">
 						<el-input v-model="remark"></el-input>
 					</el-form-item>
-					<el-form-item>
+					<!-- <el-form-item> -->
+					<div class="confirm">
+						<el-button type="default" @click="closeOutbound">取消</el-button>
 						<el-button type="primary" @click="onSubmit">新建</el-button>
+					</div>
+					<!-- </el-form-item> -->
+				</el-form>
+			</el-dialog>
+
+			<!-- 更新出库弹出框 -->
+			<el-dialog title="更新出库单" :visible.sync="updateVisible" width="60%" @close="closeUpdate">
+				<el-form :rules="rules" label-width="115px">
+					<el-form-item label="出库单" required>
+						<table class="table text-center">
+							<tbody v-for="(p,index) in updateform">
+								<tr>
+									<td>
+										<el-select v-model="p.product_id" placeholder="选择产品" class="handle-select mr10">
+											<el-option v-for="item in options" :key="item.id" :label="item.fnsku" :value="item.id"></el-option>
+											<infinite-loading :on-infinite="onInfinite" ref="infiniteLoading"></infinite-loading>
+										</el-select>
+									</td>
+									<td>
+										<el-input v-model.trim="p.new_fnsku" placeholder="新的fnsku"></el-input>
+									</td>
+									<td>
+										<el-input v-model.trim="p.plan_sum" placeholder="计划数量"></el-input>
+									</td>
+									<td @click="getIndex(index)">
+										<my-uploader v-if="p.picturefileList != ''" :onChange="updateLabel.bind(null,index)" :defaultImg="$axios.defaults.baseURL+p.picturefileList"></my-uploader>
+										<my-uploader v-else :onChange="updateLabel.bind(null,index)"></my-uploader>			
+									</td>
+								</tr>
+							</tbody>
+						</table>
 					</el-form-item>
+					<div class="newOrder">
+						<el-button @click="updateAdd">添加出库单</el-button>
+						<el-button @click="updateCancel" :disabled="isDisableUpdate" type="danger">撤销</el-button>
+					</div>
+					<br>
+					<el-form-item label="是否混装">
+						<el-radio v-model="updateRadio" label="true">是</el-radio>
+						<el-radio v-model="updateRadio" label="false">否</el-radio>
+					</el-form-item>
+					<el-form-item label="备注">
+						<el-input v-model="remark"></el-input>
+					</el-form-item>
+					<div class="confirm">
+						<el-button type="default" @click="closeUpdate">取消</el-button>
+						<el-button type="primary" @click="submitUpdate">更新</el-button>
+					</div>
 				</el-form>
 			</el-dialog>
 
@@ -114,8 +204,27 @@
 					<el-table-column prop="fnsku" label="fnsku"></el-table-column>
 					<el-table-column prop="dst_fnsku" label="新fnsku"></el-table-column>
 					<el-table-column prop="sum" label="数量"></el-table-column>
+					<el-table-column prop="sum" label="新标" width="150px">
+						<template slot-scope="scope">
+							<img class="img_fnsku" v-if="scope.row.pictures[0] != undefined" :src="$axios.defaults.baseURL+scope.row.pictures[0].url.url"/>
+							<span v-else>无</span>
+						</template>
+					</el-table-column>
+					<el-table-column label="操作" width="80px">
+						<template slot-scope="scope">
+							<el-button type="danger" @click="confirmdestroyLabel(scope.$index, scope.row)">删除</el-button>
+						</template>
+					</el-table-column>
 				</el-table>
 				<br />
+			</el-dialog>
+			<!-- 删除出库单提示 -->
+			<el-dialog title="提交删除请求" :visible.sync="delOutVisible" width="35%">
+				<div class="del-dialog-cnt">删除不可恢复，是否确定删除？</div>
+				<span slot="footer" class="dialog-footer">
+                <el-button @click="delOutVisible = false">取 消</el-button>
+                <el-button type="danger" @click="destroyLabel('form2')">确 定</el-button>
+            </span>
 			</el-dialog>
 			<!-- 删除提示框 -->
 			<el-dialog title="提交删除请求" :visible.sync="delVisible" width="35%" @close="closeDel">
@@ -126,7 +235,7 @@
 				</el-form>
 				<span slot="footer" class="dialog-footer">
                 <el-button @click="closeDel">取 消</el-button>
-                <el-button type="primary" @click="deleteOrder('form2')">确 定</el-button>
+                <el-button type="danger" @click="deleteOrder('form2')">确 定</el-button>
             </span>
 			</el-dialog>
 			<!-- 贴标弹出框 -->
@@ -168,6 +277,7 @@
 
 <script>
 	import VueInfiniteLoading from "vue-infinite-loading"
+	import MyUploader from "@/components/common/my_uploader"
 	export default {
 		//		name: 'baseform',
 		data: function() {
@@ -175,9 +285,13 @@
 				url: './static/vuetable.json',
 				message: 'first',
 				totals: 0,
+				drag:false,
 				batch_totals: 0,
 				cur_page: 1,
 				batch_page: 1,
+				details_id: undefined,
+				label_del_id: undefined,
+				update_id: undefined,
 				tableData: [],
 				options: [],
 				OutBoundTable: [],
@@ -187,6 +301,7 @@
 				product_id: '',
 				remark: '',
 				radio: 'true',
+				updateRadio: undefined,
 				form2: {
 					remark: ''
 				},
@@ -194,27 +309,42 @@
 					product_id: '',
 					new_fnsku: '',
 					plan_sum: '',
+					picturefileList: '',
 				}],
 				newForm: {
 					product_id: '',
 					newfnsku: '',
-					plan_sum: ''
+					plan_sum: '',
+					picturefileList: '',
 				},
 				newForm2: {
 					product_id: '',
 					new_fnsku: '',
 					plan_sum: '',
+					picturefileList: '',
 				},
+				updateform: [],
+				updateform2: {
+					// id: '',
+					product_id: '',
+					new_fnsku: '',
+					plan_sum: '',
+					picturefileList: '',
+				},
+				updateLength: undefined,
 				inputVisible: false,
 				inputVisible2: false,
-				isdisable: true,
 				outboundVisible: false,
 				detailVisible: false,
 				delVisible: false,
 				editVisible: false,
 				showImg: false,
+				pictureVisible: false,
+				updateVisible: false,
+				delOutVisible: false,
 				img_show: 1,
 				pdf_show: 0,
+				picture_index: undefined,
 				Fnskus: [],
 				Fnsku: '',
 				Amounts: [],
@@ -242,9 +372,16 @@
 		computed: {
 			isDisableBu() {
 				if(this.form.length <= 1) {
-					return this.isdisable = true
+					return true
 				} else {
-					return this.isdisable = false
+					return false
+				}
+			},
+			isDisableUpdate() {
+				if(this.updateform.length <= this.updateLength) {
+					return true
+				} else {
+					return false
 				}
 			},
 			data() {
@@ -257,11 +394,13 @@
 			//类型转换
 			statusFilter(status) {
 				const statusMap = {
-					5: 'primary',
+					3: 'primary',
 					1: 'warning',
 					8: 'danger',
 					2: 'success',
-					7: 'info'
+					7: 'info',
+					6: 'warning',
+					10: 'success'
 				}
 				return statusMap[status]
 			},
@@ -305,6 +444,7 @@
 				})
 			},
 			detailsShow(index, row) {
+				this.details_id = row.id
 				this.$axios.get('/outbound_orders/' + row.id, {
 					headers: {
 						'Authorization': localStorage.getItem('token')
@@ -343,7 +483,8 @@
 				this.newForm2 = {
 					plan_sum: '',
 					new_fnsku: '',
-					product_id: ''
+					product_id: '',
+					picturefileList: ''
 					//					form_branch: [{
 					//						logistics_number: '',
 					//						select_cate: ''
@@ -358,7 +499,6 @@
 					newfnsku: '',
 					plan_sum: ''
 				}
-				console.log(this.form)
 			},
 			orderDel(index) {
 				if(this.form[index]['form_branch'].length == 1) {
@@ -366,31 +506,57 @@
 					return false;
 				}
 				this.form[index]['form_branch'].pop(this.newForm)
-				console.log(this.form)
 			},
 			back() {
 				this.form.pop(this.newForm2)
 			},
 			onSubmit() {
-				console.log(this.form)
 				let logistics_number = []
 				let product_ids = []
 				let plan_sum = []
 				let new_fnsku = []
 				let store_ins = []
+				let files = []
+				let noPic = undefined
+				let formData = new FormData()
 				this.form.forEach((data) => {
+					if(data['picturefileList'] == '') {
+						noPic = 1
+					}
 					product_ids.push(data['product_id'])
 					plan_sum.push(Number(data['plan_sum']))
 					new_fnsku.push(data['new_fnsku'])
+					files.push(data['picturefileList'])
+				})
+				if(noPic) {
+					this.$message.error("请上传新标")
+					return false
+				}
+				this.form.forEach((data) => {
+					// product_ids.push(data['product_id'])
+					// plan_sum.push(Number(data['plan_sum']))
+					// new_fnsku.push(data['new_fnsku'])
+					// files.push(data['picturefileList'])
+					formData.append('cargo_ids[]', data['product_id'])
+					formData.append('dst_fnsku[]', data['new_fnsku'])
+					formData.append('sum[]', Number(data['plan_sum']))
+				})
+				console.log('files:')
+				console.log(files)
+				formData.append('is_mix', this.radio)
+				formData.append('remark', this.remark)
+				files.forEach((item) => {
+					formData.append('files[]', item)
 				})
 				let params = {
 					cargo_ids: product_ids,
 					dst_fnsku: new_fnsku,
 					sum: plan_sum,
+					files: files,
 					is_mix: this.radio,
 					remark: this.remark
 				}
-				this.$axios.post('/outbound_orders', params, {
+				this.$axios.post('/outbound_orders', formData, {
 					headers: {
 						'Authorization': localStorage.getItem('token')
 					}
@@ -403,13 +569,51 @@
 						this.form = [{
 							plan_sum: '',
 							new_fnsku: '',
-							product_id: ''
+							product_id: '',
+							picturefileList: ''
 						}]
 						this.getDatas()
 						this.outboundVisible = false
 					}
 				}).catch((res) => {
 					this.$message.error('提交失败！');
+				})
+			},
+			submitUpdate() {
+				let noPic = undefined
+				let formData = new FormData()
+				this.updateform.forEach((data, index) => {
+					if(index+1 <= this.updateLength) {
+						formData.append('label_changes[][id]',data['id'])
+					}
+					if(data['picturefileList'] == '') {
+						noPic = 1
+					}
+					formData.append('label_changes[][cargo_id]',data['product_id'])
+					formData.append('label_changes[][dst_fnsku]',data['new_fnsku'])
+					formData.append('label_changes[][sum]',data['plan_sum'])
+					console.log(data['picturefileList'])
+					if(typeof data['picturefileList'] != "string") {
+						formData.append('label_changes[][pictures][]',data['picturefileList'])
+					}
+				})
+				if(noPic) {
+					this.$message.error("请上传新标")
+					return false
+				}
+				formData.append('is_mix', this.updateRadio)
+				formData.append('remark', this.remark)
+				this.$axios.patch('/outbound_orders/' + this.update_id, formData, {
+					headers: {
+						'Authorization': localStorage.getItem('token')
+					}
+				}).then((res) => {
+					if(res.data.code == 200) {
+						this.$message.success("更新成功")
+						this.updateVisible  =false
+					}
+				}).catch((res) => {
+					console.log(res)
 				})
 			},
 			cancelLabel() {
@@ -423,6 +627,65 @@
 					id: item.id,
 				}
 				this.editVisible = true;
+			},
+			updateOutbound(index, row) {
+				this.update_id = row.id
+				this.$axios.get('/outbound_orders/' + row.id, {
+					headers: {
+						'Authorization': localStorage.getItem('token')
+					},
+				}).then((res) => {
+					res.data.data.label_changes.forEach((data, index) => {
+						this.updateLength = res.data.data.label_changes.length
+						this.updateform.push(this.updateform2)
+						this.updateform[index].id = data.id
+						this.updateform[index].product_id = data.cargo_id
+						this.updateform[index].new_fnsku = data.dst_fnsku
+						this.updateform[index].plan_sum = data.sum
+						if(data.pictures[0] != undefined) {
+							this.updateform[index].picturefileList = data.pictures[0].url.url
+						}
+						this.updateform2 = {
+							// id: '',
+							product_id: '',
+							new_fnsku: '',
+							plan_sum: '',
+							picturefileList: '',
+						}
+					})
+					this.remark = res.data.data.user_remark
+					this.updateRadio = String(res.data.data.is_mix)
+					this.updateVisible = true
+				})
+				
+			},
+			updateAdd() {
+				this.updateform.push(this.updateform2)
+				this.updateform2 = {
+					// id: '',
+					product_id: '',
+					new_fnsku: '',
+					plan_sum: '',
+					picturefileList: '',
+				}
+			},
+			updateCancel() {
+				this.updateform.pop(this.updateform2)
+			},
+			closeOutbound() {
+				this.remark = ''
+				this.form = [{
+							plan_sum: '',
+							new_fnsku: '',
+							product_id: '',
+							picturefileList: ''
+						}]
+				this.outboundVisible = false
+			},
+			closeUpdate() {
+				this.remark = ''
+				this.updateform = []
+				this.updateVisible = false
 			},
 			// 添加外箱标
 			saveEdit(form) {
@@ -439,13 +702,13 @@
 						'Authorization': localStorage.getItem('token')
 					}
 				}
-				this.$axios.post('/store_outs/' + this.form.id + '/upload_image', formData, config).then((res) => {
+				this.$axios.post('/outbound_orders/' + this.form.id + '/upload_image', formData, config).then((res) => {
 					if(res.data.code == 200) {
 						this.$message.success("添加成功!")
 						this.getData()
 					}
 				}).catch((res) => {
-					this.$message.error(res)
+					
 				})
 				this.editVisible = false;
 			},
@@ -506,6 +769,29 @@
 					}
 				})
 			},
+			confirmdestroyLabel(index, row) {
+				this.idx = index
+				this.label_del_id = row.id
+				this.delOutVisible = true
+			},
+			destroyLabel() {
+				let params ={
+					label_change_id: this.label_del_id
+				}
+				this.$axios.post('/outbound_orders/' + this.details_id + '/destroy_label_change', params, {
+					headers: {
+						'Authorization': localStorage.getItem('token')
+					}
+				}).then((res) => {
+					if(res.data.code == 200) {
+						this.delOutVisible = false
+						this.OutBoundTable.splice(this.idx, 1)
+						this.$message.success("删除成功！")
+					}
+				}).catch((res) => {
+					console.log(res)
+				})
+			},
 			addFile() {
 				if(this.fileList.length == 0) {
 					this.$message.error("请选择xlsx文件")
@@ -537,8 +823,38 @@
 			changeFile(file) {
 				this.fileList.push(file)
 			},
+			changeLabel(index,file) {
+				// const isJPG = file.raw.type === 'image/jpeg';
+				// console.log(file.raw.type)
+				// if (!isJPG) {
+    //       			this.$message.error('请上传正确格式的图片!')
+    //       			return false
+    //     		}
+    			console.log("index:")
+    			console.log(index)
+    			this.form[index].picturefileList = file
+				// console.log(this.form)
+			},
+			updateLabel(index, file) {
+				this.updateform[index].picturefileList = file
+			},
+			beforeAvatarUpload(file) {
+				const isJPG = file.type === 'image/jpeg';
+				if (!isJPG) {
+          			this.$message.error('上传头像图片只能是 JPG 格式!')
+          			return false
+        		}
+        		return isJPG
+			},
+			getIndex(index) {
+				console.log(index)
+				this.picture_index = index
+			},
 			handleRemove(a, b) {
 				this.fileList = b
+			},
+			remove_label(a, b) {
+				this.form[this.picture_index].picturefileList = ''
 			},
 			exceed() {
 				this.$message.error("对不起，超过个数限制")
@@ -547,18 +863,27 @@
 				if(status == 1) {
 					return "待拣货"
 				} else if(status == 2) {
+					return "正在拣货"
+				} else if (status == 3) {
 					return "已拣货"
-				} else if(status == 8) {
+				} else if (status == 4) {
+					return "已打包"
+				}else if (status == 5) {
+					return "待贴箱标"
+				}else if(status == 8) {
 					return "删除待审核"
 				} else if(status == 6) {
-					return '待定'
+					return '已提供箱标'
+				}else if (status == 10) {
+					return "已完成"
 				} else {
 					return '其他'
 				}
 			},
 		},
 		components: {
-			"infinite-loading": VueInfiniteLoading
+			"infinite-loading": VueInfiniteLoading,
+			"my-uploader": MyUploader
 		}
 	}
 </script>
@@ -589,4 +914,71 @@
 	.newOrder {
 		text-align: center;
 	}
+
+	.confirm {
+		text-align: center;
+	}
+
+	.img_fnsku {
+		width:5rem;
+    	height:5rem;
+	}
+
+	.uploader_containner{
+    display: inline-block;
+  	}
+  .uploader_containner > .upload_img{
+    width:5rem;
+    height:5rem;
+  }
+
+/*	.avatar-uploader .el-upload {
+    border: 1px dashed #d9d9d9;
+    border-radius: 6px;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+  }
+  .avatar-uploader .el-upload:hover {
+    border-color: #409EFF;
+  }
+  .avatar-uploader-icon {
+    font-size: 8px;
+    color: #8c939d;
+    width: 48px;
+    height: 48px;
+    line-height: 48px;
+    text-align: center;
+  }*/
+
+	.el-icon-plus:before {
+    font-size: 2px;
+  }
+  .avatar {
+    width: 50px;
+    height: 50px;
+    display: block;
+  }
+  .el-upload--picture-card {
+    background-color: #fbfdff;
+    border: 1px dashed #c0ccda;
+    border-radius: 6px;
+    box-sizing: border-box;
+    width: 57px;
+    height: 57px;
+    line-height: 46px;
+    vertical-align: top;
+}
+.el-upload-list--picture-card .el-upload-list__item {
+    overflow: hidden;
+    background-color: #fff;
+    border: 1px solid #c0ccda;
+    border-radius: 6px;
+    -webkit-box-sizing: border-box;
+    box-sizing: border-box;
+    width: 57px;
+    height: 57px;
+    margin: 0 8px 8px 0;
+    display: inline-block;
+}
 </style>

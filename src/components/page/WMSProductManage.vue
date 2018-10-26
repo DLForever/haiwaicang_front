@@ -313,11 +313,13 @@
 						this.editVisible = false;
 						this.$message.success('入库完成')
 						this.getData()
+						this.editVisible = false;
+						this.bround_sum = ''
+						this.ware_house_ids = []
 					}
 				}).catch((res) => {
-					this.$message.error(res)
+					console.log(res)
 				})
-				this.editVisible = false;
 			},
 			allUser() {
 				this.paginationShow = false
