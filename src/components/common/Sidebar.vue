@@ -208,12 +208,12 @@
 						title: 'WMS订单管理',
 						subs: [{
 								index: 'WMSoutboundmanage',
-								title: 'WMS出库单管理'
+								title: 'WMS出库单管理(美国)'
 							},
-//							{
-//								index: 'WMSordersendmanage',
-//								title: 'WMS发货订单'
-//							},
+							{
+								index: 'WMSoutboundmanageChina',
+								title: 'WMS出库单管理(国内)'
+							},
 //							{
 //								index: 'WMSordermanage',
 //								title: 'WMS换标订单'
@@ -227,7 +227,12 @@
 						subs: [{
 							index: 'WMSproductmanage',
 							title: 'WMS货物管理'
-						}]
+						},
+						{
+							index: 'WMSImportStock',
+							title: '导入库存'
+						},
+						]
 					},
 				]
 			}

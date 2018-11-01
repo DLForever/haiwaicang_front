@@ -19,11 +19,15 @@
 				</el-table-column>
 				<el-table-column prop="updated_at" label="更新时间" :formatter="formatter_updated_at" width="150">
 				</el-table-column>				-->
+				<el-table-column prop="total" label="数量">
+				</el-table-column>
 				<el-table-column prop="user_remark" label="用户备注" show-overflow-tooltip>
 				</el-table-column>
 				<el-table-column prop="manager_remark" label="仓库备注" show-overflow-tooltip>
 				</el-table-column>
 				<el-table-column prop="remove_remark" label="用户删除备注" show-overflow-tooltip>
+				</el-table-column>
+				<el-table-column prop="created_at" label="创建时间" :formatter="formatter_created_at" width="150">
 				</el-table-column>
 				<el-table-column prop="is_mix" label="是否混装" width="150"></el-table-column>
 				<el-table-column prop="status" label="状态" width="120">
@@ -100,11 +104,16 @@
 									</td>
 									<td>
 										<!-- <td> -->
+											<el-input v-model.trim="p.sku" placeholder="sku"></el-input>
+										<!-- </td> -->
+									</td>
+									<td>
+										<!-- <td> -->
 											<el-input v-model.trim="p.plan_sum" placeholder="计划数量"></el-input>
 										<!-- </td> -->
 									</td>
 									<td  @click="getIndex(index)">
-										<my-uploader :onChange="changeLabel.bind(null,index)"></my-uploader>
+										<my-uploader v-if="my_uploaderVisible" :onChange="changeLabel.bind(null,index)"></my-uploader>
 										<!-- <el-upload :drag="false" :show-file-list="false" action="">
 											<el-button size="small" type="primary">点击上传</el-button>
 										</el-upload> -->
@@ -200,6 +209,10 @@
 
 			<!-- 详情提示框 -->
 			<el-dialog title="详情" :visible.sync="detailVisible" width="65%">
+				<div class="check_button">
+					<el-button type="primary" @click="check">通过审核</el-button>
+				</div>
+				<br>
 				<el-table :data="OutBoundTable" border style="width: 100%">
 					<el-table-column prop="fnsku" label="fnsku"></el-table-column>
 					<el-table-column prop="dst_fnsku" label="新fnsku"></el-table-column>
@@ -216,7 +229,20 @@
 						</template>
 					</el-table-column>
 				</el-table>
-				<br />
+				<br>
+				<el-table v-if="this.order_box_cargos.length != 0" :data="order_box_cargos" border style="width: 100%">
+					<el-table-column type="expand">
+						<template slot-scope="scope">
+							<el-table :data="scope.row.order_box_cargos">
+								<el-table-column prop="fnsku" label="fnsku"></el-table-column>
+								<el-table-column prop="sum" label="数量"></el-table-column>
+							</el-table>
+						</template>
+					</el-table-column>
+					<el-table-column prop="sum" label="数量"></el-table-column>
+					<el-table-column prop="box_size" label="箱子尺寸(长*宽*高)"></el-table-column>
+					<el-table-column prop="weight" label="箱子重量"></el-table-column>
+				</el-table>
 			</el-dialog>
 			<!-- 删除出库单提示 -->
 			<el-dialog title="提交删除请求" :visible.sync="delOutVisible" width="35%">
@@ -295,6 +321,7 @@
 				tableData: [],
 				options: [],
 				OutBoundTable: [],
+				order_box_cargos: [],
 				batch_options: [],
 				fileList: [],
 				select_batch: '',
@@ -308,18 +335,21 @@
 				form: [{
 					product_id: '',
 					new_fnsku: '',
+					sku: '',
 					plan_sum: '',
 					picturefileList: '',
 				}],
 				newForm: {
 					product_id: '',
 					newfnsku: '',
+					sku: '',
 					plan_sum: '',
 					picturefileList: '',
 				},
 				newForm2: {
 					product_id: '',
 					new_fnsku: '',
+					sku: '',
 					plan_sum: '',
 					picturefileList: '',
 				},
@@ -328,6 +358,7 @@
 					// id: '',
 					product_id: '',
 					new_fnsku: '',
+					sku: '',
 					plan_sum: '',
 					picturefileList: '',
 				},
@@ -361,7 +392,8 @@
 						message: '请输入删除备注',
 						trigger: 'blur'
 					}],
-				}
+				},
+				my_uploaderVisible: true,
 			}
 		},
 		created() {
@@ -451,10 +483,15 @@
 					},
 				}).then((res) => {
 					this.OutBoundTable = res.data.data.label_changes
+					res.data.data.order_boxes.forEach((data) => {
+						data.box_size = data.box.length + '*' + data.box.width + '*' + data.box.height
+					})
+					this.order_box_cargos = res.data.data.order_boxes
 					this.detailVisible = true
 				})
 			},
 			showOutBound() {
+				this.my_uploaderVisible = true
 				this.outboundVisible = true
 			},
 			onInfinite(obj) {
@@ -483,6 +520,7 @@
 				this.newForm2 = {
 					plan_sum: '',
 					new_fnsku: '',
+					sku: '',
 					product_id: '',
 					picturefileList: ''
 					//					form_branch: [{
@@ -539,6 +577,7 @@
 					// files.push(data['picturefileList'])
 					formData.append('cargo_ids[]', data['product_id'])
 					formData.append('dst_fnsku[]', data['new_fnsku'])
+					formData.append('sku[]', data['sku'])
 					formData.append('sum[]', Number(data['plan_sum']))
 				})
 				console.log('files:')
@@ -569,11 +608,38 @@
 						this.form = [{
 							plan_sum: '',
 							new_fnsku: '',
+							sku: '',
 							product_id: '',
 							picturefileList: ''
 						}]
 						this.getDatas()
 						this.outboundVisible = false
+
+						let mesId =  JSON.parse(localStorage.getItem('notifyid')) || []
+						this.$axios.get('/notifications', {
+		                    headers: {
+		                        'Authorization': localStorage.getItem('token')
+		                    },
+		                }).then((res) => {
+		                    if(res.data.code == 200) {
+		                        res.data.data.forEach((data, index) => {
+		                            let offsettemp = 100 + 70 * index
+		                            if(mesId.indexOf(data.id) == -1) {
+		                                this.$notify({
+		                                    title: '您有新的消息',
+		                                    offset: offsettemp,
+		                                    message: data.message
+		                                })
+		                                mesId.push(data.id)
+		                                localStorage.removeItem('notifyid')
+		                                localStorage.setItem('notifyid', JSON.stringify(mesId))  
+		                            }
+		                        })
+		                    }
+		                }).catch((res) => {
+		                    console.log('error')
+		                })
+
 					}
 				}).catch((res) => {
 					this.$message.error('提交失败！');
@@ -649,6 +715,7 @@
 							// id: '',
 							product_id: '',
 							new_fnsku: '',
+							sku: '',
 							plan_sum: '',
 							picturefileList: '',
 						}
@@ -665,6 +732,7 @@
 					// id: '',
 					product_id: '',
 					new_fnsku: '',
+					sku: '',
 					plan_sum: '',
 					picturefileList: '',
 				}
@@ -673,10 +741,12 @@
 				this.updateform.pop(this.updateform2)
 			},
 			closeOutbound() {
+				this.my_uploaderVisible = false
 				this.remark = ''
 				this.form = [{
 							plan_sum: '',
 							new_fnsku: '',
+							sku: '',
 							product_id: '',
 							picturefileList: ''
 						}]
@@ -705,7 +775,7 @@
 				this.$axios.post('/outbound_orders/' + this.form.id + '/upload_image', formData, config).then((res) => {
 					if(res.data.code == 200) {
 						this.$message.success("添加成功!")
-						this.getData()
+						this.getDatas()
 					}
 				}).catch((res) => {
 					
@@ -859,23 +929,48 @@
 			exceed() {
 				this.$message.error("对不起，超过个数限制")
 			},
+			check() {
+				this.$axios.get('/outbound_orders/' + this.details_id + '/user_check', {
+					headers: {
+						'Authorization': localStorage.getItem('token')
+					}
+				}).then((res) => {
+					if(res.data.code == 200) {
+						this.$message.success("审核成功!")
+						this.getDatas()
+					}
+				}).catch((res) => {
+					console.log(res)
+				})
+			},
+			formatter_created_at(row, column) {
+				return row.created_at.substr(0, 19);
+			},
 			getStatusName(status) {
 				if(status == 1) {
-					return "待拣货"
+					return "待审核"
 				} else if(status == 2) {
 					return "正在拣货"
 				} else if (status == 3) {
-					return "已拣货"
+					return "待换标"
 				} else if (status == 4) {
-					return "已打包"
+					return "待审核"
 				}else if (status == 5) {
-					return "待贴箱标"
+					return "审核通过"
 				}else if(status == 8) {
 					return "删除待审核"
 				} else if(status == 6) {
 					return '已提供箱标'
+				}else if (status == 7) {
+					return "被删除"
+				}else if (status == 9) {
+					return "删除"
 				}else if (status == 10) {
 					return "已完成"
+				}else if (status == 11) {
+					return "待拣货"
+				}else if (status == 12) {
+					return '已换标'
 				} else {
 					return '其他'
 				}
@@ -913,6 +1008,10 @@
 	
 	.newOrder {
 		text-align: center;
+	}
+
+	.check_button {
+		text-align: left;
 	}
 
 	.confirm {

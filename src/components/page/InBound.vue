@@ -49,7 +49,6 @@
 										<span>-----</span>
 									</tbody>
 								</table>
-
 							</el-form-item>
 							<div class="newOrder">
 								<el-button @click="createOrder">添加物流单</el-button>
@@ -65,7 +64,7 @@
 						</el-form>
 					</div>
 				</el-tab-pane>
-				<el-tab-pane label="批量上传" name="second">
+				<!-- <el-tab-pane label="批量上传" name="second">
 					<el-form label-width="85px">
 						<el-form-item label="批量上传">
 							<el-upload class="upload-demo" drag action="" :file-list="fileList" :on-remove="handleRemove" :on-exceed="exceed" :auto-upload="false" :on-change="changeFile" :limit="1" multiple>
@@ -79,7 +78,7 @@
 							<el-button type="primary" @click="addFile">上传</el-button>
 						</el-form-item>
 					</el-form>
-				</el-tab-pane>
+				</el-tab-pane> -->
 			</el-tabs>
 		</div>
 	</div>
@@ -257,10 +256,39 @@
 							plan_sum: '',
 							logistics_number: ''
 						}]
+						let mesId =  JSON.parse(localStorage.getItem('notifyid')) || []
+						this.$axios.get('/notifications', {
+		                    headers: {
+		                        'Authorization': localStorage.getItem('token')
+		                    },
+		                }).then((res) => {
+		                    if(res.data.code == 200) {
+		                        res.data.data.forEach((data, index) => {
+		                            let offsettemp = 100 + 70 * index
+		                            if(mesId.indexOf(data.id) == -1) {
+		                                this.$notify({
+		                                    title: '您有新的消息',
+		                                    offset: offsettemp,
+		                                    message: data.message
+		                                })
+		                                mesId.push(data.id)
+		                                localStorage.removeItem('notifyid')
+		                                localStorage.setItem('notifyid', JSON.stringify(mesId))  
+		                            }
+		                        })
+		                    }
+		                }).catch((res) => {
+		                    console.log('error')
+		                })
 						this.$router.push('/inboundmanage')
+						// this.$notify({
+						// 	title: '您有新的消息',
+						// 	offset: 100,
+						// 	message: '您的入库单还需您进一步审核才能提交到仓库'
+						// })
 					}
 				}).catch((res) => {
-					this.$message.error('提交失败！');
+					console.log('error')
 				})
 			},
 			addFile() {

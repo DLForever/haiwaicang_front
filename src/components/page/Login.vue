@@ -68,8 +68,9 @@
 								password: this.ruleForm.password
 						},
 						).then((res) => {
-							localStorage.setItem('ms_username', this.ruleForm.username);
-							localStorage.setItem('token', res.data.data.token);
+							localStorage.setItem('ms_username', this.ruleForm.username)
+							localStorage.setItem('token', res.data.data.token)
+							localStorage.setItem('notifyid', JSON.stringify([]))
 							console.log(localStorage.getItem('token'))
 							this.$router.push('/');
 						}).catch((res) => {
@@ -96,6 +97,8 @@
 						).then((res) => {
 							localStorage.setItem('ms_username', this.ruleForm.username);
 							localStorage.setItem('token_admin', res.data.data.token);
+							localStorage.setItem('user_id', res.data.data.id)
+							localStorage.setItem('notifyid', JSON.stringify([]))
 							console.log(res)
 							console.log('token:' + localStorage.getItem('token_admin'))
 							this.$router.push('/');

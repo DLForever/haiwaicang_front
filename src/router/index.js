@@ -27,7 +27,7 @@ export default new Router({
                 {
                     path: '/tabs',
                     component: resolve => require(['../components/page/Tabs.vue'], resolve),
-                    meta: { title: 'tab选项卡' }
+                    meta: { title: '未读消息' }
                 },
                 {
                     path: '/add',
@@ -118,7 +118,12 @@ export default new Router({
                 {
                     path: '/WMSoutboundmanage',
                     component: resolve => require(['../components/page/WMSOutBoundManage.vue'], resolve),
-                    meta: { title: 'WMS出库单管理', permission: true  }
+                    meta: { title: 'WMS出库单管理(美国)', permission: true  }
+                },
+                {
+                    path: '/WMSoutboundmanageChina',
+                    component: resolve => require(['../components/page/WMSOutBoundManageChina.vue'], resolve),
+                    meta: { title: 'WMS出库单管理(国内)', permission: true  }
                 },
 //              {
 //                  path: '/WMSordermanage',
@@ -133,6 +138,11 @@ export default new Router({
                 {
                     path: '/WMSproductmanage',
                     component: resolve => require(['../components/page/WMSProductManage.vue'], resolve),
+                    meta: { title: 'WMS货物管理', permission: true }
+                },
+                {
+                    path: '/WMSImportStock',
+                    component: resolve => require(['../components/page/WMSImportStock.vue'], resolve),
                     meta: { title: 'WMS货物管理', permission: true }
                 },
                 {

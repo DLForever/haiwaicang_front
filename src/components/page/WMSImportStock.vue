@@ -2,8 +2,8 @@
 	<div>
 		<div class="crumbs">
 			<el-breadcrumb separator="/">
-				<el-breadcrumb-item><i class="el-icon-date"></i> 批量出库单</el-breadcrumb-item>
-				<el-breadcrumb-item>创建批量出库</el-breadcrumb-item>
+				<el-breadcrumb-item><i class="el-icon-date"></i> 导入库存</el-breadcrumb-item>
+				<el-breadcrumb-item>导入库存</el-breadcrumb-item>
 			</el-breadcrumb>
 		</div>
 		<div class="container">
@@ -16,10 +16,13 @@
 								<div class="el-upload__text">将文件拖到此处，或<em>点击上传</em></div>
 								<div class="el-upload__tip" slot="tip">只能上传xls/xlsx文件</div>
 							</el-upload>
-							<a :href="$axios.defaults.baseURL +'/batch.xlsx'">模板下载</a>
+							<a :href="$axios.defaults.baseURL +'/cargos.xlsx'">模板下载</a>
+						</el-form-item>
+						<el-form-item>
+							<el-button type="primary" @click="onSubmit">上传文件</el-button>
 						</el-form-item>
 					</el-form>
-					<el-form label-width="120px">
+					<!-- <el-form label-width="120px">
 						<el-form-item label="上传文件">
 							<el-upload class="upload-demo" drag action="" :file-list="fileList" :auto-upload="false" multiple>
 								<i class="el-icon-upload"></i>
@@ -33,7 +36,7 @@
 						<el-form-item>
 							<el-button type="primary" @click="onSubmit">上传文件</el-button>
 						</el-form-item>
-					</el-form>
+					</el-form> -->
 					
 				</el-tab-pane>
 			</el-tabs>
@@ -63,15 +66,15 @@
 				let formData = new FormData()
 				let config = {
 					headers: {
-						'Authorization': localStorage.getItem('token')
+						'Authorization': localStorage.getItem('token_admin')
 					}
 				}
 				console.log(this.xlsxList)
 				this.xlsxList.forEach((item) => {
-					formData.append('data', item.raw)
+					formData.append('file', item.raw)
 				})
 				// formData.append('remark', this.remark)
-				this.$axios.post('/outbound_orders/batch', formData, config).then((res) => {
+				this.$axios.post('/admin/cargos/set_cargo_stock', formData, config).then((res) => {
 					if(res.data.code == 200) {
 						this.$message.success("提交成功")
 						this.xlsxList = []

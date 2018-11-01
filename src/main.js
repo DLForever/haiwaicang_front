@@ -42,7 +42,7 @@ router.beforeEach((to, from, next) => {
     }
 })
 
-//var defaultHost = window.location.protocol + "//" + window.location.hostname + ":3000"
+// var defaultHost = window.location.protocol + "//" + window.location.hostname + ":3000"
 var defaultHost = 'http://47.74.177.128:3000'
 axios.defaults.baseURL = defaultHost
 

@@ -121,9 +121,9 @@
 		<el-dialog title="详情" :visible.sync="detailVisible" width="65%">
 			<el-table :data="ware_details" border style="width: 100%">
 				<!--<el-table-column prop="ware_house_id" label="库位"></el-table-column>-->
-				<el-table-column prop="fnsku" label="产品名称" width="150"></el-table-column>
-				<el-table-column prop="plan_sum" label="计划入库数量" width="150"></el-table-column>
-				<el-table-column prop="arrive_sum" label="实际入库数量" show-overflow-tooltip></el-table-column>
+				<el-table-column prop="fnsku" label="产品名称"></el-table-column>
+				<el-table-column prop="plan_sum" label="计划入库数量" ></el-table-column>
+				<el-table-column prop="arrive_sum" label="实际入库数量" ></el-table-column>
 			</el-table>
 			<br />
 		</el-dialog>
@@ -262,11 +262,14 @@
 					//							data2.warehouse = []
 					//						})
 					//					})
-					this.tableData = res.data.data;
+					if(res.data.code == 200) {
+						this.tableData = res.data.data;
 					//					let test = res.data.data[1].product_store_ins
 					//					this.totals = this.tableData.length
-					this.totals = res.data.count
-					this.paginationShow = true
+						this.totals = res.data.count
+						this.paginationShow = true
+					}
+					
 				})
 			},
 			allUser() {	
@@ -601,9 +604,19 @@
 			},
 			getStatusName(status) {
 				if(status == 1) {
-					return "待入库"
+					return "待审核"
+				}else if (status ==2) {
+					return "被删除"
+				}else if (status == 3) {
+					return "删除"
+				}else if (status == 4) {
+					return "已完成"
 				}else if(status == 5) {
 					return "删除待审核"
+				}else if (status == 6) {
+					return "已结算"
+				}else if (status == 7) {
+					return "审核通过"
 				} else {
 					return "已入库"
 				}

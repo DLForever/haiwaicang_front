@@ -14,14 +14,22 @@
                     </el-tooltip>
                 </div>
                 <!-- 消息中心 -->
-                <!--<div class="btn-bell">
+                <el-badge :value="message" class="item" >
+                    <el-tooltip effect="dark" :content="message?`有${message}条未读消息`:`消息中心`" placement="bottom">
+                        <router-link to="/tabs">
+                            <i class="el-icon-bell"></i>
+                        </router-link>
+                    </el-tooltip>
+                    <!-- <el-button size="small">消息</el-button> -->
+                </el-badge>
+               <!--  <div class="btn-bell">
                     <el-tooltip effect="dark" :content="message?`有${message}条未读消息`:`消息中心`" placement="bottom">
                         <router-link to="/tabs">
                             <i class="el-icon-bell"></i>
                         </router-link>
                     </el-tooltip>
                     <span class="btn-bell-badge" v-if="message"></span>
-                </div>-->
+                </div> -->
                 <!-- 用户头像 -->
                 <div class="user-avator"><img src="static/img/img.jpg"></div>
                 <!-- 用户名下拉菜单 -->
@@ -46,14 +54,34 @@
 <script>
     import bus from '../common/bus';
     export default {
+        name: 'Header',
         data() {
             return {
                 collapse: false,
                 fullscreen: false,
                 name: 'linxin',
-                message: 2
+                message: 0,
+                myVal: undefined,
+                popMes: undefined
             }
         },
+        created() {
+            // var myVal = setInterval(this.getMessageCount, 1000*5)
+            this.getMessageTimer()
+            // if(localStorage.getItem('token_admin')) {
+            //     this.getAdminMessageCount()
+            //     console.log('520')
+            // } else if (localStorage.getItem('token')) {
+            //     this.getUserMessageCount()
+            //     console.log('520')
+            // }
+        },
+        // mounted: function () {
+        //     this.$nextTick(function() {
+        //         let _this = this
+        //         _this.getMessageTimer()
+        //     })
+        // },
         computed:{
             username(){
                 let username = localStorage.getItem('ms_username');
@@ -61,12 +89,117 @@
             }
         },
         methods:{
+            //获取消息
+            getAdminMessageCount() {
+                this.$axios.get('/admin/notifications', {
+                    headers: {
+                        'Authorization': localStorage.getItem('token_admin')
+                    },
+                }).then((res) => {
+                    if(res.data.code == 200) {
+                        this.message = res.data.data.length
+                    }
+                })
+            },
+            getUserMessageCount() {
+                this.$axios.get('/notifications', {
+                    headers: {
+                        'Authorization': localStorage.getItem('token')
+                    },
+                }).then((res) => {
+                    if(res.data.code == 200) {
+                        this.message = res.data.data.length
+                        console.log(this.message)
+                    }
+                })
+            },
+            getMessageTimer() {
+                this.getMessageCount()
+                this.myVal = setInterval(this.getMessageCount, 1000*30)
+            },
+            // popMessage() {
+            //     function sleep(numberMillis) {
+            //         let now = new Date()
+            //         let exitTime = now.getTime() + numberMillis
+            //         while (true) {
+            //             now = new Date()
+            //             if (now.getTime() > exitTime)
+            //                 return
+            //         }
+            //     }
+            //     sleep(1000)
+            //     this.$notify({
+            //         title: '您有新的消息',
+            //         message: this.popMes,
+            //         offset: 100
+            //     })
+            //     console.log('520')
+            // },
+            popTest(index) {
+                console.log('index')
+                console.log(index)
+            },
+            getMessageCount() {
+                let mesId =  JSON.parse(localStorage.getItem('notifyid')) || []
+                if(localStorage.getItem('token_admin')) {
+                    this.$axios.get('/admin/notifications', {
+                        headers: {
+                            'Authorization': localStorage.getItem('token_admin')
+                        },
+                    }).then((res) => {
+                        if(res.data.code == 200) {
+                            this.message = res.data.data.length
+                            res.data.data.forEach((data, index) => {
+                                let offsettemp = 100 + 70 * index
+                                if(mesId.indexOf(data.id) == -1) {
+                                    this.popMes = data.message
+                                    this.$notify({
+                                        title: '您有新的消息',
+                                        message: data.message,
+                                        offset: offsettemp,
+                                    })
+                                    mesId.push(data.id)
+                                    localStorage.removeItem('notifyid')
+                                    localStorage.setItem('notifyid', JSON.stringify(mesId))  
+                                }
+                            })
+                        }
+                    })
+                } else if (localStorage.getItem('token')) {
+                    this.$axios.get('/notifications', {
+                        headers: {
+                            'Authorization': localStorage.getItem('token')
+                        },
+                    }).then((res) => {
+                        if(res.data.code == 200) {
+                            this.message = res.data.data.length
+                            res.data.data.forEach((data, index) => {
+                                let offsettemp = 100 + 70 * index
+                                if(mesId.indexOf(data.id) == -1) {
+                                    this.$notify({
+                                        title: '您有新的消息',
+                                        offset: offsettemp,
+                                        message: data.message
+                                    })
+                                    mesId.push(data.id)
+                                    localStorage.removeItem('notifyid')
+                                    localStorage.setItem('notifyid', JSON.stringify(mesId))  
+                                }
+                            })
+                        }
+                    }).catch((res) => {
+                        console.log('error')
+                    })
+                }
+            },
             // 用户名下拉菜单选择事件
             handleCommand(command) {
                 if(command == 'loginout'){
                     localStorage.removeItem('ms_username')
                     localStorage.removeItem('token')
                     localStorage.removeItem('token_admin')
+                    localStorage.removeItem('notifyid')
+                    clearInterval(this.myVal)
 //                  this.token = ''
 //                  this.token_admin = ''
                     this.$router.push('/login');
@@ -185,5 +318,10 @@
     }
     .el-dropdown-menu__item{
         text-align: center;
+    }
+
+    .item {
+        margin-top: 2px;
+        margin-right: 10px;
     }
 </style>

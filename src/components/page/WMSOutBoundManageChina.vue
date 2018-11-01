@@ -52,20 +52,23 @@
 									<el-button @click="detailsShow(scope.$index, scope.row)" type="text">&nbsp&nbsp&nbsp详&nbsp情&nbsp&nbsp&nbsp</el-button>
 								</el-dropdown-item>
 								<el-dropdown-item>
-									<el-button @click="showImgs(scope.$index, scope.row)" type="text">查看附件</el-button>
+									<el-button @click="showImgs(scope.$index, scope.row)" type="text">&nbsp&nbsp&nbsp附&nbsp件&nbsp&nbsp&nbsp</el-button>
 								</el-dropdown-item>
-								<!-- <el-dropdown-item>
+								<el-dropdown-item>
 									<el-button @click="package(scope.$index, scope.row)" type="text">&nbsp&nbsp&nbsp打&nbsp包&nbsp&nbsp&nbsp</el-button>
 								</el-dropdown-item>
 								<el-dropdown-item>
 									<el-button @click="check(scope.$index, scope.row)" type="text">&nbsp&nbsp&nbsp结&nbsp算&nbsp&nbsp&nbsp</el-button>
-								</el-dropdown-item> -->
-								<el-dropdown-item>
-									<el-button @click="sendProduct(scope.$index, scope.row)" type="text">&nbsp&nbsp&nbsp发&nbsp货&nbsp&nbsp&nbsp</el-button>
 								</el-dropdown-item>
 								<!-- <el-dropdown-item>
-									<el-button @click="handleDelete(scope.$index, scope.row)" type="text">&nbsp&nbsp&nbsp删&nbsp除&nbsp&nbsp&nbsp</el-button>
+									<el-button @click="sendProduct(scope.$index, scope.row)" type="text">&nbsp&nbsp&nbsp发&nbsp货&nbsp&nbsp&nbsp</el-button>
 								</el-dropdown-item> -->
+								<el-dropdown-item>
+									<el-button @click="printStock(scope.$index, scope.row)" type="text">打印出库单&nbsp&nbsp&nbsp</el-button>
+								</el-dropdown-item>
+								<el-dropdown-item>
+									<el-button @click="handleDelete(scope.$index, scope.row)" type="text">&nbsp&nbsp&nbsp删&nbsp除&nbsp&nbsp&nbsp</el-button>
+								</el-dropdown-item>
 							</el-dropdown-menu>
 						</el-dropdown>
 					</template>
@@ -81,8 +84,8 @@
 			<!-- <div style="height: 10%;">
 			<el-scrollbar style="height: 100%;"> -->
 			<div class="creat">
-				<el-button type="primary" @click="pick">生成拣货单</el-button>
-				<el-button type="default" @click="print">打印</el-button>
+				<!-- <el-button type="primary" @click="pick">生成拣货单</el-button> -->
+				<el-button type="primary" @click="print">打印</el-button>
 				<!--<el-button type="default" @click="print2">打印</el-button>-->
 			</div>
 
@@ -94,7 +97,7 @@
 					<el-table-column prop="fnsku" label="fnsku"></el-table-column>
 					<el-table-column prop="dst_fnsku" label="新fnsku"></el-table-column>
 					<el-table-column prop="sum" label="数量"></el-table-column>
-					<el-table-column prop="sum" label="新标" width="120px">
+					<el-table-column label="新标" width="120px">
 						<template slot-scope="scope">
 							<img class="img_fnsku" :src="$axios.defaults.baseURL+scope.row.pictures[0].url.url" />					
 						</template>
@@ -104,7 +107,7 @@
 					<el-table-column prop="updated_at" :formatter="formatter_updated_at" label="更新时间"></el-table-column>-->
 				</el-table>
 				<br>
-				<el-table v-if="this.ware_houseTable2.length != 0" :data="ware_houseTable2" border style="width: 100%">
+				<el-table v-if="this.ware_houseTable.length != 0" :data="ware_houseTable" border style="width: 100%">
 					<el-table-column prop="ware_house_name" label="库位" width="307"></el-table-column>
 					<!-- <el-table-column prop="sum" label="数量"></el-table-column> -->
 					<el-table-column prop="fnsku" label="fnsku"></el-table-column>
@@ -127,6 +130,24 @@
 			</div>
 			<!-- </el-scrollbar>
 			</div> -->
+		</el-dialog>
+
+		<!-- 打印出库提示框 -->
+		<el-dialog title="详情" :visible.sync="importStockVisible" width="50%">
+			<div class="creat">
+				<el-button type="primary" @click="printImport">打印</el-button>
+			</div>
+			<div id="importStock">
+				<h1 style="text-align:center" class="ismix">{{is_mix}}</h1>
+				<barcode :value="barcode" :options="{displayValue:true}" tag="img" width="300" height="100"></barcode>
+				<el-table :data="importStockTable" border style="width: 100%">
+					<el-table-column prop="id" label="id" width="50"></el-table-column>
+					<el-table-column label="箱子"></el-table-column>
+					<el-table-column label="箱子重量"></el-table-column>
+					<el-table-column label="fnsku"></el-table-column>
+					<el-table-column label="数量"></el-table-column>
+				</el-table>
+			</div>
 		</el-dialog>
 
 		<!-- 检查提示框 -->
@@ -350,6 +371,7 @@
 				packageVisible: false,
 				isdisable: false,
 				checkVisible: false,
+				importStockVisible: false,
 				user_total: 0,
 				package_ramark: '',
 				checkData: [],
@@ -359,6 +381,7 @@
 				checkData5: [],
 				check_id: undefined,
 				sendProductId: undefined,
+				importStockTable:[{id:1},{id:2},{id:3},{id:4},{id:5},{id:6},{id:7},{id:8},{id:9},{id:10}]
 			}
 		},
 		created() {
@@ -410,6 +433,13 @@
 				})
 				}
 			},
+			printImport() {
+				Print({
+					printable: 'importStock',
+					type: 'html',
+					targetStyle: ['text-align'],
+				})
+			},
 			print2() {
 				let sub = document.getElementById('printJS-form')
 				let newHtml = sub.innerHTML
@@ -446,8 +476,7 @@
 				}
 			},
 			getData() {
-				let user_id = localStorage.getItem('user_id')
-				this.$axios.get('/admin/outbound_orders?page=' + this.cur_page + '&wms=true', {
+				this.$axios.get('/admin/outbound_orders?page=' + this.cur_page, {
 					headers: {
 						'Authorization': localStorage.getItem('token_admin')
 					},
@@ -831,6 +860,16 @@
 				})
 				this.delVisible = false;
 			},
+			printStock(index, row) {
+				if(row.is_mix) {
+					this.is_mix = '可混装'
+				} else {
+					this.is_mix = '不混装'
+				}
+				// this.barcode = 'hwc_7896541'
+				this.barcode = 'hwc_' + row.id
+				this.importStockVisible = true
+			},
 			detailsShow(index, row) {
 				this.details_id = row.id
 				this.$axios.get('/admin/outbound_orders/' + row.id, {
@@ -867,12 +906,16 @@
 						res.data.data.order_boxes.forEach((data) => {
 							data.box_size = data.box.length + '*' + data.box.width + '*' + data.box.height
 						})
+						this.ware_houseTable.forEach((ware) => {
+							this.ware_houseTable2.push(ware)
+						})
 						this.order_box_cargos = res.data.data.order_boxes
 						this.outBoundTable = res.data.data.label_changes
 						this.pick_id = row.id
 						this.barcode = 'hwc_' + row.id
 						this.status = row.status
 						//						this.barcode = Base64.encode('123456789_1')
+						console.log(this.barcode)
 						this.detailVisible = true
 					} else {
 						this.$message.error("失败,请联系管理员")
@@ -898,19 +941,6 @@
 								// data.labal_ware_houses = data.labal_ware_houses + ' ' + data2.ware_house_name + '(' + data2.sum + ')'
 							})
 						})
-						this.ware_houseTable.forEach((data) => {
-							data.fnsku_ware = data.ware_house_id + data.fnsku
-						})
-						let temparr = []
-						this.ware_houseTable.forEach((data, index) => {
-							let indextepm = temparr.indexOf(data.fnsku_ware)
-							if(indextepm == -1) {
-								temparr.push(data.fnsku_ware)
-								this.ware_houseTable2.push(data)
-							} else {
-								this.ware_houseTable2[indextepm].sum = this.ware_houseTable2[indextepm].sum + data.sum
-							}
-						})
 						this.outBoundTable = res.data.data.label_changes
 					} else {
 						console.log('error')
@@ -919,7 +949,6 @@
 			},
 			closeDetails() {
 				this.ware_houseTable = []
-				this.ware_houseTable2 = []
 			},
 			getStatusName(status) {
 				if(status == 1) {
