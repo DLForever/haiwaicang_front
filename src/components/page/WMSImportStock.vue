@@ -63,13 +63,24 @@
 					this.$message.error("请选择xlsx文件")
 					return false;
 				}
+				const extension = this.xlsxList[0].name.split('.')[1] === 'xls';
+                const extension2 = this.xlsxList[0].name.split('.')[1] === 'xlsx';
+                const maxSzie = this.xlsxList[0].size / 1024 / 1024 < 10;
+                if (!extension && !extension2) {
+                    this.$message.error('上传失败，请上传xls、xlsx格式的文件！')
+                    return false
+                }
+                if (!maxSzie) {
+                    console.log('上传文件不能超过10MB！')
+                    this.$message.error('上传文件不能超过10MB!')
+                    return false
+                }
 				let formData = new FormData()
 				let config = {
 					headers: {
 						'Authorization': localStorage.getItem('token_admin')
 					}
 				}
-				console.log(this.xlsxList)
 				this.xlsxList.forEach((item) => {
 					formData.append('file', item.raw)
 				})

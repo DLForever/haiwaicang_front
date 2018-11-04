@@ -84,12 +84,41 @@
 				</el-tab-pane>
 	</el-tabs> -->
 			<!-- 添加出库弹出框 -->
-			<el-dialog title="创建出库单" :visible.sync="outboundVisible" width="60%" @close="closeOutbound">
+			<el-dialog title="创建出库单" :visible.sync="outboundVisible" width="70%" @close="closeOutbound">
+				<el-table :data="form" border style="width: 100%" ref="multipleTable">
+					<el-table-column prop="total" label="原fnsku">
+						<template slot-scope="scope">
+							<el-select v-model="scope.row.product_id" placeholder="选择产品" class="handle-select mr10">
+								<el-option v-for="item in options" :key="item.id" :label="item.fnsku" :value="item.id"></el-option>
+							</el-select>
+						</template>
+					</el-table-column>
+					<el-table-column prop="new_fnsku" label="新的fnsku">
+						<template slot-scope="scope">
+							<el-input v-model.trim="scope.row.new_fnsku" placeholder="新的fnsku"></el-input>
+						</template>
+					</el-table-column>
+					<el-table-column prop="sku" label="sku">
+						<template slot-scope="scope">
+							<el-input v-model.trim="scope.row.sku" placeholder="sku"></el-input>
+						</template>
+					</el-table-column>
+					<el-table-column prop="plan_sum" label="数量">
+						<template slot-scope="scope">
+							<el-input v-model.trim="scope.row.plan_sum" placeholder="计划数量"></el-input>
+						</template>
+					</el-table-column>
+					<el-table-column label="新标">
+						<template slot-scope="scope">
+							<my-uploader v-if="my_uploaderVisible" :onChange="changeLabel.bind(null,scope.$index)"></my-uploader>
+						</template>
+						
+					</el-table-column>
+				</el-table>
 				<el-form :rules="rules" label-width="115px">
-					<el-form-item label="出库单" required>
+					<!-- <el-form-item>
 						<table class="table text-center">
 							<tbody v-for="(p,index) in form">
-								<!--<tr v-for="(q,index) in p['form_branch']">-->
 								<tr>
 									<td>
 										<el-select v-model="p.product_id" placeholder="选择产品" class="handle-select mr10">
@@ -97,49 +126,24 @@
 											<infinite-loading :on-infinite="onInfinite" ref="infiniteLoading"></infinite-loading>
 										</el-select>
 									</td>
+									
 									<td>
-										<!-- <td> -->
 											<el-input v-model.trim="p.new_fnsku" placeholder="新的fnsku"></el-input>
-										<!-- </td> -->
 									</td>
 									<td>
-										<!-- <td> -->
 											<el-input v-model.trim="p.sku" placeholder="sku"></el-input>
-										<!-- </td> -->
 									</td>
 									<td>
-										<!-- <td> -->
 											<el-input v-model.trim="p.plan_sum" placeholder="计划数量"></el-input>
-										<!-- </td> -->
 									</td>
 									<td  @click="getIndex(index)">
-										<my-uploader v-if="my_uploaderVisible" :onChange="changeLabel.bind(null,index)"></my-uploader>
-										<!-- <el-upload :drag="false" :show-file-list="false" action="">
-											<el-button size="small" type="primary">点击上传</el-button>
-										</el-upload> -->
-										<!-- <el-upload action="" :auto-upload="false">
-											<el-button type="primary">上传</el-button>
-										</el-upload> -->		
-										<!-- <el-upload class="avatar-uploader" list-type="picture-card" action="" :before-upload="beforeAvatarUpload" :auto-upload="false" :on-remove="remove_label" :on-exceed="exceed" :limit="1" :on-change="changeLabel">
-  											<i class="el-icon-plus avatar-uploader-icon"></i>
-										</el-upload> -->
-<!-- 										<div class="uploader_containner">
-    										<input style="display:none" @change="addFile" :multiple="false" type="file" id="my-upload" ref="file_input"/>
-    										<img :src="img_url" class="upload_img" @click="chooseFile"/>
-    										<span v-for="item in fileList" v-if="item.type && !(item.type.match(/image/))">{{item.name}}</span>
-  										</div> -->
-										<!-- <el-dialog :visible.sync="pictureVisible">
-  											<img width="100%" alt>
-										</el-dialog> -->				
+										<my-uploader v-if="my_uploaderVisible" :onChange="changeLabel.bind(null,index)"></my-uploader>			
 									</td>
-									<!--<i class="el-icon-circle-plus" @click="orderAdd(index)" :disabled="false"></i>
-									<i class="el-icon-remove" @click="orderDel(index)"></i>-->
 								</tr>
-								<!-- <span>------------------------</span> -->
 							</tbody>
 						</table>
-						<!-- <el-upload>上传</el-upload> -->
-					</el-form-item>
+					</el-form-item> -->
+					<br>
 					<div class="newOrder">
 						<el-button @click="createOrder">添加出库单</el-button>
 						<el-button @click="back" :disabled="isDisableBu" type="danger">撤销</el-button>
@@ -163,7 +167,38 @@
 
 			<!-- 更新出库弹出框 -->
 			<el-dialog title="更新出库单" :visible.sync="updateVisible" width="60%" @close="closeUpdate">
-				<el-form :rules="rules" label-width="115px">
+				<el-table :data="updateform" border style="width: 100%" ref="multipleTable">
+					<el-table-column prop="total" label="原fnsku">
+						<template slot-scope="scope">
+							<el-select v-model="scope.row.product_id" placeholder="选择产品" class="handle-select mr10">
+								<el-option v-for="item in options" :key="item.id" :label="item.fnsku" :value="item.id"></el-option>
+							</el-select>
+						</template>
+					</el-table-column>
+					<el-table-column prop="new_fnsku" label="新的fnsku">
+						<template slot-scope="scope">
+							<el-input v-model.trim="scope.row.new_fnsku" placeholder="新的fnsku"></el-input>
+						</template>
+					</el-table-column>
+					<el-table-column prop="sku" label="sku">
+						<template slot-scope="scope">
+							<el-input v-model.trim="scope.row.sku" placeholder="sku"></el-input>
+						</template>
+					</el-table-column>
+					<el-table-column prop="plan_sum" label="数量">
+						<template slot-scope="scope">
+							<el-input v-model.trim="scope.row.plan_sum" placeholder="计划数量"></el-input>
+						</template>
+					</el-table-column>
+					<el-table-column label="新标">
+						<template slot-scope="scope">
+							<my-uploader v-if="scope.row.picturefileList != ''" :onChange="updateLabel.bind(null,scope.$index)" :defaultImg="$axios.defaults.baseURL+scope.row.picturefileList"></my-uploader>
+							<my-uploader v-else :onChange="updateLabel.bind(null,scope.$index)"></my-uploader>
+						</template>
+						
+					</el-table-column>
+				</el-table>
+				<!-- <el-form :rules="rules" label-width="115px">
 					<el-form-item label="出库单" required>
 						<table class="table text-center">
 							<tbody v-for="(p,index) in updateform">
@@ -187,7 +222,9 @@
 								</tr>
 							</tbody>
 						</table>
-					</el-form-item>
+					</el-form-item> -->
+					<br>
+				<el-form>
 					<div class="newOrder">
 						<el-button @click="updateAdd">添加出库单</el-button>
 						<el-button @click="updateCancel" :disabled="isDisableUpdate" type="danger">撤销</el-button>
@@ -265,7 +302,26 @@
             </span>
 			</el-dialog>
 			<!-- 贴标弹出框 -->
-			<el-dialog title="编辑" :visible.sync="editVisible" width="30%" @close="cancelLabel">
+			<el-dialog title="编辑" :visible.sync="editVisible" width="50%" @close="cancelLabel">
+				<el-table v-if="this.order_box_cargos.length != 0" :data="order_box_cargos" border style="width: 100%">
+					<el-table-column type="expand">
+						<template slot-scope="scope">
+							<el-table :data="scope.row.order_box_cargos">
+								<el-table-column prop="fnsku" label="fnsku"></el-table-column>
+								<el-table-column prop="sum" label="数量"></el-table-column>
+							</el-table>
+						</template>
+					</el-table-column>
+					<el-table-column prop="sum" label="数量"></el-table-column>
+					<el-table-column prop="box_size" label="箱子尺寸(长*宽*高)"></el-table-column>
+					<el-table-column prop="weight" label="箱子重量"></el-table-column>
+					<el-table-column label="货物编码">
+						<template slot-scope="scope">
+							<el-input placeholder="输入货物编码" :value="scope.row.cargo_number" v-model="scope.row.cargo_number"></el-input>
+						</template>
+					</el-table-column>
+				</el-table>
+				<br>
 				<el-form ref="form" :model="form" label-width="80px">
 					<el-form-item label="外箱标">
 						<el-upload class="upload-demo" drag action="" :file-list="fileList" :on-remove="handleRemove" :auto-upload="false" :on-change="changeFile" :limit="5" multiple>
@@ -302,6 +358,7 @@
 </template>
 
 <script>
+	import notificatinImg from "@/assets/close.png"
 	import VueInfiniteLoading from "vue-infinite-loading"
 	import MyUploader from "@/components/common/my_uploader"
 	export default {
@@ -394,7 +451,11 @@
 					}],
 				},
 				my_uploaderVisible: true,
+				notifications: []
 			}
+		},
+		props:{
+			getMessageCount:Function
 		},
 		created() {
 			this.getData();
@@ -548,7 +609,24 @@
 			back() {
 				this.form.pop(this.newForm2)
 			},
+			popTest(index,id) {
+                console.log('index')
+                this.notifications[index].close()
+                this.notifications[index] = undefined
+                this.$axios.patch('/notifications/' + id, '',{
+                    headers: {
+                        'Authorization': localStorage.getItem('token')
+                    },
+                }).then((res) => {
+                    if(res.data.code = 200) {
+
+                    }
+                }).catch((res) => {
+                    console.log('error')
+                })
+            },
 			onSubmit() {
+				console.log(this.form)
 				let logistics_number = []
 				let product_ids = []
 				let plan_sum = []
@@ -571,10 +649,6 @@
 					return false
 				}
 				this.form.forEach((data) => {
-					// product_ids.push(data['product_id'])
-					// plan_sum.push(Number(data['plan_sum']))
-					// new_fnsku.push(data['new_fnsku'])
-					// files.push(data['picturefileList'])
 					formData.append('cargo_ids[]', data['product_id'])
 					formData.append('dst_fnsku[]', data['new_fnsku'])
 					formData.append('sku[]', data['sku'])
@@ -614,31 +688,37 @@
 						}]
 						this.getDatas()
 						this.outboundVisible = false
-
-						let mesId =  JSON.parse(localStorage.getItem('notifyid')) || []
-						this.$axios.get('/notifications', {
-		                    headers: {
-		                        'Authorization': localStorage.getItem('token')
-		                    },
-		                }).then((res) => {
-		                    if(res.data.code == 200) {
-		                        res.data.data.forEach((data, index) => {
-		                            let offsettemp = 100 + 70 * index
-		                            if(mesId.indexOf(data.id) == -1) {
-		                                this.$notify({
-		                                    title: '您有新的消息',
-		                                    offset: offsettemp,
-		                                    message: data.message
-		                                })
-		                                mesId.push(data.id)
-		                                localStorage.removeItem('notifyid')
-		                                localStorage.setItem('notifyid', JSON.stringify(mesId))  
-		                            }
-		                        })
-		                    }
-		                }).catch((res) => {
-		                    console.log('error')
-		                })
+						this.getMessageCount()
+						// let mesId =  JSON.parse(localStorage.getItem('notifyid')) || []
+						// this.$axios.get('/notifications', {
+		    //                 headers: {
+		    //                     'Authorization': localStorage.getItem('token')
+		    //                 },
+		    //             }).then((res) => {
+		    //                 if(res.data.code == 200) {
+		    //                     res.data.data.forEach((data, index) => {
+		    //                         let offsettemp = 100 + 70 * index
+		    //                         if(mesId.indexOf(data.id) == -1) {
+		    //                             this.notifications.push(this.$notify({
+      //                                       title: '您有新的消息',
+      //                                       dangerouslyUseHTMLString: true,
+      //                                       offset: offsettemp,
+      //                                       message: data.message + `&nbsp<img src="${notificatinImg}"></img>`,
+      //                                       onClick: this.popTest.bind(null,this.notifications.length,data.id),
+      //                                       customClass: "testlzh",
+      //                                       duration: 7000,
+      //                                       showClose: false
+      //                                   }))
+		    //                             mesId.push(data.id)
+		    //                             localStorage.removeItem('notifyid')
+		    //                             localStorage.setItem('notifyid', JSON.stringify(mesId))  
+		    //                         }
+		    //                     })
+		    //                 }
+		    //             }).catch((res) => {
+		    //                 console.log('error')
+		    //             })
+		    
 
 					}
 				}).catch((res) => {
@@ -658,6 +738,7 @@
 					formData.append('label_changes[][cargo_id]',data['product_id'])
 					formData.append('label_changes[][dst_fnsku]',data['new_fnsku'])
 					formData.append('label_changes[][sum]',data['plan_sum'])
+					formData.append('label_changes[][sku]',data['sku'])
 					console.log(data['picturefileList'])
 					if(typeof data['picturefileList'] != "string") {
 						formData.append('label_changes[][pictures][]',data['picturefileList'])
@@ -677,6 +758,7 @@
 					if(res.data.code == 200) {
 						this.$message.success("更新成功")
 						this.updateVisible  =false
+						this.getMessageCount()
 					}
 				}).catch((res) => {
 					console.log(res)
@@ -692,6 +774,17 @@
 				this.form = {
 					id: item.id,
 				}
+				this.$axios.get('/outbound_orders/' + row.id, {
+					headers: {
+						'Authorization': localStorage.getItem('token')
+					},
+				}).then((res) => {
+					res.data.data.order_boxes.forEach((data) => {
+						data.box_size = data.box.length + '*' + data.box.width + '*' + data.box.height
+						// data.cargo_number = ''
+					})
+					this.order_box_cargos = res.data.data.order_boxes
+				})
 				this.editVisible = true;
 			},
 			updateOutbound(index, row) {
@@ -708,6 +801,7 @@
 						this.updateform[index].product_id = data.cargo_id
 						this.updateform[index].new_fnsku = data.dst_fnsku
 						this.updateform[index].plan_sum = data.sum
+						this.updateform[index].sku = data.sku
 						if(data.pictures[0] != undefined) {
 							this.updateform[index].picturefileList = data.pictures[0].url.url
 						}
@@ -759,11 +853,19 @@
 			},
 			// 添加外箱标
 			saveEdit(form) {
+				let order_box_ids = []
+				let cargo_number = []
+				let formData = new FormData()
+				this.order_box_cargos.forEach((data) => {
+					formData.append('order_box_ids[]', data.box_id)
+					formData.append('cargo_number[]', data.cargo_number)
+				})
+				console.log(cargo_number)
 				if(this.fileList.length == 0) {
 					this.$message.error('请添加外箱标')
 					return false
 				}
-				let formData = new FormData()
+				
 				this.fileList.forEach((item) => {
 					formData.append('picture[]', item.raw)
 				})

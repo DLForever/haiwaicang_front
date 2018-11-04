@@ -8,7 +8,6 @@
 		</div>
 		<div class="container">
 			<div class="handle-box">
-				<!--<el-button @click="print">打印</el-button>-->
 				<el-select v-model="select_cate" filterable remote placeholder="选择用户" class="handle-select mr10" :loading="loading" @change="getUserDatasFirst" @visible-change="selectVisble" :remote-method="remoteMethod">
 					<el-option v-for="item in options" :key="item.id" :label="item.name" :value="item.id"></el-option>
 					<infinite-loading :on-infinite="onInfinite" ref="infiniteLoading"></infinite-loading>
@@ -17,9 +16,6 @@
 					<el-input style="width:150px" placeholder="请输入fnsku" v-model="search_fnsku"></el-input>
 					<el-button @click="filter_fnsku()" type="primary">查询</el-button>
 				</div>
-				<!--<el-button type="primary" icon="search" @click="allUser">所有用户</el-button>-->
-				<!--<el-input v-model="select_word" placeholder="筛选fnsku" class="handle-input mr10"></el-input>-->
-				<!--<el-button type="primary" icon="search" @click="search">搜索</el-button>-->
 			</div>
 			<el-table :data="data" border style="width: 100%" ref="multipleTable" @selection-change="handleSelectionChange">
 				<el-table-column type="selection" width="55"></el-table-column>
@@ -69,57 +65,54 @@
 			</div>
 		</div>
 
-		<!-- 入库弹出框 -->
-		<el-dialog title="编辑" :visible.sync="editVisible" width="30%">
+		<!-- 上架弹出框 -->
+		<el-dialog title="编辑" :visible.sync="editVisible" width="40%" @close="closePutVisible">
 			<el-table :data="product_store_ins" border style="width: 100%">
 				<el-table-column prop="fnsku" label="fnsku"></el-table-column>
 				<el-table-column prop="arrive_sum" label="到达数量"></el-table-column>
+			</el-table>
+			<br>
+			<el-table :data="waretable" border style="width: 100%">
 				<el-table-column label="库位选择">
 					<template slot-scope="scope">
-						<el-select v-model="ware_house_ids" placeholder="选择库位" class="handle-select mr10" multiple>
+						<el-select v-model="scope.row.ware" placeholder="选择库位" class="handle-select mr10">
 							<el-option v-for="item in wareoptions" :label="item.name" :value="item.id"></el-option>
 							<infinite-loading :on-infinite="onInfinite_ware" ref="infiniteLoading"></infinite-loading>
 						</el-select>
 					</template>
 				</el-table-column>
-				<el-table-column label="实际上架数量" width="133">
+				<el-table-column label="上架数量">
 					<template scope="scope">
-						<el-input class="input-new-tag" v-model="bround_sum" ref="saveTagInput" size="small">
+						<el-input class="input-new-tag" placeholder="输入数量" v-model.trim="scope.row.sum" ref="saveTagInput" size="small">
 						</el-input>
 					</template>
 				</el-table-column>
 			</el-table>
-			<span class="el-upload__tip">温馨提示：如果一个产品入多个库，到货数量请用‘/’分开，格式为 66/88，确保库位和数据一一对应</span>
-			<br><br>
+			<br>
 			<el-form ref="form" :model="form" label-width="40px">
+				<div class="newWare">
+					<el-button @click="createWare">添加库位</el-button>
+					<el-button @click="back" :disabled="isDisableBu" type="danger">撤销</el-button>
+				</div>
+				<br>
 				<el-form-item label="备注">
 					<el-input v-model="form.remark"></el-input>
 				</el-form-item>
 			</el-form>
 			<span slot="footer" class="dialog-footer">
-                <el-button @click="editVisible = false">取 消</el-button>
+                <el-button @click="closePutVisible">取 消</el-button>
                 <el-button type="primary" @click="saveEdit('form')">确 定</el-button>
             </span>
 		</el-dialog>
 
 		<!-- 详情提示框 -->
 		<el-dialog title="详情" :visible.sync="detailVisible" width="50%">
-			<!--<el-button @click="print2">打印</el-button>-->
-			<!--<div id="printJS-form">-->
 				<el-table :data="form.cargo_ware_houses" border style="width: 100%">
 					<el-table-column prop="fnsku" label="fnsku"></el-table-column>
 					<el-table-column prop="ware_house_name" label="所在库位"></el-table-column>
 					<el-table-column prop="sum" label="数量"></el-table-column>
 					<el-table-column prop="lock_sum" label="锁定数量"></el-table-column>
 				</el-table>
-				
-				<!--<el-table border style="width: 100%">
-					<el-table-column label="fnsku"></el-table-column>
-					<el-table-column label="所在库位"></el-table-column>
-					<el-table-column label="数量"></el-table-column>
-					<el-table-column label="锁定数量"></el-table-column>
-				</el-table>-->
-			<!--</div>-->
 		</el-dialog>
 
 		<!-- 删除提示框 -->
@@ -162,7 +155,6 @@
 				user_page: 1,
 				ware_page: 1,
 				pagesize: 20,
-				//              pagesizes:'',
 				multipleSelection: [],
 				select_cate: '',
 				select_word: '',
@@ -178,9 +170,16 @@
 				product_store_ins: [],
 				form: {
 					fnsku: ''
-					//              	product_store_ins: [],
 				},
-				idx: -1
+				idx: -1,
+				waretable: [{
+					ware: undefined,
+					sum: 0
+				}],
+				waretabletemp: {
+					ware: undefined,
+					sum: 0
+				},
 			}
 		},
 		created() {
@@ -196,6 +195,13 @@
 				return this.tableData.filter((d) => {
 					return d
 				})
+			},
+			isDisableBu() {
+				if(this.waretable.length <= 1) {
+					return this.isdisable = true
+				} else {
+					return this.isdisable = false
+				}
 			}
 		},
 		filters: {
@@ -209,32 +215,6 @@
 			},
 		},
 		methods: {
-//			print2() {
-//				Print({
-//					printable: 'printJS-form',
-//					type: 'html',
-//					targetStyles: ['border', 'content']
-//				})
-//			},
-//			print3() {
-//				let sub = document.getElementById('printJS-form')
-//				let newHtml = sub.innerHTML
-//				let oldHtml = document.body.innerHTML
-//				document.body.innerHTML = newHtml
-//				window.print()
-////				window.location.reload()
-//				document.body.innerHTML = oldHtml
-////				return false
-//			},
-//			print() {
-//				let sub = document.getElementById('printJS-form2')
-//				let newHtml = sub.innerHTML
-//				let oldHtml = document.body.innerHTML
-//				document.body.innerHTML = newHtml
-//				window.print()
-//				window.location.reload()
-//				document.body.innerHTML = oldHtml
-//			},
 			handleSizeChange(val) {
 				this.pagesize = val;
 			},
@@ -278,8 +258,17 @@
 							callback()
 						}
 					}
-
 				})
+			},
+			createWare() {
+				this.waretable.push(this.waretabletemp)
+				this.waretabletemp = {
+					ware: undefined,
+					sum: 0
+				}
+			},
+			back() {
+				this.waretable.pop(this.waretabletemp)
 			},
 			grounding(index, row) {
 				this.idx = index;
@@ -289,20 +278,27 @@
 					id: item.id,
 					arrive_sum: item.arrive_sum
 				}
-				console.log(this.product_store_ins)
 				this.editVisible = true;
+			},
+			closePutVisible() {
+				this.waretable = [{
+					ware: undefined,
+					sum: 0
+				}]
+				this.editVisible = false
 			},
 			// 上架
 			saveEdit(form) {
+				console.log(this.waretable)
 				let sum = []
-				if(this.ware_house_ids.length == 1) {
-					sum.push(parseInt(this.bround_sum))
-				} else {
-					sum = this.bround_sum.split('/').map(Number)
-				}
+				let ware_house_ids = []
+				this.waretable.forEach((data) => {
+					sum.push(data.sum)
+					ware_house_ids.push(data.ware)
+				})
 				let params = {
 					sum: sum,
-					ware_house_ids: this.ware_house_ids
+					ware_house_ids: ware_house_ids
 				}
 				this.$axios.post('/admin/cargos/' + this.form.id + '/putaway', params, {
 					headers: {
@@ -311,9 +307,8 @@
 				}).then((res) => {
 					if(res.data.code == 200) {
 						this.editVisible = false;
-						this.$message.success('入库完成')
 						this.getData()
-						this.editVisible = false;
+						this.$message.success('入库完成')
 						this.bround_sum = ''
 						this.ware_house_ids = []
 					}
@@ -529,5 +524,9 @@
 	.del-dialog-cnt {
 		font-size: 16px;
 		text-align: center
+	}
+
+	.newWare {
+		text-align: center;
 	}
 </style>

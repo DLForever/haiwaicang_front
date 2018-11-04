@@ -125,6 +125,11 @@ export default new Router({
                     component: resolve => require(['../components/page/WMSOutBoundManageChina.vue'], resolve),
                     meta: { title: 'WMS出库单管理(国内)', permission: true  }
                 },
+                {
+                    path: '/WMSsendmanage',
+                    component: resolve => require(['../components/page/WMSsendManage.vue'], resolve),
+                    meta: { title: 'WMS发货管理', permission: true  }
+                },
 //              {
 //                  path: '/WMSordermanage',
 //                  component: resolve => require(['../components/page/WMSOrderManage.vue'], resolve),

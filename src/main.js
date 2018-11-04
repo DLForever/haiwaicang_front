@@ -12,7 +12,7 @@ import cookie_ from './components/common/cookie'
 Vue.use(ElementUI, { size: 'small' });
 Vue.prototype.$axios = axios;
 Vue.use(judge)
-//Vue.prototype.cookie = cookie_
+Vue.prototype.cookie = cookie_
 //Vue.prototype.token_admin = localStorage.getItem('token_admin')
 //Vue.prototype.token = localStorage.getItem('token')
 

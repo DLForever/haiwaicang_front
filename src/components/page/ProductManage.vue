@@ -12,21 +12,21 @@
                     <el-option key="1" label="广东省" value="广东省"></el-option>
                     <el-option key="2" label="湖南省" value="湖南省"></el-option>
                 </el-select>-->
-                <el-input v-model="select_word" placeholder="筛选fnsku/产品名称" class="handle-input mr10"></el-input>
+               <!--  <el-input v-model="select_word" placeholder="筛选fnsku/产品名称" class="handle-input mr10"></el-input> -->
                 <!--<el-button type="primary" icon="search" @click="search">搜索</el-button>-->
             </div>
             <!--<el-table :data="data.slice((cur_page-1)*pagesize, cur_page*pagesize)" border style="width: 100%" ref="multipleTable" @selection-change="handleSelectionChange">-->
             <el-table :data="data" border style="width: 100%" ref="multipleTable" @selection-change="handleSelectionChange">
                 <el-table-column type="selection" width="55"></el-table-column>
+                <el-table-column prop="shopname" label="店铺名" width="200">
+                </el-table-column>
+                <el-table-column prop="erp_number" label="erp 编码" width="200">
+                </el-table-column>
                 <el-table-column prop="fnsku" label="FNSKU" width="200">
                 </el-table-column>
                 <el-table-column prop="name" label="产品名称">
                 </el-table-column>
-                <el-table-column prop="length" label="长(英寸)" width="110">
-                </el-table-column>
-                <el-table-column prop="width" label="宽(英寸)" width="110">
-                </el-table-column>
-                <el-table-column prop="height" label="高(英寸)" width="110">
+                <el-table-column prop="size" label="尺寸(长*宽*高)" width="110">
                 </el-table-column>
                 <el-table-column prop="weight" label="重量" width="110">
                 </el-table-column>
@@ -161,6 +161,9 @@
                 	headers: {'Authorization': localStorage.getItem('token')}
                 },
                 ).then((res) => {
+                    res.data.data.forEach((data) => {
+                        data.size = data.length + '*' + data.width + '*' + data.height
+                    })
                     this.tableData = res.data.data
 //					this.totals = this.tableData.length
                     this.totals = res.data.count

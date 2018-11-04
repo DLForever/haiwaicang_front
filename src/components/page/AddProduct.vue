@@ -47,10 +47,16 @@
 							<el-form-item label="重量" prop="weight">
 								<el-input v-model.trim="form.weight"></el-input>
 							</el-form-item>
+							<el-form-item label="店铺名" prop="shopname">
+								<el-input v-model.trim="form.shopname"></el-input>
+							</el-form-item>
+							<el-form-item label="erp编码" prop="erp_number">
+								<el-input v-model.trim="form.erp_number"></el-input>
+							</el-form-item>
 							<el-form-item label="备注" prop="remark">
 								<el-input v-model.trim="form.remark"></el-input>
 							</el-form-item>
-							<el-form-item label="产品图片" required>
+							<el-form-item label="产品图片">
 								<el-upload class="upload-demo" drag action="" :file-list="fileList" :on-remove="handleRemove" :auto-upload="false" :on-change="changeFile" :limit="5" multiple>
 									<i class="el-icon-upload"></i>
 									<div class="el-upload__text">将文件拖到此处，或<em>点击上传</em></div>
@@ -74,20 +80,23 @@
 					</div>
 
 				</el-tab-pane>
-				<!--<el-tab-pane label="批量上传" name="second">
+				<el-tab-pane label="批量上传" name="second">
 					<template v-if="message === 'second'">
 						<el-form ref="form" :model="form" label-width="85px">
 							<el-form-item label="批量上传">
-								<el-upload class="upload-demo" drag action="" :file-list="fileList2" :on-remove="handleRemove2" :auto-upload="false" :on-change="changeFile2" :limit="5" multiple>
+								<el-upload class="upload-demo" drag action="" :on-exceed="exceed" :file-list="batchList" :on-remove="handleRemoveBatch" :auto-upload="false" :on-change="changeBatch" :before-upload="beforeAvatarUpload" :limit="1">
 									<i class="el-icon-upload"></i>
 									<div class="el-upload__text">将文件拖到此处，或<em>点击上传</em></div>
 									<div class="el-upload__tip" slot="tip">只能上传xls文件</div>
 								</el-upload>
-								<a type="primary" href="">模板下载</a>
+								<a :href="$axios.defaults.baseURL +'/batch_product.xlsx'">模板下载</a>
+							</el-form-item>
+							<el-form-item>
+								<el-button type="primary" @click="uploadproduct">上传文件</el-button>
 							</el-form-item>
 						</el-form>
 					</template>
-				</el-tab-pane>-->
+				</el-tab-pane>
 			</el-tabs>
 		</div>
 	</div>
@@ -102,6 +111,7 @@
 				product_pictures: [],
 				fileList: [],
 				fileList2: [],
+				batchList: [],
 				form: {
 					name: '',
 					sku: '',
@@ -112,8 +122,20 @@
 					height: '',
 					weight: '',
 					remark: '',
+					shopname: '',
+					erp_number: ''
 				},
 				rules: {
+					// shopname: [{
+					// 	required: true,
+					// 	message: '请输入店铺名',
+					// 	trigger: 'blur'
+					// }],
+					// erp_number: [{
+					// 	required: true,
+					// 	message: '请输入erp编码',
+					// 	trigger: 'blur'
+					// }],
 					name: [{
 						required: true,
 						message: '请输入名称',
@@ -172,10 +194,12 @@
 				let formData = new FormData()
 				this.$refs[formName].validate((valid) => {
 					if(valid) {
-						if (this.fileList.length == 0){
-							this.$message.error('请上传产品图片')
-							return false
-						}
+						// if (this.fileList.length == 0){
+						// 	this.$message.error('请上传产品图片')
+						// 	return false
+						// }
+						formData.append('product[shopname]', this.form.shopname)
+						formData.append('product[erp_number]', this.form.erp_number)
 						formData.append('product[fnsku]', this.form.fnsku)
 						formData.append('product[name]', this.form.name)
 						formData.append('product[sku]', this.form.sku)
@@ -215,41 +239,44 @@
 						return false
 					}
 				})
-				//				formData.append('product[fnsku]', this.form.fnsku)
-				//				formData.append('product[name]', this.form.name)
-				//				formData.append('product[sku]', this.form.sku)
-				//				formData.append('product[length]', this.form.length)
-				//				formData.append('product[width]', this.form.width)
-				//				formData.append('product[height]', this.form.height)
-				//				formData.append('product[weight]', this.form.weight)
-				//				formData.append('product[price]', this.form.price)
-				//				formData.append('product[remark]', this.form.remark)
-				//				this.fileList.forEach((item) => {
-				//					formData.append('product_pictures[]', item.raw)
-				//				})
-				//				this.fileList2.forEach((item) => {
-				//					formData.append('package_pictures[]', item.raw)
-				//				})
-				//				let config = {
-				//					headers: {
-				//						'Authorization': token
-				//					}
-				//				}
-				//				this.$axios.post('/products', formData, config
-				//				).then((res) => {
-				//					if(res.data.code == 200){
-				//						this.$message.success('提交成功！');
-				//						this.$refs['form'].resetFields()
-				//						this.form.length = ''
-				//						this.form.width = ''
-				//						this.form.height = ''
-				//						this.fileList = []
-				//						this.fileList2 = []
-				//					}			
-				//				}).catch((res) => {
-				//					this.$message.error('提交有误')
-				//				})
 			},
+			uploadproduct() {
+				if(this.batchList.length == 0) {
+					this.$message.error("请选择xlsx文件")
+					return
+				}
+				const extension = this.batchList[0].name.split('.')[1] === 'xls'
+				const extension2 = this.batchList[0].name.split('.')[1] === 'xlsx'
+				const isLt2M = this.batchList[0].size / 1024 / 1024 < 10
+				if(!extension & !extension2) {
+					console.log('上传模板只能是 xls、xlsx格式！')
+					this.$message.error('请上传 xls、xlsx格式的文件')
+					return
+				}
+				if(!isLt2M) {
+					console.log('上传模板大小不能超过10MB！')
+					return
+				}
+				
+				let formData = new FormData()
+				let config = {
+					headers: {
+						'Authorization': localStorage.getItem('token')
+					}
+				}
+				console.log(this.batchList)
+				this.batchList.forEach((item) => {
+					formData.append('data', item.raw)
+				})
+				this.$axios.post('/products/batch', formData, config).then((res) => {
+					if(res.data.code == 200) {
+						this.$message.success("提交成功")
+						this.batchList = []
+					}
+				}).catch((res) => {
+					this.$message.error("失败，请核对无误后联系管理员")
+				})
+			},			
 			//上传前对文件的大小进行判断
 			beforeAvatarUpload(file) {
 				const extension = file.name.split('.')[1] === 'xls'
@@ -278,6 +305,15 @@
 			handleRemove2(a, b) {
 				this.fileList2 = b
 			},
+			changeBatch(file) {
+				this.batchList.push(file)
+			},
+			handleRemoveBatch(a, b) {
+				this.batchList = b
+			},
+			exceed() {
+				this.$message.error("对不起，超过个数限制")
+			}
 		}
 	}
 </script>

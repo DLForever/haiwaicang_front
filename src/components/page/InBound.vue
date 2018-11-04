@@ -55,8 +55,11 @@
 								<el-button @click="back" :disabled="isDisableBu" type="danger">撤销</el-button>
 							</div>
 							<br>
+							<el-form-item label="订单编码">
+								<el-input v-model.trim="order_number"></el-input>
+							</el-form-item>
 							<el-form-item label="备注">
-								<el-input v-model="remark"></el-input>
+								<el-input v-model.trim="remark"></el-input>
 							</el-form-item>
 							<el-form-item>
 								<el-button type="primary" @click="onSubmit">新建</el-button>
@@ -85,7 +88,9 @@
 </template>
 
 <script>
+	import notificatinImg from "@/assets/close.png"
 	import VueInfiniteLoading from "vue-infinite-loading"
+	import Header from '@/components/common/Header'
 	export default {
 		//		name: 'baseform',
 		data: function() {
@@ -134,12 +139,17 @@
 						message: '请输入名称',
 						trigger: 'blur'
 					}],
-				}
+				},
+				notifications: [],
+				order_number: undefined
 			}
 		},
 		created() {
 			this.getData();
 			this.getBatchInbound()
+		},
+		props:{
+			getMessageCount:Function
 		},
 		computed: {
 			isDisableBu() {
@@ -159,6 +169,8 @@
 				}).then((res) => {
 					this.options = this.options.concat(res.data.data)
 					this.totals = res.data.count
+					console.log('message')
+					console.log(Header.data)
 				})
 			},
 			getBatchInbound() {
@@ -219,7 +231,27 @@
 			back() {
 				this.form.pop(this.newForm2)
 			},
+			popTest(index,id) {
+                console.log('index')
+                this.notifications[index].close()
+                this.notifications[index] = undefined
+                this.$axios.patch('/notifications/' + id, '',{
+                    headers: {
+                        'Authorization': localStorage.getItem('token')
+                    },
+                }).then((res) => {
+                    if(res.data.code = 200) {
+
+                    }
+                }).catch((res) => {
+                    console.log('error')
+                })
+            },
 			onSubmit() {
+				// if(!this.order_number) {
+				// 	this.$message.error("请输入完整信息")
+				// 	return false
+				// }
 				let logistics_number = []
 				let product_id = []
 				let plan_sum = []
@@ -256,36 +288,8 @@
 							plan_sum: '',
 							logistics_number: ''
 						}]
-						let mesId =  JSON.parse(localStorage.getItem('notifyid')) || []
-						this.$axios.get('/notifications', {
-		                    headers: {
-		                        'Authorization': localStorage.getItem('token')
-		                    },
-		                }).then((res) => {
-		                    if(res.data.code == 200) {
-		                        res.data.data.forEach((data, index) => {
-		                            let offsettemp = 100 + 70 * index
-		                            if(mesId.indexOf(data.id) == -1) {
-		                                this.$notify({
-		                                    title: '您有新的消息',
-		                                    offset: offsettemp,
-		                                    message: data.message
-		                                })
-		                                mesId.push(data.id)
-		                                localStorage.removeItem('notifyid')
-		                                localStorage.setItem('notifyid', JSON.stringify(mesId))  
-		                            }
-		                        })
-		                    }
-		                }).catch((res) => {
-		                    console.log('error')
-		                })
+						this.getMessageCount()
 						this.$router.push('/inboundmanage')
-						// this.$notify({
-						// 	title: '您有新的消息',
-						// 	offset: 100,
-						// 	message: '您的入库单还需您进一步审核才能提交到仓库'
-						// })
 					}
 				}).catch((res) => {
 					console.log('error')

@@ -214,10 +214,10 @@
 								index: 'WMSoutboundmanageChina',
 								title: 'WMS出库单管理(国内)'
 							},
-//							{
-//								index: 'WMSordermanage',
-//								title: 'WMS换标订单'
-//							},
+							{
+								index: 'WMSsendmanage',
+								title: 'WMS发货管理'
+							},
 						]
 					},
 					{

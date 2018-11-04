@@ -18,12 +18,12 @@
 				<el-table-column type="selection" width="55"></el-table-column>
 				<el-table-column prop="barcode" label="出库单号">
 				</el-table-column>
-				<el-table-column label="条形码" width="120">
+				<!-- <el-table-column label="条形码" width="120">
 					<template slot-scope="scope">
 						<barcode :value="scope.row.barcode" :options="{displayValue:false}" tag="img" width="100" height="50"></barcode>
 					</template>
-				</el-table-column>
-				<el-table-column prop="username" label="用户名">
+				</el-table-column> -->
+				<el-table-column prop="user_number" label="用户名">
 				</el-table-column>
 				<el-table-column prop="total" label="数量">
 				</el-table-column>
@@ -60,9 +60,9 @@
 								<el-dropdown-item>
 									<el-button @click="check(scope.$index, scope.row)" type="text">&nbsp&nbsp&nbsp结&nbsp算&nbsp&nbsp&nbsp</el-button>
 								</el-dropdown-item> -->
-								<el-dropdown-item>
+								<!-- <el-dropdown-item>
 									<el-button @click="sendProduct(scope.$index, scope.row)" type="text">&nbsp&nbsp&nbsp发&nbsp货&nbsp&nbsp&nbsp</el-button>
-								</el-dropdown-item>
+								</el-dropdown-item> -->
 								<!-- <el-dropdown-item>
 									<el-button @click="handleDelete(scope.$index, scope.row)" type="text">&nbsp&nbsp&nbsp删&nbsp除&nbsp&nbsp&nbsp</el-button>
 								</el-dropdown-item> -->

@@ -73,7 +73,7 @@
 <script>
     import Header from "@/components/common/Header"
     export default {
-        // name: 'tabs',
+        name: 'tabs',
         data() {
             return {
                 message: 'first',
@@ -100,6 +100,9 @@
                     title: '【系统通知】该系统将于今晚凌晨2点到5点进行升级维护'
                 }]
             }
+        },
+        props:{
+            changeMessageCount:Function
         },
         created() {
             if(localStorage.getItem('token_admin')) {
@@ -163,6 +166,7 @@
                     }).then((res) => {
                         if(res.data.code = 200) {
                             this.unread.splice(index, 1);
+                            this.changeMessageCount(this.unread.length)
                             this.$message.success('已读消息')
                         }
                     }).catch((res) => {
@@ -176,6 +180,7 @@
                     }).then((res) => {
                         if(res.data.code = 200) {
                             this.unread.splice(index, 1)
+                            this.changeMessageCount(this.unread.length)
                             this.$message.success('已读消息')
                             Header.methods.getUserMessageCount
                             // Header.methods.getUserMessageCount

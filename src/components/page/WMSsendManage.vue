@@ -54,21 +54,21 @@
 								<el-dropdown-item>
 									<el-button @click="showImgs(scope.$index, scope.row)" type="text">&nbsp&nbsp&nbsp附&nbsp件&nbsp&nbsp&nbsp</el-button>
 								</el-dropdown-item>
-								<el-dropdown-item>
+<!-- 								<el-dropdown-item>
 									<el-button @click="package(scope.$index, scope.row)" type="text">&nbsp&nbsp&nbsp打&nbsp包&nbsp&nbsp&nbsp</el-button>
 								</el-dropdown-item>
 								<el-dropdown-item>
 									<el-button @click="check(scope.$index, scope.row)" type="text">&nbsp&nbsp&nbsp结&nbsp算&nbsp&nbsp&nbsp</el-button>
-								</el-dropdown-item>
-								<!-- <el-dropdown-item>
-									<el-button @click="sendProduct(scope.$index, scope.row)" type="text">&nbsp&nbsp&nbsp发&nbsp货&nbsp&nbsp&nbsp</el-button>
 								</el-dropdown-item> -->
+								<el-dropdown-item>
+									<el-button @click="sendProduct(scope.$index, scope.row)" type="text">&nbsp&nbsp&nbsp发&nbsp货&nbsp&nbsp&nbsp</el-button>
+								</el-dropdown-item>
 								<el-dropdown-item>
 									<el-button @click="printStock(scope.$index, scope.row)" type="text">打印出库单&nbsp&nbsp&nbsp</el-button>
 								</el-dropdown-item>
-								<el-dropdown-item>
+								<!-- <el-dropdown-item>
 									<el-button @click="handleDelete(scope.$index, scope.row)" type="text">&nbsp&nbsp&nbsp删&nbsp除&nbsp&nbsp&nbsp</el-button>
-								</el-dropdown-item>
+								</el-dropdown-item> -->
 							</el-dropdown-menu>
 						</el-dropdown>
 					</template>
@@ -132,26 +132,33 @@
 			</div> -->
 		</el-dialog>
 
-		<!-- 打印出库提示框 -->
-		<el-dialog title="详情" :visible.sync="importStockVisible" width="50%">
+		<!-- 打印发货单提示框 -->
+		<el-dialog title="详情" :visible.sync="importStockVisible" width="50%" @close="closeSendPrint">
 			<div class="creat">
-				<el-button type="primary" @click="printImport">打印</el-button>
+				<el-button type="primary" @click="printSend">打印</el-button>
 			</div>
-			<div id="importStock">
+			<div id="send-form">
 				<h1 style="text-align:center" class="ismix">{{is_mix}}</h1>
 				<barcode :value="barcode" :options="{displayValue:true}" tag="img" width="300" height="100"></barcode>
-				<el-table :data="importStockTable" border style="width: 100%">
-					<el-table-column prop="id" label="id" width="50"></el-table-column>
-					<el-table-column label="箱子"></el-table-column>
-					<el-table-column label="箱子重量"></el-table-column>
-					<el-table-column label="fnsku"></el-table-column>
-					<el-table-column label="数量"></el-table-column>
+				<el-table v-if="this.order_box_cargos.length != 0" :data="order_box_cargos" border style="width: 100%">
+					<el-table-column type="expand">
+						<template slot-scope="scope">
+							<el-table :data="scope.row.order_box_cargos">
+								<el-table-column prop="fnsku" label="fnsku"></el-table-column>
+								<el-table-column prop="sum" label="数量"></el-table-column>
+							</el-table>
+						</template>
+					</el-table-column>
+					<el-table-column prop="sku" label="sku"></el-table-column>
+					<el-table-column prop="sum" label="数量"></el-table-column>
+					<el-table-column prop="box_size" label="箱子尺寸(长*宽*高)"></el-table-column>
+					<el-table-column prop="weight" label="箱子重量"></el-table-column>
 				</el-table>
 			</div>
 		</el-dialog>
 
 		<!-- 检查提示框 -->
-		<el-dialog title="详情" :visible.sync="checkVisible" width="65%" @close="closeCheckVisible">
+		<el-dialog title="详情" :visible.sync="checkVisible" width="65%">
 			<el-table :data="checkData" border style="width: 100%">
 				<el-table-column prop="total" label="总数"></el-table-column>
 				<el-table-column prop="box_sum" label="箱子数量"></el-table-column>
@@ -196,7 +203,6 @@
 			<br>
 			<div class="dialog-footer-check">
 				<span slot="footer" class="dialog-footer">
-					<el-button type="default" @click="closeCheckVisible">取消</el-button>
 					<el-button type="primary" @click="check_done">提交</el-button>
 				</span>
 			</div>
@@ -225,62 +231,62 @@
 		<!-- 打包弹出框 -->
 		<el-dialog title="打包" :visible.sync="packageVisible" width="60%" @close="cancel_Package">
 			<el-form label-width="115px">
-				<el-form-item label="箱子" required>
-					<table class="table text-center">
-						<tbody v-for="(p,index) in form">
-							<tr>
-							<td>
-								<el-select placeholder="选择箱子" v-model="p.boxes_id"  class="handle-select mr10" value-key="id">
-									<el-option v-for="item in box_options" :label="item.name" :value="item.id"></el-option>
-									<infinite-loading :on-infinite="onInfinite_box" ref="infiniteLoading"></infinite-loading>
-								</el-select>
-							</td>
-							<td>
-								<el-input v-model.trim="p.boxes_weight" placeholder="箱子重量"></el-input>
-							</td>
-							
-							<i class="el-icon-circle-plus" @click="orderAdd(index)" :disabled="false"></i>
-							<span>&nbsp</span>
-							<i class="el-icon-remove" @click="orderDel(index)"></i>
-							</tr>
-							<tr v-for="(q,index) in p['form_branch']">
-								<td>
-									<el-select v-model="q.fnsku" placeholder="选择产品" class="handle-select mr10">
-										<el-option v-for="item in package_fnskus" :label="item" :value="item"></el-option>
-									</el-select>
-								</td>
-								<td>
-									<!-- <td> -->
-										<el-input v-model.trim="q.sum" placeholder="计划数量"></el-input>
-									<!-- </td> -->
-								</td>
-							</tr>
-							<span>-----</span>
-						</tbody>
-					</table>
-				</el-form-item>
-				<div class="newOrder">
-					<el-button @click="addBoxes">添加箱子</el-button>
-					<el-button @click="back" :disabled="isDisableBu" type="danger">撤销</el-button>
-				</div>
-				<br>
-				<el-form-item label="备注">
-					<el-input ></el-input>
-				</el-form-item>
-				<el-form-item>
-					<el-button type="primary" @click="package_done">打包</el-button>
-				</el-form-item>
-			</el-form>
+							<el-form-item label="箱子" required>
+								<table class="table text-center">
+									<tbody v-for="(p,index) in form">
+										<tr>
+										<td>
+											<el-select placeholder="选择箱子" v-model="p.boxes_id"  class="handle-select mr10" value-key="id">
+												<el-option v-for="item in box_options" :label="item.name" :value="item.id"></el-option>
+												<infinite-loading :on-infinite="onInfinite_box" ref="infiniteLoading"></infinite-loading>
+											</el-select>
+										</td>
+										<td>
+											<el-input v-model.trim="p.boxes_weight" placeholder="箱子重量"></el-input>
+										</td>
+										
+										<i class="el-icon-circle-plus" @click="orderAdd(index)" :disabled="false"></i>
+										<span>&nbsp</span>
+										<i class="el-icon-remove" @click="orderDel(index)"></i>
+										</tr>
+										<tr v-for="(q,index) in p['form_branch']">
+											<td>
+												<el-select v-model="q.fnsku" placeholder="选择产品" class="handle-select mr10">
+													<el-option v-for="item in package_fnskus" :label="item" :value="item"></el-option>
+												</el-select>
+											</td>
+											<td>
+												<!-- <td> -->
+													<el-input v-model.trim="q.sum" placeholder="计划数量"></el-input>
+												<!-- </td> -->
+											</td>
+										</tr>
+										<span>-----</span>
+									</tbody>
+								</table>
+							</el-form-item>
+							<div class="newOrder">
+								<el-button @click="addBoxes">添加箱子</el-button>
+								<el-button @click="back" :disabled="isDisableBu" type="danger">撤销</el-button>
+							</div>
+							<br>
+							<el-form-item label="备注">
+								<el-input ></el-input>
+							</el-form-item>
+							<el-form-item>
+								<el-button type="primary" @click="package_done">打包</el-button>
+							</el-form-item>
+						</el-form>
 		</el-dialog>
 		
 		<!-- 图片弹出框 -->
 		<el-dialog title="附件详情" :visible.sync="showImg" width="30%">
 			<el-carousel :interval="4000" type="card" height="200px" v-if="img_show">
-				<el-carousel-item v-for="item in form_picture.pictures">
+				<el-carousel-item v-for="item in form.pictures">
 					<img :src="$axios.defaults.baseURL+item.url.url" />
 				</el-carousel-item>
 			</el-carousel>
-			<div v-if="pdf_show" v-for="item in form_picture.pictures">
+			<div v-if="pdf_show" v-for="item in form.pictures">
 				<a target="_blank" :href="$axios.defaults.baseURL+item.url.url">{{'查看' + item.id + '.pdf'}}</a>
 			</div>
 			<span slot="footer" class="dialog-footer">
@@ -350,7 +356,6 @@
 					fnsku: '',
 					sum: ''
 				},
-				form_picture: [],
 				package_fnskus: [],
 				product_store_ins_mul: [],
 				order_box_cargos: [],
@@ -435,9 +440,9 @@
 				})
 				}
 			},
-			printImport() {
+			printSend() {
 				Print({
-					printable: 'importStock',
+					printable: 'send-form',
 					type: 'html',
 					targetStyle: ['text-align'],
 				})
@@ -478,7 +483,7 @@
 				}
 			},
 			getData() {
-				this.$axios.get('/admin/outbound_orders?page=' + this.cur_page, {
+				this.$axios.get('/admin/outbound_orders?page=' + this.cur_page + '&wms=true&out=true', {
 					headers: {
 						'Authorization': localStorage.getItem('token_admin')
 					},
@@ -645,7 +650,7 @@
 				}).then((res) => {
 					if(res.data.code == 200) {
 						res.data.data.label_changes.forEach((data) => {
-							//获取打包包含的fnsku
+							console.log(data['dst_fnsku'])
 							this.package_fnskus.push(data['dst_fnsku'])
 						})
 					}
@@ -752,14 +757,6 @@
 					// console.log('error')
 				})
 			},
-			closeCheckVisible() {
-				this.checkVisible = false
-				this.checkData = []
-				this.checkData2 = []
-				this.checkData3 = []
-				this.checkData4 = []
-				this.checkData5 = []
-			},
 			addBoxes() {
 				this.form.push(this.new_form)
 				this.new_form = {
@@ -793,7 +790,7 @@
 			showImgs(index, row) {
 				this.idx = index;
 				const item = this.tableData[index];
-				this.form_picture = {
+				this.form = {
 					id: item.id,
 					pictures: item.pictures
 				}
@@ -871,16 +868,6 @@
 				this.delVisible = false;
 			},
 			printStock(index, row) {
-				if(row.is_mix) {
-					this.is_mix = '可混装'
-				} else {
-					this.is_mix = '不混装'
-				}
-				// this.barcode = 'hwc_7896541'
-				this.barcode = 'hwc_' + row.id
-				this.importStockVisible = true
-			},
-			detailsShow(index, row) {
 				this.details_id = row.id
 				this.$axios.get('/admin/outbound_orders/' + row.id, {
 					headers: {
@@ -894,9 +881,7 @@
 							this.is_mix = '不混装'
 						}
 						res.data.data.label_changes.forEach((data) => {
-							// data.labal_ware_houses = ''
 							data.label_ware_houses.forEach((data2) => {
-								// data.labal_ware_houses = data.labal_ware_houses + ' ' + data2.ware_house_name + '(' + data2.sum + ')'
 								this.ware_houseTable.push(data2)
 							})
 						})
@@ -924,6 +909,53 @@
 						this.pick_id = row.id
 						this.barcode = 'hwc_' + row.id
 						this.status = row.status
+						this.importStockVisible = true
+					} else {
+						this.$message.error("失败,请联系管理员")
+					}
+				})
+				
+			},
+			detailsShow(index, row) {
+				this.details_id = row.id
+				this.$axios.get('/admin/outbound_orders/' + row.id, {
+					headers: {
+						'Authorization': localStorage.getItem('token_admin')
+					},
+				}).then((res) => {
+					if(res.data.code == 200) {
+						if(row.is_mix) {
+							this.is_mix = '可混装'
+						} else {
+							this.is_mix = '不混装'
+						}
+						res.data.data.label_changes.forEach((data) => {
+							data.label_ware_houses.forEach((data2) => {
+								// data.labal_ware_houses = data.labal_ware_houses + ' ' + data2.ware_house_name + '(' + data2.sum + ')'
+								this.ware_houseTable.push(data2)
+							})
+						})
+						this.ware_houseTable.forEach((data) => {
+							data.fnsku_ware = data.ware_house_id + data.fnsku
+						})
+						let temparr = []
+						this.ware_houseTable.forEach((data, index) => {
+							let indextepm = temparr.indexOf(data.fnsku_ware)
+							if(indextepm == -1) {
+								temparr.push(data.fnsku_ware)
+								this.ware_houseTable2.push(data)
+							} else {
+								this.ware_houseTable2[indextepm].sum = this.ware_houseTable2[indextepm].sum + data.sum
+							}
+						})
+						res.data.data.order_boxes.forEach((data) => {
+							data.box_size = data.box.length + '*' + data.box.width + '*' + data.box.height
+						})
+						this.order_box_cargos = res.data.data.order_boxes
+						this.outBoundTable = res.data.data.label_changes
+						this.pick_id = row.id
+						this.barcode = 'hwc_' + row.id
+						this.status = row.status
 						//						this.barcode = Base64.encode('123456789_1')
 						console.log(this.barcode)
 						this.detailVisible = true
@@ -939,16 +971,9 @@
 					},
 				}).then((res) => {
 					if(res.data.code == 200) {
-						// if(row.is_mix) {
-						// 	this.is_mix = '可混装'
-						// } else {
-						// 	this.is_mix = '不混装'
-						// }
 						res.data.data.label_changes.forEach((data) => {
-							// data.labal_ware_houses = ''
 							data.label_ware_houses.forEach((data2) => {
 								this.ware_houseTable.push(data2)
-								// data.labal_ware_houses = data.labal_ware_houses + ' ' + data2.ware_house_name + '(' + data2.sum + ')'
 							})
 						})
 						this.outBoundTable = res.data.data.label_changes
@@ -960,6 +985,9 @@
 			closeDetails() {
 				this.ware_houseTable = []
 				this.ware_houseTable2 = []
+			},
+			closeSendPrint() {
+				this.ware_houseTable = []
 			},
 			getStatusName(status) {
 				if(status == 1) {
