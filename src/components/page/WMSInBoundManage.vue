@@ -9,18 +9,26 @@
 		<div class="container">
 			<div class="handle-box">
 				<!--<el-button type="primary" icon="delete" class="handle-del mr10" @click="delAll">批量删除</el-button>-->
-				<el-select v-model="select_cate" filterable remote placeholder="选择用户" :loading="loading" class="handle-select mr10" @visible-change="test" @change="getUserDatasFirst" :remote-method="remoteMethod">
-					<el-option v-for="item in options" :key="item.id" :label="item.name" :value="item.id"></el-option>
-					<infinite-loading :on-infinite="onInfinite" ref="infiniteLoading"></infinite-loading>
-				</el-select>
-				
-				<el-select v-model="select_batch" filterable remote placeholder="选择批次" :loading="loading2" class="handle-select mr10 batch_box" @visible-change="batchVisible" @change="getBatchsDatas" :remote-method="remoteMethodBatch">
-					<el-option v-for="item in batchoptions" :key="item.id" :label="item.batch_number" :value="item.id"></el-option>
-					<infinite-loading :on-infinite="onInfinite_batch" ref="infiniteLoading2"></infinite-loading>
-				</el-select>
+				<div class="search">
+					<!-- <span>用户:</span> -->
+					用户:
+					<el-select v-model="select_cate" filterable remote placeholder="选择用户" :loading="loading" class="handle-select mr10" @visible-change="test" :remote-method="remoteMethod">
+						<el-option v-for="item in options" :key="item.id" :label="item.name" :value="item.id"></el-option>
+						<infinite-loading :on-infinite="onInfinite" ref="infiniteLoading"></infinite-loading>
+					</el-select>
+					批次:
+					<el-select v-model="select_batch" filterable remote placeholder="选择批次" :loading="loading2" class="handle-select mr10" @visible-change="batchVisible" :remote-method="remoteMethodBatch">
+						<el-option v-for="item in batchoptions" :key="item.id" :label="item.batch_number" :value="item.id"></el-option>
+						<infinite-loading :on-infinite="onInfinite_batch" ref="infiniteLoading2"></infinite-loading>
+					</el-select>
+					fnsku:
+					<el-input style="width:150px" placeholder="请输入fnsku" v-model.trim="search_fnsku"></el-input>
+					<el-button @click="clear_search" type="default">重置</el-button>
+	                <el-button @click="filter_inbound" type="primary">查询</el-button>
+                </div>
 				<!--<el-button type="primary" icon="search" @click="allUser">所有用户</el-button>-->
 			</div>
-			
+			<br><br>
 			<!--<el-table :data="data.slice((cur_page-1)*pagesize, cur_page*pagesize)" border style="width: 100%" model="form" ref="multipleTable" @selection-change="handleSelectionChange">-->
 			<el-table :data="data" border style="width: 100%" model="form" ref="multipleTable" @selection-change="handleSelectionChange">
 				<el-table-column type="selection" width="55"></el-table-column>
@@ -149,8 +157,10 @@
 				paginationShow: true,
 				batchDisabled: true,
 				tableData: [],
-				options: [{id: -1, name: "所有用户"},],
-				options2: [{id: -1, name: "所有用户"},],
+				// options: [{id: -1, name: "所有用户"},],
+				options: [],
+				options2: [],
+				// options2: [{id: -1, name: "所有用户"},],
 				batchoptions: [],
 				batch_total: 0,
 				wareoptions: [],
@@ -196,6 +206,7 @@
 				idx: -1,
 				inputVisible: true,
 				inputValue: '',
+				search_fnsku: ''
 			}
 		},
 		created() {
@@ -251,7 +262,7 @@
 				if(process.env.NODE_ENV === 'development') {
 					//					this.url = '/ms/table/list';
 				};				
-				this.$axios.get('/admin/store_ins?page=' + this.cur_page, {
+				this.$axios.get('/admin/store_ins?page=' + this.cur_page + '&batch_store_in_id=' + this.select_batch + '&user_id=' + this.select_cate + '&fnsku=' + this.search_fnsku, {
 					headers: {
 						'Authorization': localStorage.getItem('token_admin')
 					},
@@ -271,6 +282,31 @@
 					}
 					
 				})
+			},
+			filter_inbound() {
+				this.paginationShow = false
+				this.cur_page = 1
+				this.$axios.get('/admin/store_ins?page=' + this.cur_page + '&batch_store_in_id=' + this.select_batch + '&user_id=' + this.select_cate + '&fnsku=' + this.search_fnsku, {
+					headers: {
+						'Authorization': localStorage.getItem('token_admin')
+					},
+					//                  page: this.cur_page
+				}).then((res) => {
+					if(res.data.code == 200) {
+						this.tableData = res.data.data;
+						this.totals = res.data.count
+						this.paginationShow = true
+					}
+					
+				}).catch((res) => {
+					console.log(res)
+				})
+			},
+			clear_search() {
+				this.select_cate = ''
+				this.select_batch = ''
+				this.search_fnsku = ''
+				this.getData()
 			},
 			allUser() {	
 				this.paginationShow = false
@@ -306,7 +342,7 @@
 				}  
 			},
 			remoteMethod(query,callback=undefined) {
-				this.select_batch = ''
+				// this.select_batch = ''
 				console.log("remote")
 				console.log(query)
 				console.log(this.query)
@@ -348,7 +384,7 @@
 				}
 			},
 			remoteMethodBatch(query,callback=undefined){
-				this.select_cate = ''
+				// this.select_cate = ''
 				console.log("remote")
 				console.log(query)
 				console.log(this.query2)
@@ -364,7 +400,7 @@
 						}
 					}
 					console.log(this.user_page)
-					this.$axios.get("/admin/batch_store_ins/search_batch?query=" + query.trim()+"&page="+this.batch_page, {
+					this.$axios.get("/admin/batch_store_ins/search_batch?query=" + query.trim()+"&page="+this.batch_page + '&user_id=' + this.select_cate, {
 						headers: {
 						'Authorization': localStorage.getItem('token_admin')
 					},
@@ -390,38 +426,40 @@
 					})
 				}
 			},
-			getUserDatasFirst() {
-				if(this.select_cate == -1) {
-					this.paginationShow = false
-					this.cur_page = 1
-					this.getData()
-					return
-				}
-				this.paginationShow = false				
-				this.cur_page = 1
-				this.$axios.get('/admin/store_ins?page=' + this.cur_page + '&user_id=' + this.select_cate, {
-					headers: {
-						'Authorization': localStorage.getItem('token_admin')
-					},
-				}).then((res) => {
-					this.tableData = res.data.data
-					this.totals = res.data.count
-					this.paginationShow = true
-				})
-			},
-			getBatchsDatas() {
-				this.paginationShow = false				
-				this.cur_page = 1
-				this.$axios.get('/admin/store_ins/search_by_batch?page=' + this.cur_page + '&batch_id=' + this.select_batch, {
-					headers: {
-						'Authorization': localStorage.getItem('token_admin')
-					},
-				}).then((res) => {
-					this.tableData = res.data.data
-					this.totals = res.data.count
-					this.paginationShow = true
-				})
-			},
+			// getUserDatasFirst() {
+			// 	if(this.select_cate == -1) {
+			// 		this.paginationShow = false
+			// 		this.cur_page = 1
+			// 		this.getData()
+			// 		return
+			// 	}
+			// 	this.paginationShow = false				
+			// 	this.cur_page = 1
+			// 	this.$axios.get('/admin/store_ins?page=' + this.cur_page + '&user_id=' + this.select_cate, {
+			// 		headers: {
+			// 			'Authorization': localStorage.getItem('token_admin')
+			// 		},
+			// 	}).then((res) => {
+			// 		this.tableData = res.data.data
+			// 		this.totals = res.data.count
+			// 		this.paginationShow = true
+			// 	})
+			// },
+			// getBatchsDatas() {
+			// 	console.log('lyh')
+			// 	this.paginationShow = false				
+			// 	this.cur_page = 1
+			// 	// this.$axios.get('/admin/store_ins?page=' + this.cur_page + '&batch_store_in_id=' + this.select_batch + '&fnsku=' + this.search_fnsku, {
+			// 	this.$axios.get('/admin/store_ins/search_by_batch?page=' + this.cur_page + '&batch_id=' + this.select_batch, {
+			// 		headers: {
+			// 			'Authorization': localStorage.getItem('token_admin')
+			// 		},
+			// 	}).then((res) => {
+			// 		this.tableData = res.data.data
+			// 		this.totals = res.data.count
+			// 		this.paginationShow = true
+			// 	})
+			// },
 			getUserDatas() {
 				this.$axios.get('/admin/store_ins?page=' + this.cur_page + '&user_id=' + this.select_cate, {
 					headers: {
@@ -627,14 +665,14 @@
 						'Authorization': localStorage.getItem('token_admin')
 					},
 				}).then((res) => {
-					res.data.data.product_store_ins.forEach((data) => {
-//						data.ware_count = ''
-//						data.store_in_ware_houses.forEach((data2) => {
-//							data.ware_count += data2.ware_house_name + '(' + data2.sum + ') '
-//						})
-						this.ware_details = res.data.data.product_store_ins
-					})
-					this.detailVisible = true
+					if(res.data.code = 200) {
+						res.data.data.product_store_ins.forEach((data) => {
+							this.ware_details = res.data.data.product_store_ins
+						})
+						this.detailVisible = true
+					}
+				}).catch((res) => {
+					console.log('error')
 				})
 			},
 			
@@ -650,7 +688,7 @@
 		margin-bottom: 20px;
 	}
 	
-	.batch_box {
+	.search {
 		float: right;
 	}
 	

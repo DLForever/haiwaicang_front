@@ -8,7 +8,7 @@
 		</div>
 		<div class="container">
 			<el-tabs v-model="message">
-				<el-tab-pane label="出库申请" name="first">
+				<el-tab-pane label="导入库存" name="first">
 					<el-form label-width="120px">
 						<el-form-item label="上传excel文件">
 							<el-upload class="upload-demo" drag action="" :file-list="xlsxList" :on-remove="handleRemove" :on-exceed="exceed" :auto-upload="false" :on-change="changeFile" :limit="1">

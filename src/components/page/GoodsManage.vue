@@ -7,9 +7,15 @@
 			</el-breadcrumb>
 		</div>
 		<div class="container">
-			<!-- <div class="handle-box">
-				<el-button type="primary" icon="search" @click="mixed">混装发货</el-button>
-			</div> -->
+			<div class="handle-box">
+				<div class="fnsku_filter">
+					fnsku:
+                    <el-input style="width:150px" placeholder="请输入fnsku" v-model.trim="search_fnsku"></el-input>
+                    <el-button @click="clear_filter" type="default">重置</el-button>
+                    <el-button @click="filter_product" type="primary">查询</el-button>
+                </div>
+			</div>
+			<br><br>
 			<el-table :data="data" border style="width: 100%" model="form" ref="multipleTable" @selection-change="handleSelectionChange">
 				<!-- <el-table-column type="selection" width="55"></el-table-column> -->
 				<el-table-column prop="fnsku" label="FNSKU" width="250">
@@ -52,7 +58,7 @@
 				</el-table-column> -->
 			</el-table>
 			<div class="pagination">
-				<el-pagination @current-change="handleCurrentChange" @size-change="handleSizeChange" :page-size="pagesize" layout="prev, pager, next" :total="totals">
+				<el-pagination v-if="paginationShow" @current-change="handleCurrentChange" @size-change="handleSizeChange" :page-size="pagesize" layout="prev, pager, next" :total="totals">
 				</el-pagination>
 			</div>
 		</div>
@@ -205,7 +211,9 @@
 						message: '请输入发货数量',
 						trigger: 'blur'
 					}],
-				}
+				},
+				search_fnsku: '',
+				paginationShow: true,
 			}
 		},
 		created() {
@@ -246,15 +254,39 @@
 				if(process.env.NODE_ENV === 'development') {
 					//					this.url = '/ms/table/list';
 				};
-				this.$axios.get('/cargos?page=' + this.cur_page, {
+				this.$axios.get('/cargos/search_by_fnsku?page=' + this.cur_page + '&query=' + this.search_fnsku, {
 					headers: {
 						'Authorization': localStorage.getItem('token')
 					}
 				}).then((res) => {
-					this.tableData = res.data.data
-					//					this.totals = this.tableData.length
-					this.totals = res.data.count
+					if(res.data.code == 200) {
+						this.tableData = res.data.data
+						this.totals = res.data.count
+					}
+				}).catch((res) => {
+					console.log('error')
 				})
+			},
+			filter_product() {
+				this.paginationShow = false
+				this.cur_page = 1
+				this.$axios.get('/cargos/search_by_fnsku?page=' + this.cur_page + '&query=' + this.search_fnsku, {
+					headers: {
+						'Authorization': localStorage.getItem('token')
+					}
+				}).then((res) => {
+					if(res.data.code == 200) {
+						this.tableData = res.data.data
+						this.totals = res.data.count
+					}
+					this.paginationShow = true
+				}).catch((res) => {
+					console.log('error')
+				})
+			},
+			clear_filter() {
+				this.search_fnsku = ''
+				this.getData()
 			},
 			search() {
 				this.is_search = true;
@@ -513,4 +545,7 @@
 	.newOrder {
 		text-align: center;
 	}
+	.fnsku_filter {
+        float: right;
+    }
 </style>

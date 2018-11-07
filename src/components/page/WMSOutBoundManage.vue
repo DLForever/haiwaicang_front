@@ -9,11 +9,19 @@
 
 		<div class="container">
 			<div class="handle-box">
-				<el-select v-model="select_cate" filterable remote placeholder="选择用户" class="handle-select mr10" :loading="loading" @change="getUserDatasFirst" @visible-change="selectVisble" :remote-method="remoteMethod">
-					<el-option v-for="item in options" :label="item.name" :value="item.id"></el-option>
-					<infinite-loading :on-infinite="onInfinite" ref="infiniteLoading"></infinite-loading>
-				</el-select>
+				<div class="fnsku_filter">
+					用户:
+					<el-select v-model="select_cate" filterable remote placeholder="选择用户" class="handle-select mr10" :loading="loading" @visible-change="selectVisble" :remote-method="remoteMethod">
+						<el-option v-for="item in options" :label="item.name" :value="item.id"></el-option>
+						<infinite-loading :on-infinite="onInfinite" ref="infiniteLoading"></infinite-loading>
+					</el-select>
+					fnsku:
+                    <el-input style="width:150px" placeholder="请输入fnsku" v-model.trim="search_fnsku"></el-input>
+                    <el-button @click="clear_search" type="default">重置</el-button>
+                    <el-button @click="filter_inbound" type="primary">查询</el-button>
+                </div>
 			</div>
+			<br><br>
 			<el-table :data="data" border style="width: 100%" model="form" ref="multipleTable" @selection-change="handleSelectionChange">
 				<el-table-column type="selection" width="55"></el-table-column>
 				<el-table-column prop="barcode" label="出库单号">
@@ -203,52 +211,52 @@
 		<!-- 打包弹出框 -->
 		<el-dialog title="打包" :visible.sync="packageVisible" width="60%" @close="cancel_Package">
 			<el-form label-width="115px">
-							<el-form-item label="箱子" required>
-								<table class="table text-center">
-									<tbody v-for="(p,index) in form">
-										<tr>
-										<td>
-											<el-select placeholder="选择箱子" v-model="p.boxes_id"  class="handle-select mr10" value-key="id">
-												<el-option v-for="item in box_options" :label="item.name" :value="item.id"></el-option>
-												<infinite-loading :on-infinite="onInfinite_box" ref="infiniteLoading"></infinite-loading>
-											</el-select>
-										</td>
-										<td>
-											<el-input v-model.trim="p.boxes_weight" placeholder="箱子重量"></el-input>
-										</td>
-										
-										<i class="el-icon-circle-plus" @click="orderAdd(index)" :disabled="false"></i>
-										<span>&nbsp</span>
-										<i class="el-icon-remove" @click="orderDel(index)"></i>
-										</tr>
-										<tr v-for="(q,index) in p['form_branch']">
-											<td>
-												<el-select v-model="q.fnsku" placeholder="选择产品" class="handle-select mr10">
-													<el-option v-for="item in package_fnskus" :label="item" :value="item"></el-option>
-												</el-select>
-											</td>
-											<td>
-												<!-- <td> -->
-													<el-input v-model.trim="q.sum" placeholder="计划数量"></el-input>
-												<!-- </td> -->
-											</td>
-										</tr>
-										<span>-----</span>
-									</tbody>
-								</table>
-							</el-form-item>
-							<div class="newOrder">
-								<el-button @click="addBoxes">添加箱子</el-button>
-								<el-button @click="back" :disabled="isDisableBu" type="danger">撤销</el-button>
-							</div>
-							<br>
-							<el-form-item label="备注">
-								<el-input ></el-input>
-							</el-form-item>
-							<el-form-item>
-								<el-button type="primary" @click="package_done">打包</el-button>
-							</el-form-item>
-						</el-form>
+				<el-form-item label="箱子" required>
+					<table class="table text-center">
+						<tbody v-for="(p,index) in form">
+							<tr>
+							<td>
+								<el-select placeholder="选择箱子" v-model="p.boxes_id"  class="handle-select mr10" value-key="id">
+									<el-option v-for="item in box_options" :label="item.name" :value="item.id"></el-option>
+									<infinite-loading :on-infinite="onInfinite_box" ref="infiniteLoading"></infinite-loading>
+								</el-select>
+							</td>
+							<td>
+								<el-input v-model.trim="p.boxes_weight" placeholder="箱子重量"></el-input>
+							</td>
+							
+							<i class="el-icon-circle-plus" @click="orderAdd(index)" :disabled="false"></i>
+							<span>&nbsp</span>
+							<i class="el-icon-remove" @click="orderDel(index)"></i>
+							</tr>
+							<tr v-for="(q,index) in p['form_branch']">
+								<td>
+									<el-select v-model="q.fnsku" placeholder="选择产品" class="handle-select mr10">
+										<el-option v-for="item in package_fnskus" :label="item" :value="item"></el-option>
+									</el-select>
+								</td>
+								<td>
+									<!-- <td> -->
+										<el-input v-model.trim="q.sum" placeholder="计划数量"></el-input>
+									<!-- </td> -->
+								</td>
+							</tr>
+							<span>-----</span>
+						</tbody>
+					</table>
+				</el-form-item>
+				<div class="newOrder">
+					<el-button @click="addBoxes">添加箱子</el-button>
+					<el-button @click="back" :disabled="isDisableBu" type="danger">撤销</el-button>
+				</div>
+				<br>
+				<el-form-item label="备注">
+					<el-input ></el-input>
+				</el-form-item>
+				<el-form-item>
+					<el-button type="primary" @click="package_done">打包</el-button>
+				</el-form-item>
+			</el-form>
 		</el-dialog>
 		
 		<!-- 图片弹出框 -->
@@ -300,14 +308,16 @@
 				outBoundTable: [],
 				ware_houseTable: [],
 				ware_houseTable2: [],
-				options: [{
-					id: -1,
-					name: "所有用户"
-				}, ],
-				options2: [{
-					id: -1,
-					name: "所有用户"
-				}, ],
+				// options: [{
+				// 	id: -1,
+				// 	name: "所有用户"
+				// }, ],
+				// options2: [{
+				// 	id: -1,
+				// 	name: "所有用户"
+				// }, ],
+				options: [],
+				options2: [],
 				form: [{
 					boxes_id: '',
 					boxes_weight: '',
@@ -359,10 +369,11 @@
 				checkData5: [],
 				check_id: undefined,
 				sendProductId: undefined,
+				search_fnsku: ''
 			}
 		},
 		created() {
-			this.getData();
+			this.getData()
 			this.getBoxs()
 		},
 		watch: {
@@ -420,21 +431,21 @@
 				document.body.innerHTML = oldHtml
 			},
 			formatter_created_at(row, column) {
-				return row.created_at.substr(0, 19);
+				return row.created_at.substr(0, 19)
 			},
 			formatter_updated_at(row, column) {
-				return row.updated_at.substr(0, 19);
+				return row.updated_at.substr(0, 19)
 			},
 			handleCurrentChange(val) {
-				this.cur_page = val;
+				this.cur_page = val
 				if(!this.select_cate || this.select_cate == -1) {
-					this.getData();
+					this.getData()
 				} else {
 					this.getUserDatas()
 				}
 			},
 			handleSelectionChange(val) {
-				this.multipleSelection = val;
+				this.multipleSelection = val
 			},
 			store_insSelectionChange(val) {
 				this.store_ins_mul = val
@@ -446,8 +457,7 @@
 				}
 			},
 			getData() {
-				let user_id = localStorage.getItem('user_id')
-				this.$axios.get('/admin/outbound_orders?page=' + this.cur_page + '&wms=true', {
+				this.$axios.get('/admin/outbound_orders?page=' + this.cur_page + '&user_id=' + this.select_cate + '&wms=true' + '&out=false&fnsku=' + this.search_fnsku, {
 					headers: {
 						'Authorization': localStorage.getItem('token_admin')
 					},
@@ -469,6 +479,36 @@
 					}
 					this.paginationShow = true
 				})
+			},
+			filter_inbound() {
+				this.cur_page = 1
+				this.$axios.get('/admin/outbound_orders?page=' + this.cur_page + '&user_id=' + this.select_cate + '&wms=true' + '&out=false&fnsku=' + this.search_fnsku, {
+					headers: {
+						'Authorization': localStorage.getItem('token_admin')
+					},
+				}).then((res) => {
+					if(res.data.code == 200) {
+						res.data.data.forEach((data) => {
+							if(data.is_mix) {
+								data.is_mix = '混装'
+							} else {
+								data.is_mix = '不混装'
+							}
+							data.barcode = 'hwc_' + data.id
+							// data.tempcode = 'wzsv587-' + data.id
+						})
+						this.tableData = res.data.data
+						this.totals = res.data.count
+					} else {
+						console.log(res.data.message)
+					}
+					this.paginationShow = true
+				})
+			},
+			clear_search() {
+				this.select_cate = ''
+				this.search_fnsku = ''
+				this.getData()
 			},
 			getUser(callback = undefined) {
 				this.$axios.get('/admin/users?page=' + this.user_page, {
@@ -533,7 +573,6 @@
 					}).then((res) => {
 						if(res.data.code == 200) {
 							this.loading = false
-							//							this.options = res.data.data
 							if(reload) {
 								this.options = this.options2.concat(res.data.data)
 							} else {
@@ -558,33 +597,41 @@
 					obj.complete()
 				}
 			},
-			getUserDatasFirst() {
-				if(this.select_cate == -1) {
-					this.paginationShow = false
-					this.cur_page = 1
-					this.getData()
-					return
-				}
-				this.paginationShow = false
-				this.cur_page = 1
-				this.$axios.get('/admin/outbound_orders?page=' + this.cur_page + '&user_id=' + this.select_cate, {
-					headers: {
-						'Authorization': localStorage.getItem('token_admin')
-					},
-				}).then((res) => {
-					this.tableData = res.data.data
-					this.totals = res.data.count
-					this.paginationShow = true
-				})
-			},
+			// getUserDatasFirst() {
+			// 	if(this.select_cate == -1) {
+			// 		this.paginationShow = false
+			// 		this.cur_page = 1
+			// 		this.getData()
+			// 		return
+			// 	}
+			// 	this.paginationShow = false
+			// 	this.cur_page = 1
+			// 	this.$axios.get('/admin/outbound_orders?page=' + this.cur_page + '&user_id=' + this.select_cate, {
+			// 		headers: {
+			// 			'Authorization': localStorage.getItem('token_admin')
+			// 		},
+			// 	}).then((res) => {
+			// 		if(res.data.code == 200) {
+			// 			this.tableData = res.data.data
+			// 			this.totals = res.data.count
+			// 			this.paginationShow = true
+			// 		}
+			// 	}).catch((res) => {
+			// 		console.log('error')
+			// 	})
+			// },
 			getUserDatas() {
 				this.$axios.get('/admin/outbound_orders?page=' + this.cur_page + '&user_id=' + this.select_cate, {
 					headers: {
 						'Authorization': localStorage.getItem('token_admin')
 					},
 				}).then((res) => {
-					this.tableData = res.data.data
-					this.totals = res.data.count
+					if(res.data.code == 200) {
+						this.tableData = res.data.data
+						this.totals = res.data.count
+					}
+				}).catch((res) => {
+					console.log('error')
 				})
 			},
 			pick() {
@@ -682,9 +729,6 @@
 							data.check_sum2 = ''
 						})
 						this.checkData5 = res.data.data.product_store_ins
-						// res.data.data.forEach((data) => {
-						// 	this.checkData = data
-						// })
 						this.checkVisible = true
 					}
 				}).catch((res) => {
@@ -718,7 +762,7 @@
 						this.$message.success('审核成功')
 					}
 				}).catch((res) => {
-					// console.log('error')
+					console.log('error')
 				})
 			},
 			addBoxes() {
@@ -745,15 +789,15 @@
 			orderDel(index) {
 				if(this.form[index]['form_branch'].length == 1) {
 					this.$message.error("至少保留一项哦")
-					return false;
+					return false
 				}
 				this.form[index]['form_branch'].pop(this.form_branch)
 				console.log(this.form)
 			},
 			//箱标弹出框
 			showImgs(index, row) {
-				this.idx = index;
-				const item = this.tableData[index];
+				this.idx = index
+				const item = this.tableData[index]
 				this.form = {
 					id: item.id,
 					pictures: item.pictures
@@ -769,19 +813,18 @@
 					this.img_show = 1
 					this.pdf_show = 0
 				}
-				this.showImg = true;
+				this.showImg = true
 			},
 			sendProduct(index, row) {
-				this.idx = index;
-				const item = this.tableData[index];
+				this.idx = index
+				const item = this.tableData[index]
 				this.sendProductId = item.id
-				console.log(item)
 				// this.form = {
 				// 	id: item.id,
 				// 	logistics_number: item.logistics_number,
 				// 	l_type: this.l_type
 				// }
-				this.sendProductVisible = true;
+				this.sendProductVisible = true
 			},
 			//发货
 			sendEnd() {
@@ -809,8 +852,8 @@
 				})
 			},
 			handleDelete(index, row) {
-				this.idx = index;
-				this.delVisible = true;
+				this.idx = index
+				this.delVisible = true
 			},
 			// 确定删除
 			deleteRow() {
@@ -829,7 +872,7 @@
 				}).catch((res) => {
 					this.$message.error("删除失败")
 				})
-				this.delVisible = false;
+				this.delVisible = false
 			},
 			detailsShow(index, row) {
 				this.details_id = row.id
@@ -984,4 +1027,8 @@
 		width:5rem;
     	height:5rem;
 	}
+
+	.fnsku_filter {
+        float: right;
+    }
 </style>

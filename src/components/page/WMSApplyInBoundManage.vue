@@ -197,9 +197,13 @@
 						'Authorization': localStorage.getItem('token_admin')
 					},
 				}).then((res) => {
-					this.tableData = res.data.data;
-					this.totals = res.data.count
-					this.paginationShow = true
+					if(res.data.code == 200) {
+						this.tableData = res.data.data;
+						this.totals = res.data.count
+						this.paginationShow = true
+					}
+				}).catch((res) => {
+					console.log('error')
 				})
 			},
 			allUser() {	
@@ -275,9 +279,13 @@
 						'Authorization': localStorage.getItem('token_admin')
 					},
 				}).then((res) => {
-					this.tableData = res.data.data
-					this.totals = res.data.count
-					this.paginationShow = true
+					if(res.data.code == 200) {
+						this.tableData = res.data.data
+						this.totals = res.data.count
+						this.paginationShow = true
+					}
+				}).catch((res) => {
+					console.log('error')
 				})
 			},
 			getUserDatas() {
@@ -286,8 +294,10 @@
 						'Authorization': localStorage.getItem('token_admin')
 					},
 				}).then((res) => {
-					this.tableData = res.data.data
-					this.totals = res.data.count
+					if(res.data.code) {
+						this.tableData = res.data.data
+						this.totals = res.data.count
+					}
 				})
 			},
 			getWarehouse(callback = undefined) {

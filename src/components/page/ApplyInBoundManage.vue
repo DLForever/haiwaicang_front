@@ -7,6 +7,13 @@
 			</el-breadcrumb>
 		</div>
 		<div class="container">
+			<div class="handle-box">
+				<!-- <div class="fnsku_filter">
+                    <el-input style="width:150px" placeholder="请输入店铺名" v-model.trim="search_shopname"></el-input>
+                    <el-input style="width:150px" placeholder="请输入fnsku" v-model.trim="search_fnsku"></el-input>
+                    <el-button @click="filter_product" type="primary">查询</el-button>
+                </div> -->
+			</div>
 			<el-table :data="data" border style="width: 100%" model="form" ref="multipleTable" @selection-change="handleSelectionChange">
 				<el-table-column type="selection" width="55"></el-table-column>
 				<el-table-column label="申请文件">
@@ -216,8 +223,12 @@
 					},
 					params
 				}).then((res) => {
-					this.batch_list = res.data.data
-					this.detailVisible = true
+					if(res.data.code == 200) {
+						this.batch_list = res.data.data
+						this.detailVisible = true
+					}
+				}).catch((res) => {
+					cosnole.log('error')
 				})
 			},
 		}

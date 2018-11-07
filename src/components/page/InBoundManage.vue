@@ -8,10 +8,17 @@
 		</div>
 		<div class="container">
 			<div class="handle-box">
-				<el-select v-model="select_batch" placeholder="选择批次" class="handle-select mr10 batch_box" @change="dataFilterBatchFirst">
-					<el-option v-for="item in batchoptions" :key="item.id" :label="item.batch_number" :value="item.id"></el-option>
-					<infinite-loading :on-infinite="onInfinite_batch" ref="infiniteLoading2"></infinite-loading>
-				</el-select>
+				<div class="inbound_filter">
+					批次:
+					<el-select v-model="select_batch" placeholder="选择批次" class="handle-select mr10 batch_box">
+						<el-option v-for="item in batchoptions" :key="item.id" :label="item.batch_number" :value="item.id"></el-option>
+						<infinite-loading :on-infinite="onInfinite_batch" ref="infiniteLoading2"></infinite-loading>
+					</el-select>
+					fnsku:
+                    <el-input style="width:150px" placeholder="请输入fnsku" v-model.trim="search_fnsku"></el-input>
+                    <el-button @click="clear_filter" type="default">重置</el-button>
+                    <el-button @click="filter_inbound" type="primary">查询</el-button>
+                </div>
 				<!--<el-button type="primary" icon="delete" class="handle-del mr10" @click="delAll">批量删除</el-button>
 				<el-select v-model="select_cate" placeholder="筛选省份" class="handle-select mr10">
 					<el-option key="1" label="广东省" value="广东省"></el-option>
@@ -20,6 +27,7 @@
 				<!--<el-input v-model="select_word" placeholder="筛选关键词" class="handle-input mr10"></el-input>-->
 				<!--<el-button type="primary" icon="search" @click="search">搜索</el-button>-->
 			</div>
+			<br><br>
 			<!--<el-table :data="data.slice((cur_page-1)*pagesize, cur_page*pagesize)" border style="width: 100%" ref="multipleTable" @selection-change="handleSelectionChange">-->
 			<el-table :data="data" border style="width: 100%" ref="multipleTable" @selection-change="handleSelectionChange">
 				<el-table-column type="selection" width="55"></el-table-column>
@@ -76,7 +84,7 @@
 				<el-button type="primary" @click="check">通过审核</el-button>
 			</div>
 			<br>
-			<el-table :data="form.product_store_ins" border style="width: 100%">
+			<el-table :data="ware_details" border style="width: 100%">
 				<el-table-column prop="fnsku" label="fnsku"></el-table-column>
 				<el-table-column prop="plan_sum" label="计划数量"></el-table-column>
 				<el-table-column prop="arrive_sum" label="实际到达数量"></el-table-column>
@@ -111,9 +119,10 @@
 				batch_page: 1,
 				pagesize: 20,
 				multipleSelection: [],
-				batchoptions: [{id: -1, batch_number: "所有批次"},],
+				// batchoptions: [{id: -1, batch_number: "所有批次"},],
+				batchoptions: [],
 				batch_total: 0,
-				select_batch: undefined,
+				select_batch: '',
 				select_cate: '',
 				select_word: '',
 				totals: 0,
@@ -123,6 +132,8 @@
 				detailVisible: false,
 				delVisible: false,
 				paginationShow: false,
+				search_fnsku: '',
+				ware_details: [],
 				form: {
 					remark: ''
 				},
@@ -181,11 +192,12 @@
 			// 分页导航
 			handleCurrentChange(val) {
 				this.cur_page = val;
-				if(!this.select_batch || this.select_batch == -1) {
-					this.getData()
-				} else {
-					this.dataFilterBatch()
-				}
+				this.getData()
+				// if(!this.select_batch || this.select_batch == -1) {
+				// 	this.getData()
+				// } else {
+				// 	this.dataFilterBatch()
+				// }
 				
 			},
 			// 获取 easy-mock 的模拟数据
@@ -194,7 +206,7 @@
 				if(process.env.NODE_ENV === 'development') {
 					//                  this.url = '/ms/table/list';
 				};
-				this.$axios.get('/store_ins?page=' + this.cur_page, {
+				this.$axios.get('/store_ins?page=' + this.cur_page + '&batch_store_in_id=' + this.select_batch + '&fnsku=' + this.search_fnsku, {
 					headers: {
 						'Authorization': localStorage.getItem('token')
 					},
@@ -209,6 +221,30 @@
 				}).catch((res) => {
 					console.log(res)
 				})
+			},
+			filter_inbound() {
+				this.paginationShow = false
+				this.cur_page = 1
+				this.$axios.get('/store_ins?page=' + this.cur_page + '&batch_store_in_id=' + this.select_batch + '&fnsku=' + this.search_fnsku, {
+					headers: {
+						'Authorization': localStorage.getItem('token')
+					},
+					//                  page: this.cur_page
+				}).then((res) => {
+					if(res.data.code == 200) {
+						this.tableData = res.data.data;
+						this.totals = res.data.count
+						this.paginationShow = true
+					}
+					
+				}).catch((res) => {
+					console.log(res)
+				})
+			},
+			clear_filter() {
+				this.select_batch = ''
+				this.search_fnsku = ''
+				this.getData()
 			},
 			getBatch(callback = undefined) {
 				this.$axios.get('/batch_store_ins/available_index?page=' + this.batch_page, {
@@ -227,13 +263,15 @@
 			},
 			dataFilterBatchFirst() {
 				if(this.select_batch == -1) {
+					this.search_fnsku = ''
+					this.select_batch = ''
 					this.paginationShow = false
 					this.cur_page = 1
 					this.getData()
 					return
 				}
 				this.paginationShow = false
-				this.$axios.get('/store_ins?page=' + this.cur_page + '&batch_store_in_id=' + this.select_batch, {
+				this.$axios.get('/store_ins?page=' + this.cur_page + '&batch_store_in_id=' + this.select_batch + '&fnsku=' + this.search_fnsku, {
 					headers: {
 						'Authorization': localStorage.getItem('token')
 					},
@@ -283,7 +321,7 @@
 			filterTag(value, row) {
 				return row.tag === value;
 			},
-			detailsShow(index, row) {
+			detailsShow2(index, row) {
 				this.detail_id = row.id
 				this.idx = index;
 				const item = this.tableData[index];
@@ -292,7 +330,23 @@
 				}
 				this.detailVisible = true;
 			},
-
+			detailsShow(index, row) {
+				this.detail_id = row.id
+				this.$axios.get('/store_ins/' + row.id, {
+					headers: {
+						'Authorization': localStorage.getItem('token')
+					},
+				}).then((res) => {
+					if(res.data.code = 200) {
+						res.data.data.product_store_ins.forEach((data) => {
+							this.ware_details = res.data.data.product_store_ins
+						})
+						this.detailVisible = true
+					}
+				}).catch((res) => {
+					console.log('error')
+				})
+			},
 			delAll() {
 				const length = this.multipleSelection.length;
 				let str = '';
@@ -430,4 +484,8 @@
 	.check_button {
 		text-align: left;
 	}
+
+	.inbound_filter {
+        float: right;
+    }
 </style>

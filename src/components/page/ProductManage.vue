@@ -3,6 +3,7 @@
         <div class="crumbs">
             <el-breadcrumb separator="/">
                 <el-breadcrumb-item><i class="el-icon-tickets"></i> 产品管理</el-breadcrumb-item>
+                <el-breadcrumb-item>产品管理</el-breadcrumb-item>
             </el-breadcrumb>
         </div>
         <div class="container">
@@ -12,9 +13,18 @@
                     <el-option key="1" label="广东省" value="广东省"></el-option>
                     <el-option key="2" label="湖南省" value="湖南省"></el-option>
                 </el-select>-->
-               <!--  <el-input v-model="select_word" placeholder="筛选fnsku/产品名称" class="handle-input mr10"></el-input> -->
+                <!-- <el-input v-model="select_word" placeholder="筛选fnsku/产品名称" class="handle-input mr10"></el-input> -->
                 <!--<el-button type="primary" icon="search" @click="search">搜索</el-button>-->
+                <div class="fnsku_filter">
+                    店铺名:
+                    <el-input style="width:150px" placeholder="请输入店铺名" v-model.trim="search_shopname"></el-input>
+                    fnsku:
+                    <el-input style="width:150px" placeholder="请输入fnsku" v-model.trim="search_fnsku"></el-input>
+                    <el-button @click="clear_filter" type="default">重置</el-button>
+                    <el-button @click="filter_product" type="primary">查询</el-button>
+                </div>
             </div>
+            <br><br>
             <!--<el-table :data="data.slice((cur_page-1)*pagesize, cur_page*pagesize)" border style="width: 100%" ref="multipleTable" @selection-change="handleSelectionChange">-->
             <el-table :data="data" border style="width: 100%" ref="multipleTable" @selection-change="handleSelectionChange">
                 <el-table-column type="selection" width="55"></el-table-column>
@@ -52,7 +62,7 @@
                 </el-table-column>-->
             </el-table>
             <div class="pagination">
-                <el-pagination @current-change="handleCurrentChange" @size-change="handleSizeChange" :page-size="pagesize" layout="prev, pager, next" :total="totals">
+                <el-pagination v-if="paginationShow" @current-change="handleCurrentChange" @size-change="handleSizeChange" :page-size="pagesize" layout="prev, pager, next" :total="totals">
                 </el-pagination>
             </div>
         </div>
@@ -106,6 +116,9 @@
                 is_search: false,
                 editVisible: false,
                 delVisible: false,
+                paginationShow: true,
+                search_fnsku: '',
+                search_shopname: '',
                 totals: 1,
                 form: {
                     name: '',
@@ -157,20 +170,44 @@
                 if (process.env.NODE_ENV === 'development') {
 //                  this.url = '/ms/table/list';
                 };
-                this.$axios.get( '/products?page='+this.cur_page, {
+                this.$axios.get( '/products?page='+this.cur_page + '&shopname=' + this.search_shopname + '&fnsku=' + this.search_fnsku, {
                 	headers: {'Authorization': localStorage.getItem('token')}
                 },
                 ).then((res) => {
-                    res.data.data.forEach((data) => {
+                    if(res.data.code == 200) {
+                        res.data.data.forEach((data) => {
                         data.size = data.length + '*' + data.width + '*' + data.height
                     })
-                    this.tableData = res.data.data
-//					this.totals = this.tableData.length
-                    this.totals = res.data.count
-                    console.log(res)
+                        this.tableData = res.data.data
+                        this.totals = res.data.count
+                    }
                 }).catch((res) => {
-                	this.$message.error(res)
+                	console.log('error')
                 })
+            },
+            filter_product() {
+                this.cur_page = 1
+                this.paginationShow = false
+                this.$axios.get( '/products?page='+this.cur_page + '&shopname=' + this.search_shopname + '&fnsku=' + this.search_fnsku, {
+                    headers: {'Authorization': localStorage.getItem('token')}
+                },
+                ).then((res) => {
+                    if(res.data.code == 200) {
+                        res.data.data.forEach((data) => {
+                        data.size = data.length + '*' + data.width + '*' + data.height
+                    })
+                        this.tableData = res.data.data
+                        this.totals = res.data.count
+                    }
+                    this.paginationShow = true
+                }).catch((res) => {
+                    console.log('error')
+                })
+            },
+            clear_filter() {
+                this.search_fnsku = ''
+                this.search_shopname = ''
+                this.getData()
             },
             formatter_created_at(row, column) {
 				return row.created_at.substr(0, 19);
@@ -263,5 +300,9 @@
     .del-dialog-cnt{
         font-size: 16px;
         text-align: center
+    }
+
+    .fnsku_filter {
+        float: right;
     }
 </style>

@@ -59,7 +59,7 @@
             return {
                 collapse: false,
                 fullscreen: false,
-                name: 'linxin',
+                name: 'lyh',
                 myVal: undefined,
                 popMes: undefined
             }

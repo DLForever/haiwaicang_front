@@ -9,11 +9,19 @@
 
 		<div class="container">
 			<div class="handle-box">
-				<el-select v-model="select_cate" filterable remote placeholder="选择用户" class="handle-select mr10" :loading="loading" @change="getUserDatasFirst" @visible-change="selectVisble" :remote-method="remoteMethod">
-					<el-option v-for="item in options" :label="item.name" :value="item.id"></el-option>
-					<infinite-loading :on-infinite="onInfinite" ref="infiniteLoading"></infinite-loading>
-				</el-select>
+				<div class="fnsku_filter">
+					用户:
+					<el-select v-model="select_cate" filterable remote placeholder="选择用户" class="handle-select mr10" :loading="loading" @visible-change="selectVisble" :remote-method="remoteMethod">
+						<el-option v-for="item in options" :label="item.name" :value="item.id"></el-option>
+						<infinite-loading :on-infinite="onInfinite" ref="infiniteLoading"></infinite-loading>
+					</el-select>
+					fnsku:
+                    <el-input style="width:150px" placeholder="请输入fnsku" v-model.trim="search_fnsku"></el-input>
+                    <el-button @click="clear_search" type="default">重置</el-button>
+                    <el-button @click="filter_inbound" type="primary">查询</el-button>
+                </div>
 			</div>
+			<br><br>
 			<el-table :data="data" border style="width: 100%" model="form" ref="multipleTable" @selection-change="handleSelectionChange">
 				<el-table-column type="selection" width="55"></el-table-column>
 				<el-table-column prop="barcode" label="出库单号">
@@ -54,12 +62,6 @@
 								<el-dropdown-item>
 									<el-button @click="showImgs(scope.$index, scope.row)" type="text">&nbsp&nbsp&nbsp附&nbsp件&nbsp&nbsp&nbsp</el-button>
 								</el-dropdown-item>
-<!-- 								<el-dropdown-item>
-									<el-button @click="package(scope.$index, scope.row)" type="text">&nbsp&nbsp&nbsp打&nbsp包&nbsp&nbsp&nbsp</el-button>
-								</el-dropdown-item>
-								<el-dropdown-item>
-									<el-button @click="check(scope.$index, scope.row)" type="text">&nbsp&nbsp&nbsp结&nbsp算&nbsp&nbsp&nbsp</el-button>
-								</el-dropdown-item> -->
 								<el-dropdown-item>
 									<el-button @click="sendProduct(scope.$index, scope.row)" type="text">&nbsp&nbsp&nbsp发&nbsp货&nbsp&nbsp&nbsp</el-button>
 								</el-dropdown-item>
@@ -81,16 +83,11 @@
 		</div>
 		<!-- 详情提示框 -->
 		<el-dialog title="详情" :visible.sync="detailVisible" width="50%" @close="closeDetails">
-			<!-- <div style="height: 10%;">
-			<el-scrollbar style="height: 100%;"> -->
 			<div class="creat">
-				<!-- <el-button type="primary" @click="pick">生成拣货单</el-button> -->
 				<el-button type="primary" @click="print">打印</el-button>
-				<!--<el-button type="default" @click="print2">打印</el-button>-->
 			</div>
 
 			<div id="printJS-form">
-				<!--<h1 class="ismix">{{is_mix}}</h1>-->
 				<h1 style="text-align:center" class="ismix">{{is_mix}}</h1>
 				<barcode :value="barcode" :options="{displayValue:true}" tag="img" width="300" height="100"></barcode>
 				<el-table :data="outBoundTable" border style="width: 100%">
@@ -102,9 +99,6 @@
 							<img class="img_fnsku" :src="$axios.defaults.baseURL+scope.row.pictures[0].url.url" />					
 						</template>
 					</el-table-column>
-					<!-- <el-table-column prop="labal_ware_houses" label="取货详情"></el-table-column> -->
-					<!--<el-table-column prop="created_at" :formatter="formatter_created_at" label="创建时间"></el-table-column>
-					<el-table-column prop="updated_at" :formatter="formatter_updated_at" label="更新时间"></el-table-column>-->
 				</el-table>
 				<br>
 				<el-table v-if="this.ware_houseTable2.length != 0" :data="ware_houseTable2" border style="width: 100%">
@@ -128,8 +122,6 @@
 					<el-table-column prop="weight" label="箱子重量"></el-table-column>
 				</el-table>
 			</div>
-			<!-- </el-scrollbar>
-			</div> -->
 		</el-dialog>
 
 		<!-- 打印发货单提示框 -->
@@ -156,58 +148,6 @@
 				</el-table>
 			</div>
 		</el-dialog>
-
-		<!-- 检查提示框 -->
-		<el-dialog title="详情" :visible.sync="checkVisible" width="65%">
-			<el-table :data="checkData" border style="width: 100%">
-				<el-table-column prop="total" label="总数"></el-table-column>
-				<el-table-column prop="box_sum" label="箱子数量"></el-table-column>
-			</el-table>
-			<br>
-			<el-table v-if="this.checkData3.length != 0" :data="checkData3" border style="width: 100%">
-				<el-table-column prop="sum" label="数量"></el-table-column>
-				<el-table-column prop="weight" label="箱子重量"></el-table-column>
-			</el-table>
-			<br>
-			<el-table :data="checkData2" border style="width: 100%">
-				<el-table-column prop="fnsku" label="fnsku"></el-table-column>
-				<el-table-column prop="dst_fnsku" label="新fnsku"></el-table-column>
-				<el-table-column prop="sum" label="数量"></el-table-column>
-			</el-table>
-			<br>
-			<el-table v-if="this.checkData4.length != 0" :data="checkData4" border style="width: 100%" @selection-change="store_insSelectionChange">
-				<el-table-column type="selection" width="55"></el-table-column>
-				<el-table-column prop="logistics_number" label="物流单号"></el-table-column>
-				<el-table-column prop="batch_number" label="任务批次"></el-table-column>
-				<el-table-column prop="total_plan_sum" label="计划数量"></el-table-column>
-				<el-table-column prop="total_arrive_sum" label="到达数量"></el-table-column>
-				<el-table-column prop="created_at" label="创建时间" :formatter="formatter_created_at"></el-table-column>
-				<el-table-column prop="updated_at" label="更新时间" :formatter="formatter_updated_at"></el-table-column>
-			</el-table>
-			<br>
-			<el-table v-if="this.checkData5.length != 0" :data="checkData5" border style="width: 100%" @selection-change="productSelectionChange">
-				<el-table-column type="selection" width="55"></el-table-column>
-				<el-table-column prop="fnsku" label="fnsku"></el-table-column>
-				<el-table-column prop="plan_sum" label="计划数量"></el-table-column>
-				<el-table-column prop="way_sum" label="在途数量"></el-table-column>
-				<el-table-column prop="arrive_sum" label="到达数量"></el-table-column>
-				<el-table-column prop="check_sum" label="已结算数量"></el-table-column>
-				<el-table-column prop="created_at" label="创建时间" :formatter="formatter_created_at"></el-table-column>
-				<el-table-column prop="updated_at" label="更新时间" :formatter="formatter_updated_at"></el-table-column>
-				<el-table-column label="结算数量">
-					<template slot-scope="scope">
-						<el-input placeholder="输入结算数量" :value="scope.row.check_sum2" v-model="scope.row.check_sum2"></el-input>
-					</template>
-				</el-table-column>
-			</el-table>
-			<br>
-			<div class="dialog-footer-check">
-				<span slot="footer" class="dialog-footer">
-					<el-button type="primary" @click="check_done">提交</el-button>
-				</span>
-			</div>
-			
-		</el-dialog>
 		
 		<!-- 发货弹出框 -->
 		<el-dialog title="发货" :visible.sync="sendProductVisible" width="30%" center>
@@ -226,57 +166,6 @@
                 <el-button @click="sendProductVisible = false">取 消</el-button>
                 <el-button type="primary" @click="sendEnd">确 定</el-button>
             </span>
-		</el-dialog>
-
-		<!-- 打包弹出框 -->
-		<el-dialog title="打包" :visible.sync="packageVisible" width="60%" @close="cancel_Package">
-			<el-form label-width="115px">
-							<el-form-item label="箱子" required>
-								<table class="table text-center">
-									<tbody v-for="(p,index) in form">
-										<tr>
-										<td>
-											<el-select placeholder="选择箱子" v-model="p.boxes_id"  class="handle-select mr10" value-key="id">
-												<el-option v-for="item in box_options" :label="item.name" :value="item.id"></el-option>
-												<infinite-loading :on-infinite="onInfinite_box" ref="infiniteLoading"></infinite-loading>
-											</el-select>
-										</td>
-										<td>
-											<el-input v-model.trim="p.boxes_weight" placeholder="箱子重量"></el-input>
-										</td>
-										
-										<i class="el-icon-circle-plus" @click="orderAdd(index)" :disabled="false"></i>
-										<span>&nbsp</span>
-										<i class="el-icon-remove" @click="orderDel(index)"></i>
-										</tr>
-										<tr v-for="(q,index) in p['form_branch']">
-											<td>
-												<el-select v-model="q.fnsku" placeholder="选择产品" class="handle-select mr10">
-													<el-option v-for="item in package_fnskus" :label="item" :value="item"></el-option>
-												</el-select>
-											</td>
-											<td>
-												<!-- <td> -->
-													<el-input v-model.trim="q.sum" placeholder="计划数量"></el-input>
-												<!-- </td> -->
-											</td>
-										</tr>
-										<span>-----</span>
-									</tbody>
-								</table>
-							</el-form-item>
-							<div class="newOrder">
-								<el-button @click="addBoxes">添加箱子</el-button>
-								<el-button @click="back" :disabled="isDisableBu" type="danger">撤销</el-button>
-							</div>
-							<br>
-							<el-form-item label="备注">
-								<el-input ></el-input>
-							</el-form-item>
-							<el-form-item>
-								<el-button type="primary" @click="package_done">打包</el-button>
-							</el-form-item>
-						</el-form>
 		</el-dialog>
 		
 		<!-- 图片弹出框 -->
@@ -328,14 +217,16 @@
 				outBoundTable: [],
 				ware_houseTable: [],
 				ware_houseTable2: [],
-				options: [{
-					id: -1,
-					name: "所有用户"
-				}, ],
-				options2: [{
-					id: -1,
-					name: "所有用户"
-				}, ],
+				// options: [{
+				// 	id: -1,
+				// 	name: "所有用户"
+				// }, ],
+				// options2: [{
+				// 	id: -1,
+				// 	name: "所有用户"
+				// }, ],
+				options: [],
+				options2: [],
 				form: [{
 					boxes_id: '',
 					boxes_weight: '',
@@ -388,7 +279,8 @@
 				checkData5: [],
 				check_id: undefined,
 				sendProductId: undefined,
-				importStockTable:[{id:1},{id:2},{id:3},{id:4},{id:5},{id:6},{id:7},{id:8},{id:9},{id:10}]
+				importStockTable:[{id:1},{id:2},{id:3},{id:4},{id:5},{id:6},{id:7},{id:8},{id:9},{id:10}],
+				search_fnsku: ''
 			}
 		},
 		created() {
@@ -457,10 +349,10 @@
 				document.body.innerHTML = oldHtml
 			},
 			formatter_created_at(row, column) {
-				return row.created_at.substr(0, 19);
+				return row.created_at.substr(0, 19)
 			},
 			formatter_updated_at(row, column) {
-				return row.updated_at.substr(0, 19);
+				return row.updated_at.substr(0, 19)
 			},
 			handleCurrentChange(val) {
 				this.cur_page = val;
@@ -483,7 +375,7 @@
 				}
 			},
 			getData() {
-				this.$axios.get('/admin/outbound_orders?page=' + this.cur_page + '&wms=true&out=true', {
+				this.$axios.get('/admin/outbound_orders?page=' + this.cur_page + '&user_id=' + this.select_cate + '&wms=true' + '&out=true&fnsku=' + this.search_fnsku, {
 					headers: {
 						'Authorization': localStorage.getItem('token_admin')
 					},
@@ -500,11 +392,42 @@
 						})
 						this.tableData = res.data.data
 						this.totals = res.data.count
-					} else {
-						console.log(res.data.message)
+						this.paginationShow = true
 					}
-					this.paginationShow = true
+				}).catch((res) => {
+
 				})
+			},
+			filter_inbound() {
+				this.paginationShow = false
+				this.cur_page = 1
+				this.$axios.get('/admin/outbound_orders?page=' + this.cur_page + '&user_id=' + this.select_cate + '&wms=true' + '&out=true&fnsku=' + this.search_fnsku, {
+					headers: {
+						'Authorization': localStorage.getItem('token_admin')
+					},
+				}).then((res) => {
+					if(res.data.code == 200) {
+						res.data.data.forEach((data) => {
+							if(data.is_mix) {
+								data.is_mix = '混装'
+							} else {
+								data.is_mix = '不混装'
+							}
+							data.barcode = 'hwc_' + data.id
+							// data.tempcode = 'wzsv587-' + data.id
+						})
+						this.tableData = res.data.data
+						this.totals = res.data.count
+						this.paginationShow = true
+					}
+				}).catch((res) => {
+
+				})
+			},
+			clear_search() {
+				this.select_cate = ''
+				this.search_fnsku = ''
+				this.getData()
 			},
 			getUser(callback = undefined) {
 				this.$axios.get('/admin/users?page=' + this.user_page, {
@@ -519,6 +442,8 @@
 							callback()
 						}
 					}
+				}).catch((res) => {
+
 				})
 			},
 			getBoxs(callback = undefined) {
@@ -534,6 +459,8 @@
 							callback()
 						}
 					}
+				}).catch((res) => {
+
 				})
 			},
 			onInfinite_box(obj) {
@@ -608,9 +535,11 @@
 						'Authorization': localStorage.getItem('token_admin')
 					},
 				}).then((res) => {
-					this.tableData = res.data.data
-					this.totals = res.data.count
-					this.paginationShow = true
+					if(res.data.code) {
+						this.tableData = res.data.data
+						this.totals = res.data.count
+						this.paginationShow = true
+					}
 				})
 			},
 			getUserDatas() {
@@ -619,177 +548,18 @@
 						'Authorization': localStorage.getItem('token_admin')
 					},
 				}).then((res) => {
-					this.tableData = res.data.data
-					this.totals = res.data.count
-				})
-			},
-			pick() {
-				this.$axios.get('/admin/outbound_orders/' + this.pick_id + '/print_pick', {
-					headers: {
-						'Authorization': localStorage.getItem('token_admin')
-					},
-				}).then((res) => {
 					if(res.data.code == 200) {
-						this.$message.success('拣货成功')
-						this.status = 2
-						this.refresh_detail()
-						this.getData()
-					} else {
-						this.$message.error("失败,请联系管理员")
-					}
-				})
-			},
-			//打包
-			package(index, row) {
-				this.idx = index
-				const item = this.tableData[index]
-				this.$axios.get('/admin/outbound_orders/' + row.id, {
-					headers: {
-						'Authorization': localStorage.getItem('token_admin')
-					},
-				}).then((res) => {
-					if(res.data.code == 200) {
-						res.data.data.label_changes.forEach((data) => {
-							console.log(data['dst_fnsku'])
-							this.package_fnskus.push(data['dst_fnsku'])
-						})
-					}
-				})
-				this.package_id = item.id
-				this.packageVisible = true
-			},
-			package_done() {
-				let box_ids = []
-				let weight = []
-				let sum = []
-				let fnsku = []
-				this.form.forEach((data) => {
-					let temp_sum = []
-					let temp_fnsku = []
-					data.form_branch.forEach((data2) => {
-						temp_sum.push(data2['sum'])
-						temp_fnsku.push(data2['fnsku'])
-					})
-					sum.push(temp_sum)
-					fnsku.push(temp_fnsku)
-					weight.push(data['boxes_weight'])
-					box_ids.push(data['boxes_id'])
-				})
-				let params = {
-					box_ids: box_ids,
-					weight: weight,
-					sum: sum,
-					fnsku: fnsku,
-					remark: this.package_ramark
-				}
-				this.$axios.post('/admin/outbound_orders/' + this.package_id + '/done_package', params, {
-					headers: {
-						'Authorization': localStorage.getItem('token_admin')
-					},
-				}).then((res) => {
-					if(res.data.code ==200) {
-						this.$message.success("打包成功")
-						this.getData()
-						this.packageVisible = false
+						this.tableData = res.data.data
+						this.totals = res.data.count
 					}
 				}).catch((res) => {
 
 				})
-			},
-			cancel_Package() {
-				this.package_fnskus = []
-				this.package_ramark = ''
-				this.packageVisible = false
-			},
-			check(index, row) {
-				this.check_id = row.id
-				this.$axios.get('/admin/outbound_orders/' + row.id + '/settlement', {
-					headers: {
-						'Authorization': localStorage.getItem('token_admin')
-					},
-				}).then((res) => {
-					if(res.data.code == 200) {
-						this.checkData = [res.data.data]
-						this.checkData2 = res.data.data.label_changes
-						this.checkData3 = res.data.data.order_boxes
-						this.checkData4 = res.data.data.store_ins
-						
-						res.data.data.product_store_ins.forEach((data) => {
-							data.check_sum2 = ''
-						})
-						this.checkData5 = res.data.data.product_store_ins
-						// res.data.data.forEach((data) => {
-						// 	this.checkData = data
-						// })
-						this.checkVisible = true
-					}
-				}).catch((res) => {
-
-				})
-			},
-			check_done() {
-				let store_in_ids = []
-				let product_store_in_ids = []
-				let sum = []
-				for(let i = 0; i < this.store_ins_mul.length; i++) {
-					store_in_ids.push(this.store_ins_mul[i].id)
-				}
-				for(let j = 0; j < this.product_store_ins_mul.length; j++) {
-					sum.push(this.product_store_ins_mul[j].check_sum2)
-					product_store_in_ids.push(this.product_store_ins_mul[j].id)
-				}
-				let params = {
-					store_in_ids: store_in_ids,
-					product_store_in_ids: product_store_in_ids,
-					sum: sum
-				}
-				this.$axios.post('/admin/outbound_orders/' + this.check_id + '/check', params, {
-					headers: {
-						'Authorization': localStorage.getItem('token_admin')
-					},
-				}).then((res) => {
-					if(res.data.code == 200) {
-						this.getData()
-						this.checkVisible = false
-						this.$message.success('审核成功')
-					}
-				}).catch((res) => {
-					// console.log('error')
-				})
-			},
-			addBoxes() {
-				this.form.push(this.new_form)
-				this.new_form = {
-					boxes_id: '',
-					boxes_weight: '',
-					form_branch: [{
-						fnsku: '',
-						sum: ''
-					}],
-				}
-			},
-			back() {
-				this.form.pop(this.new_form)
-			},
-			orderAdd(index) {
-				this.form[index]['form_branch'].push(this.form_branch)
-				this.form_branch = {
-					fnsku: '',
-					sum: ''
-				}
-			},
-			orderDel(index) {
-				if(this.form[index]['form_branch'].length == 1) {
-					this.$message.error("至少保留一项哦")
-					return false;
-				}
-				this.form[index]['form_branch'].pop(this.form_branch)
-				console.log(this.form)
 			},
 			//箱标弹出框
 			showImgs(index, row) {
-				this.idx = index;
-				const item = this.tableData[index];
+				this.idx = index
+				const item = this.tableData[index]
 				this.form = {
 					id: item.id,
 					pictures: item.pictures
@@ -805,11 +575,11 @@
 					this.img_show = 1
 					this.pdf_show = 0
 				}
-				this.showImg = true;
+				this.showImg = true
 			},
 			sendProduct(index, row) {
-				this.idx = index;
-				const item = this.tableData[index];
+				this.idx = index
+				const item = this.tableData[index]
 				this.sendProductId = item.id
 				console.log(item)
 				// this.form = {
@@ -817,7 +587,7 @@
 				// 	logistics_number: item.logistics_number,
 				// 	l_type: this.l_type
 				// }
-				this.sendProductVisible = true;
+				this.sendProductVisible = true
 			},
 			//发货
 			sendEnd() {
@@ -838,15 +608,15 @@
 					if(res.data.code == 200) {
 						this.$message.success("下发成功!")
 						this.getData()
-						this.sendProductVisible = false;
+						this.sendProductVisible = false
 					}
 				}).catch((res) => {
 					console.log("error")
 				})
 			},
 			handleDelete(index, row) {
-				this.idx = index;
-				this.delVisible = true;
+				this.idx = index
+				this.delVisible = true
 			},
 			// 确定删除
 			deleteRow() {
@@ -861,11 +631,11 @@
 						this.tableData.splice(this.idx, 1)
 						//						this.getData()
 						this.$message.success("删除成功")
+						this.delVisible = false;
 					}
 				}).catch((res) => {
 					this.$message.error("删除失败")
 				})
-				this.delVisible = false;
 			},
 			printStock(index, row) {
 				this.details_id = row.id
@@ -913,6 +683,8 @@
 					} else {
 						this.$message.error("失败,请联系管理员")
 					}
+				}).catch((res) => {
+
 				})
 				
 			},
@@ -962,6 +734,8 @@
 					} else {
 						this.$message.error("失败,请联系管理员")
 					}
+				}).catch((res) => {
+
 				})
 			},
 			refresh_detail() {
@@ -980,6 +754,8 @@
 					} else {
 						console.log('error')
 					}
+				}).catch((res) => {
+
 				})
 			},
 			closeDetails() {
@@ -1052,4 +828,8 @@
 		width:5rem;
     	height:5rem;
 	}
+
+	.fnsku_filter {
+        float: right;
+    }
 </style>

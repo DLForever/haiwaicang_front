@@ -288,9 +288,11 @@
 					},
 					params
 				}).then((res) => {
-					this.tableData = res.data.data
-					this.totals = res.data.count
-					this.paginationShow = true
+					if(res.data.code == 200) {
+						this.tableData = res.data.data
+						this.totals = res.data.count
+						this.paginationShow = true
+					}
 				})
 			},
 			allUser() {
@@ -339,7 +341,6 @@
 					}).then((res) => {
 						if(res.data.code == 200){
 							this.loading = false
-//							this.options = res.data.data
 							if(reload){
 								this.options = this.options2.concat(res.data.data)
 							}else{
@@ -387,9 +388,13 @@
 						'Authorization': localStorage.getItem('token_admin')
 					},
 				}).then((res) => {
-					this.tableData = res.data.data
-					this.totals = res.data.count
-					this.paginationShow = true
+					if(res.data.code == 200) {
+						this.tableData = res.data.data
+						this.totals = res.data.count
+						this.paginationShow = true
+					}
+				}).catch((res) => {
+					console.log('error')
 				})
 			},
 			getUserDatas() {
@@ -398,8 +403,12 @@
 						'Authorization': localStorage.getItem('token_admin')
 					},
 				}).then((res) => {
-					this.tableData = res.data.data
-					this.totals = res.data.count
+					if(res.data.code == 200) {
+						this.tableData = res.data.data
+						this.totals = res.data.count
+					}
+				}).catch((res) => {
+					console.log('error')
 				})
 			},
 			getWarehouse(callback = undefined) {
@@ -559,7 +568,7 @@
 							this.change_count = ''
 						}
 					}).catch((res) => {
-						this.$message.error(res)
+						console.log('error')
 					})
 				}).catch(() => {
 					this.$message({
@@ -583,15 +592,12 @@
 						'Authorization': localStorage.getItem('token_admin')
 					},
 				}).then((res) => {
-					this.order_ware_houses = res.data.data.order_ware_houses
-					//					res.data.data.product_store_ins.forEach((data) => {
-					//						data.ware_count = ''
-					//						data.store_in_ware_houses.forEach((data2) => {
-					//							data.ware_count += data2.ware_house_name + '(' + data2.sum + ') '
-					//						})
-					//						this.ware_details = res.data.data.product_store_ins
-					//					})
-					this.detailVisible = true
+					if(res.data.code == 200) {
+						this.order_ware_houses = res.data.data.order_ware_houses
+						this.detailVisible = true
+					}
+				}).catch((res) => {
+					console.log('error')
 				})
 			},
 			// 确定删除

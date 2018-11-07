@@ -9,11 +9,19 @@
 
 		<div class="container">
 			<div class="handle-box">
-				<el-select v-model="select_cate" filterable remote placeholder="选择用户" class="handle-select mr10" :loading="loading" @change="getUserDatasFirst" @visible-change="selectVisble" :remote-method="remoteMethod">
-					<el-option v-for="item in options" :label="item.name" :value="item.id"></el-option>
-					<infinite-loading :on-infinite="onInfinite" ref="infiniteLoading"></infinite-loading>
-				</el-select>
+				<div class="fnsku_filter">
+					用户:
+					<el-select v-model="select_cate" filterable remote placeholder="选择用户" class="handle-select mr10" :loading="loading" @visible-change="selectVisble" :remote-method="remoteMethod">
+						<el-option v-for="item in options" :label="item.name" :value="item.id"></el-option>
+						<infinite-loading :on-infinite="onInfinite" ref="infiniteLoading"></infinite-loading>
+					</el-select>
+					fnsku:
+                    <el-input style="width:150px" placeholder="请输入fnsku" v-model.trim="search_fnsku"></el-input>
+                    <el-button @click="clear_search" type="default">重置</el-button>
+                    <el-button @click="filter_inbound" type="primary">查询</el-button>
+                </div>
 			</div>
+			<br><br>
 			<el-table :data="data" border style="width: 100%" model="form" ref="multipleTable" @selection-change="handleSelectionChange">
 				<el-table-column type="selection" width="55"></el-table-column>
 				<el-table-column prop="barcode" label="出库单号">
@@ -322,14 +330,16 @@
 				outBoundTable: [],
 				ware_houseTable: [],
 				ware_houseTable2: [],
-				options: [{
-					id: -1,
-					name: "所有用户"
-				}, ],
-				options2: [{
-					id: -1,
-					name: "所有用户"
-				}, ],
+				// options: [{
+				// 	id: -1,
+				// 	name: "所有用户"
+				// }, ],
+				// options2: [{
+				// 	id: -1,
+				// 	name: "所有用户"
+				// }, ],
+				options: [],
+				options2: [],
 				form: [{
 					boxes_id: '',
 					boxes_weight: '',
@@ -383,7 +393,8 @@
 				checkData5: [],
 				check_id: undefined,
 				sendProductId: undefined,
-				importStockTable:[{id:1},{id:2},{id:3},{id:4},{id:5},{id:6},{id:7},{id:8},{id:9},{id:10}]
+				importStockTable:[{id:1},{id:2},{id:3},{id:4},{id:5},{id:6},{id:7},{id:8},{id:9},{id:10}],
+				search_fnsku: ''
 			}
 		},
 		created() {
@@ -452,21 +463,21 @@
 				document.body.innerHTML = oldHtml
 			},
 			formatter_created_at(row, column) {
-				return row.created_at.substr(0, 19);
+				return row.created_at.substr(0, 19)
 			},
 			formatter_updated_at(row, column) {
-				return row.updated_at.substr(0, 19);
+				return row.updated_at.substr(0, 19)
 			},
 			handleCurrentChange(val) {
-				this.cur_page = val;
+				this.cur_page = val
 				if(!this.select_cate || this.select_cate == -1) {
-					this.getData();
+					this.getData()
 				} else {
 					this.getUserDatas()
 				}
 			},
 			handleSelectionChange(val) {
-				this.multipleSelection = val;
+				this.multipleSelection = val
 			},
 			store_insSelectionChange(val) {
 				this.store_ins_mul = val
@@ -478,7 +489,7 @@
 				}
 			},
 			getData() {
-				this.$axios.get('/admin/outbound_orders?page=' + this.cur_page, {
+				this.$axios.get('/admin/outbound_orders?page=' + this.cur_page + '&user_id=' + this.select_cate + '&wms=false' + '&out=false&fnsku=' + this.search_fnsku, {
 					headers: {
 						'Authorization': localStorage.getItem('token_admin')
 					},
@@ -496,10 +507,45 @@
 						this.tableData = res.data.data
 						this.totals = res.data.count
 					} else {
-						console.log(res.data.message)
+						console.log('error')
 					}
 					this.paginationShow = true
+				}).catch((res) => {
+					console.log('error')
 				})
+			},
+			filter_inbound() {
+				this.paginationShow = false
+				this.cur_page = 1
+				this.$axios.get('/admin/outbound_orders?page=' + this.cur_page + '&user_id=' + this.select_cate + '&wms=false' + '&out=false&fnsku=' + this.search_fnsku, {
+					headers: {
+						'Authorization': localStorage.getItem('token_admin')
+					},
+				}).then((res) => {
+					if(res.data.code == 200) {
+						res.data.data.forEach((data) => {
+							if(data.is_mix) {
+								data.is_mix = '混装'
+							} else {
+								data.is_mix = '不混装'
+							}
+							data.barcode = 'hwc_' + data.id
+							// data.tempcode = 'wzsv587-' + data.id
+						})
+						this.tableData = res.data.data
+						this.totals = res.data.count
+					} else {
+						console.log('error')
+					}
+					this.paginationShow = true
+				}).catch((res) => {
+					console.log('error')
+				})
+			},
+			clear_search() {
+				this.select_cate = ''
+				this.search_fnsku = ''
+				this.getData()
 			},
 			getUser(callback = undefined) {
 				this.$axios.get('/admin/users?page=' + this.user_page, {
@@ -514,6 +560,8 @@
 							callback()
 						}
 					}
+				}).catch((res) => {
+					console.log('error')
 				})
 			},
 			getBoxs(callback = undefined) {
@@ -529,6 +577,8 @@
 							callback()
 						}
 					}
+				}).catch((res) => {
+					console.log('error')
 				})
 			},
 			onInfinite_box(obj) {
@@ -614,8 +664,12 @@
 						'Authorization': localStorage.getItem('token_admin')
 					},
 				}).then((res) => {
-					this.tableData = res.data.data
-					this.totals = res.data.count
+					if(res.data.code == 200) {
+						this.tableData = res.data.data
+						this.totals = res.data.count
+					}
+				}).catch((res) => {
+					console.log('error')
 				})
 			},
 			pick() {
@@ -632,6 +686,8 @@
 					} else {
 						this.$message.error("失败,请联系管理员")
 					}
+				}).catch((res) => {
+					console.log('error')
 				})
 			},
 			//打包
@@ -648,10 +704,12 @@
 							//获取打包包含的fnsku
 							this.package_fnskus.push(data['dst_fnsku'])
 						})
+						this.package_id = item.id
+						this.packageVisible = true
 					}
+				}).catch((res) => {
+					console.log('error')
 				})
-				this.package_id = item.id
-				this.packageVisible = true
 			},
 			package_done() {
 				let box_ids = []
@@ -688,12 +746,20 @@
 						this.packageVisible = false
 					}
 				}).catch((res) => {
-
+					console.log('error')
 				})
 			},
 			cancel_Package() {
 				this.package_fnskus = []
 				this.package_ramark = ''
+				this.form = [{
+					boxes_id: '',
+					boxes_weight: '',
+					form_branch: [{
+						fnsku: '',
+						sum: ''
+					}],
+				}],
 				this.packageVisible = false
 			},
 			check(index, row) {
@@ -708,18 +774,14 @@
 						this.checkData2 = res.data.data.label_changes
 						this.checkData3 = res.data.data.order_boxes
 						this.checkData4 = res.data.data.store_ins
-						
 						res.data.data.product_store_ins.forEach((data) => {
 							data.check_sum2 = ''
 						})
 						this.checkData5 = res.data.data.product_store_ins
-						// res.data.data.forEach((data) => {
-						// 	this.checkData = data
-						// })
 						this.checkVisible = true
 					}
 				}).catch((res) => {
-
+					console.log('error')
 				})
 			},
 			check_done() {
@@ -749,7 +811,7 @@
 						this.$message.success('审核成功')
 					}
 				}).catch((res) => {
-					// console.log('error')
+					console.log('error')
 				})
 			},
 			closeCheckVisible() {
@@ -784,15 +846,15 @@
 			orderDel(index) {
 				if(this.form[index]['form_branch'].length == 1) {
 					this.$message.error("至少保留一项哦")
-					return false;
+					return false
 				}
 				this.form[index]['form_branch'].pop(this.form_branch)
 				console.log(this.form)
 			},
 			//箱标弹出框
 			showImgs(index, row) {
-				this.idx = index;
-				const item = this.tableData[index];
+				this.idx = index
+				const item = this.tableData[index]
 				this.form_picture = {
 					id: item.id,
 					pictures: item.pictures
@@ -808,11 +870,11 @@
 					this.img_show = 1
 					this.pdf_show = 0
 				}
-				this.showImg = true;
+				this.showImg = true
 			},
 			sendProduct(index, row) {
-				this.idx = index;
-				const item = this.tableData[index];
+				this.idx = index
+				const item = this.tableData[index]
 				this.sendProductId = item.id
 				console.log(item)
 				// this.form = {
@@ -820,7 +882,7 @@
 				// 	logistics_number: item.logistics_number,
 				// 	l_type: this.l_type
 				// }
-				this.sendProductVisible = true;
+				this.sendProductVisible = true
 			},
 			//发货
 			sendEnd() {
@@ -841,15 +903,15 @@
 					if(res.data.code == 200) {
 						this.$message.success("下发成功!")
 						this.getData()
-						this.sendProductVisible = false;
+						this.sendProductVisible = false
 					}
 				}).catch((res) => {
 					console.log("error")
 				})
 			},
 			handleDelete(index, row) {
-				this.idx = index;
-				this.delVisible = true;
+				this.idx = index
+				this.delVisible = true
 			},
 			// 确定删除
 			deleteRow() {
@@ -1024,4 +1086,8 @@
 		width:5rem;
     	height:5rem;
 	}
+
+	.fnsku_filter {
+        float: right;
+    }
 </style>

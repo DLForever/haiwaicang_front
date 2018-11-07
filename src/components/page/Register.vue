@@ -196,10 +196,11 @@
 								'Content-Type': 'application/json; charset=UTF-8'
 							}
 						}).then((res) => {
-							localStorage.setItem('ms_username', this.ruleForm.username);
-							localStorage.setItem('token', res.data.data.token);
-							console.log(res)
-							this.$router.push('/');
+							if(res.data.code == 200) {
+								localStorage.setItem('ms_username', this.ruleForm.username);
+								localStorage.setItem('token', res.data.data.token);
+								this.$router.push('/');
+							}							
 						})
 					} else {
 						this.$message.error('请填写完整信息')

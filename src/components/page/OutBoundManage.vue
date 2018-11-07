@@ -11,8 +11,14 @@
 				<el-tab-pane label="新建产品" name="first"> -->
 			<div class="handle-box">
 				<el-button type="primary" @click="showOutBound">创建出库单</el-button>
+				<div class="fnsku_filter">
+					fnsku:
+                    <el-input style="width:150px" placeholder="请输入fnsku" v-model.trim="search_fnsku"></el-input>
+                    <el-button @click="clear_search" type="default">重置</el-button>
+                    <el-button @click="filter_inbound" type="primary">查询</el-button>
+                </div>
 			</div>
-
+				
 			<el-table :data="data" border style="width: 100%" ref="multipleTable" @selection-change="handleSelectionChange">
 				<el-table-column type="selection" width="55"></el-table-column>
 				<!--<el-table-column prop="created_at" label="创建时间" :formatter="formatter_created_at" width="150">
@@ -67,6 +73,10 @@
 					</template>
 				</el-table-column>
 			</el-table>
+			<div class="pagination">
+				<el-pagination v-if="paginationShow"  :page-size="pagesize" layout="prev, pager, next" :total="totals">
+				</el-pagination>
+			</div>
 		<!-- </el-tab-pane>
 		<el-tab-pane label="批量上传" name="second">
 					<template v-if="message === 'second'">
@@ -110,7 +120,7 @@
 					</el-table-column>
 					<el-table-column label="新标">
 						<template slot-scope="scope">
-							<my-uploader v-if="my_uploaderVisible" :onChange="changeLabel.bind(null,scope.$index)"></my-uploader>
+							<my-uploader v-if="my_uploaderVisible" @current-change="handleCurrentChange" :onChange="changeLabel.bind(null,scope.$index)"></my-uploader>
 						</template>
 						
 					</el-table-column>
@@ -430,6 +440,8 @@
 				pictureVisible: false,
 				updateVisible: false,
 				delOutVisible: false,
+				paginationShow: true,
+				pagesize: 20,
 				img_show: 1,
 				pdf_show: 0,
 				picture_index: undefined,
@@ -451,15 +463,16 @@
 					}],
 				},
 				my_uploaderVisible: true,
-				notifications: []
+				notifications: [],
+				search_fnsku: ''
 			}
 		},
 		props:{
 			getMessageCount:Function
 		},
 		created() {
-			this.getData();
-			this.getDatas();
+			this.getData()
+			this.getDatas()
 			this.getBatchInbound()
 		},
 		computed: {
@@ -510,21 +523,58 @@
 				})
 			},
 			getDatas() {
-				this.$axios.get('/outbound_orders?page=' + this.cur_page, {
+				this.$axios.get('/outbound_orders?page=' + this.cur_page + '&fnsku=' + this.search_fnsku, {
 					headers: {
 						'Authorization': localStorage.getItem('token')
 					}
 				}).then((res) => {
-					res.data.data.forEach((data) => {
-						if(data.is_mix) {
-							data.is_mix = '混装'
-						} else {
-							data.is_mix = '不混装'
-						}
-					})
-					this.tableData = res.data.data
-					this.totals = res.data.count
+					if(res.data.code == 200) {
+						res.data.data.forEach((data) => {
+							if(data.is_mix) {
+								data.is_mix = '混装'
+							} else {
+								data.is_mix = '不混装'
+							}
+						})
+						this.tableData = res.data.data
+						this.totals = res.data.count
+						this.paginationShow = true
+					}
+				}).catch((res) => {
+
 				})
+			},
+			filter_inbound() {
+				this.paginationShow = false
+				this.cur_page = 1
+				this.$axios.get('/outbound_orders?page=' + this.cur_page + '&fnsku=' + this.search_fnsku, {
+					headers: {
+						'Authorization': localStorage.getItem('token')
+					}
+				}).then((res) => {
+					if(res.data.code == 200) {
+						res.data.data.forEach((data) => {
+							if(data.is_mix) {
+								data.is_mix = '混装'
+							} else {
+								data.is_mix = '不混装'
+							}
+						})
+						this.tableData = res.data.data
+						this.totals = res.data.count
+						this.paginationShow = true
+					}
+				}).catch((res) => {
+
+				})
+			},
+			clear_search() {
+				this.search_fnsku = ''
+				this.getDatas()
+			},
+			handleCurrentChange(val) {
+				this.cur_page = val
+				this.getDatas()
 			},
 			getBatchInbound() {
 				this.$axios.get('/batch_store_ins/available_index?page=' + this.batch_page, {
@@ -532,8 +582,12 @@
 						'Authorization': localStorage.getItem('token')
 					}
 				}).then((res) => {
-					this.batch_options = this.batch_options.concat(res.data.data)
-					this.batch_totals = res.data.count
+					if(res.data.code == 200) {
+						this.batch_options = this.batch_options.concat(res.data.data)
+						this.batch_totals = res.data.count
+					}
+				}).catch((res) => {
+
 				})
 			},
 			detailsShow(index, row) {
@@ -543,12 +597,14 @@
 						'Authorization': localStorage.getItem('token')
 					},
 				}).then((res) => {
-					this.OutBoundTable = res.data.data.label_changes
-					res.data.data.order_boxes.forEach((data) => {
-						data.box_size = data.box.length + '*' + data.box.width + '*' + data.box.height
-					})
-					this.order_box_cargos = res.data.data.order_boxes
-					this.detailVisible = true
+					if(res.data.code == 200) {
+						this.OutBoundTable = res.data.data.label_changes
+						res.data.data.order_boxes.forEach((data) => {
+							data.box_size = data.box.length + '*' + data.box.width + '*' + data.box.height
+						})
+						this.order_box_cargos = res.data.data.order_boxes
+						this.detailVisible = true
+					}
 				})
 			},
 			showOutBound() {
@@ -610,7 +666,6 @@
 				this.form.pop(this.newForm2)
 			},
 			popTest(index,id) {
-                console.log('index')
                 this.notifications[index].close()
                 this.notifications[index] = undefined
                 this.$axios.patch('/notifications/' + id, '',{
@@ -626,7 +681,6 @@
                 })
             },
 			onSubmit() {
-				console.log(this.form)
 				let logistics_number = []
 				let product_ids = []
 				let plan_sum = []
@@ -654,8 +708,6 @@
 					formData.append('sku[]', data['sku'])
 					formData.append('sum[]', Number(data['plan_sum']))
 				})
-				console.log('files:')
-				console.log(files)
 				formData.append('is_mix', this.radio)
 				formData.append('remark', this.remark)
 				files.forEach((item) => {
@@ -781,7 +833,6 @@
 				}).then((res) => {
 					res.data.data.order_boxes.forEach((data) => {
 						data.box_size = data.box.length + '*' + data.box.width + '*' + data.box.height
-						// data.cargo_number = ''
 					})
 					this.order_box_cargos = res.data.data.order_boxes
 				})
@@ -1125,6 +1176,10 @@
     	height:5rem;
 	}
 
+	.fnsku_filter {
+        float: right;
+    }
+
 	.uploader_containner{
     display: inline-block;
   	}
@@ -1132,25 +1187,6 @@
     width:5rem;
     height:5rem;
   }
-
-/*	.avatar-uploader .el-upload {
-    border: 1px dashed #d9d9d9;
-    border-radius: 6px;
-    cursor: pointer;
-    position: relative;
-    overflow: hidden;
-  }
-  .avatar-uploader .el-upload:hover {
-    border-color: #409EFF;
-  }
-  .avatar-uploader-icon {
-    font-size: 8px;
-    color: #8c939d;
-    width: 48px;
-    height: 48px;
-    line-height: 48px;
-    text-align: center;
-  }*/
 
 	.el-icon-plus:before {
     font-size: 2px;

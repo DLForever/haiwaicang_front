@@ -266,7 +266,7 @@
 				}
 				console.log(this.batchList)
 				this.batchList.forEach((item) => {
-					formData.append('data', item.raw)
+					formData.append('file', item.raw)
 				})
 				this.$axios.post('/products/batch', formData, config).then((res) => {
 					if(res.data.code == 200) {

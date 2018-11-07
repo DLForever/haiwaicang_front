@@ -8,15 +8,19 @@
 		</div>
 		<div class="container">
 			<div class="handle-box">
-				<el-select v-model="select_cate" filterable remote placeholder="选择用户" class="handle-select mr10" :loading="loading" @change="getUserDatasFirst" @visible-change="selectVisble" :remote-method="remoteMethod">
-					<el-option v-for="item in options" :key="item.id" :label="item.name" :value="item.id"></el-option>
-					<infinite-loading :on-infinite="onInfinite" ref="infiniteLoading"></infinite-loading>
-				</el-select>
 				<div class="fnsku_filter">
+					用户:
+					<el-select v-model="select_cate" filterable remote placeholder="选择用户" class="handle-select mr10" :loading="loading" @visible-change="selectVisble" :remote-method="remoteMethod">
+						<el-option v-for="item in options" :key="item.id" :label="item.name" :value="item.id"></el-option>
+						<infinite-loading :on-infinite="onInfinite" ref="infiniteLoading"></infinite-loading>
+					</el-select>
+					fnsku:
 					<el-input style="width:150px" placeholder="请输入fnsku" v-model="search_fnsku"></el-input>
-					<el-button @click="filter_fnsku()" type="primary">查询</el-button>
+					<el-button @click="clear_filter" type="default">重置</el-button>
+					<el-button @click="filter_fnsku" type="primary">查询</el-button>
 				</div>
 			</div>
+			<br><br>
 			<el-table :data="data" border style="width: 100%" ref="multipleTable" @selection-change="handleSelectionChange">
 				<el-table-column type="selection" width="55"></el-table-column>
 				<el-table-column prop="fnsku" label="fnsku" width="200">
@@ -144,6 +148,8 @@
 					id: -1,
 					name: "所有用户"
 				}, ],
+				options: [],
+				options2: [],
 				wareoptions: [],
 				ware_total: 0,
 				query: undefined,
@@ -221,15 +227,16 @@
 			// 分页导航
 			handleCurrentChange(val) {
 				this.cur_page = val;
-				if(!this.select_cate || this.select_cate == -1) {
-					this.getData();
-				} else {
-					this.getUserDatas()
-				}
+				this.getData();
+				// if(!this.select_cate || this.select_cate == -1) {
+				// 	this.getData();
+				// } else {
+				// 	this.getUserDatas()
+				// }
 			},
 			// 获取 easy-mock 的模拟数据
 			getData() {
-				this.$axios.get('/admin/cargos?page=' + this.cur_page, {
+				this.$axios.get("/admin/cargos/search_by_fnsku?page=" + this.user_page + '&query=' + this.search_fnsku.trim() + '&user_id=' + this.select_cate , {
 					headers: {
 						'Authorization': localStorage.getItem('token_admin')
 					}
@@ -237,10 +244,8 @@
 					if(res.data.code == 200) {
 						this.tableData = res.data.data
 						this.totals = res.data.count
-					}else {
-						console.log(res.data.message)
-					}					
-					this.paginationShow = true
+						this.paginationShow = true
+					}				
 				}).catch((res) => {
 					this.$message.error(res)
 				})
@@ -258,6 +263,8 @@
 							callback()
 						}
 					}
+				}).catch((res) => {
+					console.log('error')
 				})
 			},
 			createWare() {
@@ -313,7 +320,7 @@
 						this.ware_house_ids = []
 					}
 				}).catch((res) => {
-					console.log(res)
+					console.log('error')
 				})
 			},
 			allUser() {
@@ -335,6 +342,8 @@
 							callback()
 						}
 					}
+				}).catch((res) => {
+					console.log('error')
 				})
 			},
 			selectVisble(visible) {
@@ -378,12 +387,13 @@
 				}
 			},
 			filter_fnsku() {
-				if(this.search_fnsku.trim() == '') {
-					this.$message.error("请输入fnsku")
-					return false
-				}
+				// if(this.search_fnsku.trim() == '') {
+				// 	this.$message.error("请输入fnsku")
+				// 	return false
+				// }
+				this.cur_page = 1
 				this.paginationShow = false
-				this.$axios.get("/admin/cargos/search_by_fnsku?query=" + this.search_fnsku.trim() + "&page=" + this.user_page, {
+				this.$axios.get("/admin/cargos/search_by_fnsku?page=" + this.user_page + '&query=' + this.search_fnsku.trim() + '&user_id=' + this.select_cate , {
 					headers: {
 						'Authorization': localStorage.getItem('token_admin')
 					},
@@ -391,11 +401,17 @@
 					if(res.data.code == 200) {
 						this.tableData = res.data.data
 						this.totals = res.data.count
-						this.paginationShow = true
+						
 					}
+					this.paginationShow = true
 				}).catch((res) => {
 
 				})
+			},
+			clear_filter() {
+				this.select_cate = ''
+				this.search_fnsku = ''
+				this.getData()
 			},
 			getUserDatasFirst() {
 				if(this.select_cate == -1) {
@@ -411,9 +427,13 @@
 						'Authorization': localStorage.getItem('token_admin')
 					},
 				}).then((res) => {
-					this.tableData = res.data.data
-					this.totals = res.data.count
-					this.paginationShow = true
+					if(res.data.code == 200) {
+						this.tableData = res.data.data
+						this.totals = res.data.count
+						this.paginationShow = true
+					}
+				}).catch((res) => {
+
 				})
 			},
 			getUserDatas() {
@@ -422,8 +442,12 @@
 						'Authorization': localStorage.getItem('token_admin')
 					},
 				}).then((res) => {
-					this.tableData = res.data.data
-					this.totals = res.data.count
+					if(res.data.code == 200) {
+						this.tableData = res.data.data
+						this.totals = res.data.count
+					}
+				}).catch((res) => {
+
 				})
 			},
 			onInfinite(obj) {
@@ -436,48 +460,48 @@
 				}
 			},
 			detailsShow(index, row) {
-				this.idx = index;
-				const item = this.tableData[index];
+				this.idx = index
+				const item = this.tableData[index]
 				this.form = {
 					cargo_ware_houses: item.cargo_ware_houses,
 				}
-				this.detailVisible = true;
+				this.detailVisible = true
 			},
 
 			search() {
-				this.is_search = true;
+				this.is_search = true
 			},
 			formatter_created_at(row, column) {
-				return row.created_at.substr(0, 19);
+				return row.created_at.substr(0, 19)
 			},
 			formatter_updated_at(row, column) {
-				return row.updated_at.substr(0, 19);
+				return row.updated_at.substr(0, 19)
 			},
 			filterTag(value, row) {
-				return row.tag === value;
+				return row.tag === value
 			},
 			handleDelete(index, row) {
-				this.idx = index;
-				this.delVisible = true;
+				this.idx = index
+				this.delVisible = true
 			},
 			delAll() {
 				const length = this.multipleSelection.length;
-				let str = '';
-				this.del_list = this.del_list.concat(this.multipleSelection);
+				let str = ''
+				this.del_list = this.del_list.concat(this.multipleSelection)
 				for(let i = 0; i < length; i++) {
-					str += this.multipleSelection[i].name + ' ';
+					str += this.multipleSelection[i].name + ' '
 				}
-				this.$message.error('删除了' + str);
-				this.multipleSelection = [];
+				this.$message.error('删除了' + str)
+				this.multipleSelection = []
 			},
 			handleSelectionChange(val) {
-				this.multipleSelection = val;
+				this.multipleSelection = val
 			},
 			// 确定删除
 			deleteRow() {
-				this.tableData.splice(this.idx, 1);
-				this.$message.success('删除成功');
-				this.delVisible = false;
+				this.tableData.splice(this.idx, 1)
+				this.$message.success('删除成功')
+				this.delVisible = false
 			},
 			getStatusName(status) {
 				if(status == 1) {

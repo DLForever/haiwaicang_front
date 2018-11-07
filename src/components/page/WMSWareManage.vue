@@ -7,6 +7,15 @@
 			</el-breadcrumb>
 		</div>
 		<div class="container">
+			<div class="handle-box">
+				<div class="fnsku_filter">
+					fnsku:
+                    <el-input style="width:150px" placeholder="请输入fnsku" v-model.trim="search_fnsku"></el-input>
+                    <el-button @click="clear_filter" type="default">重置</el-button>
+                    <el-button @click="filter_ware" type="primary">查询</el-button>
+                </div>
+			</div>
+			<br><br>
 			<el-table :data="data" border style="width: 100%" model="form" ref="multipleTable" @selection-change="handleSelectionChange">
 				<el-table-column type="selection" width="55"></el-table-column>
 				<el-table-column prop="name" label="库位名称"></el-table-column>
@@ -28,7 +37,7 @@
 				</el-table-column>
 			</el-table>
 			<div class="pagination">
-				<el-pagination @current-change="handleCurrentChange" :page-size="pagesize" layout="prev, pager, next" :total="totals">
+				<el-pagination v-if="paginationShow" @current-change="handleCurrentChange" :page-size="pagesize" layout="prev, pager, next" :total="totals">
 				</el-pagination>
 			</div>
 		</div>
@@ -59,11 +68,13 @@
 				detailVisible: false,
 				form: {
 					
-				}
+				},
+				search_fnsku: '',
+				paginationShow: true,
 			}
 		},
 		created() {
-			this.getData();
+			this.getData()
 		},
 		watch: {
 			"$route": "getData"
@@ -77,30 +88,64 @@
 		},
 		methods: {
 			handleCurrentChange(val) {
-				this.cur_page = val;
-				this.getData();
+				this.cur_page = val
+				this.getData()
 			},
 			handleSelectionChange(val) {
-				this.multipleSelection = val;
+				this.multipleSelection = val
 			},
 			getData() {
-				this.$axios.get('/admin/warehouses?page=' + this.cur_page, {
+				this.$axios.get('/admin/warehouses?page=' + this.cur_page + '&fnsku=' + this.search_fnsku, {
 					headers: {
 						'Authorization': localStorage.getItem('token_admin')
 					},
 				}).then((res) => {
-					res.data.data.forEach((data) => {
-						data.sum = 0
-						data.lock_sum = 0
-						data.cargo_ware_houses.forEach((data2) => {
-							data2.name = data.name
-							data.sum += data2.sum
-							data.lock_sum += data2.lock_sum
+					if(res.data.code == 200) {
+						res.data.data.forEach((data) => {
+							data.sum = 0
+							data.lock_sum = 0
+							data.cargo_ware_houses.forEach((data2) => {
+								data2.name = data.name
+								data.sum += data2.sum
+								data.lock_sum += data2.lock_sum
+							})
 						})
-					})
-					this.tableData = res.data.data
-					this.totals = res.data.count
+						this.tableData = res.data.data
+						this.totals = res.data.count
+					}
+				}).catch((res) => {
+
 				})
+			},
+			filter_ware() {
+				this.paginationShow = false
+				this.cur_page = 1
+				this.$axios.get('/admin/warehouses?page=' + this.cur_page + '&fnsku=' + this.search_fnsku, {
+					headers: {
+						'Authorization': localStorage.getItem('token_admin')
+					},
+				}).then((res) => {
+					if(res.data.code == 200) {
+						res.data.data.forEach((data) => {
+							data.sum = 0
+							data.lock_sum = 0
+							data.cargo_ware_houses.forEach((data2) => {
+								data2.name = data.name
+								data.sum += data2.sum
+								data.lock_sum += data2.lock_sum
+							})
+						})
+						this.tableData = res.data.data
+						this.totals = res.data.count
+					}
+					this.paginationShow = true
+				}).catch((res) => {
+
+				})
+			},
+			clear_filter() {
+				this.search_fnsku = ''
+				this.getData()
 			},
 			detailsShow(index, row) {
 				this.idx = index;
@@ -108,8 +153,18 @@
 				this.form = {
 					cargo_ware_houses: item.cargo_ware_houses,
 				}
-				this.detailVisible = true;
+				this.detailVisible = true
 			},
 		},
 	}
 </script>
+
+<style scoped>
+	.handle-box {
+        margin-bottom: 20px;
+    }
+
+    .fnsku_filter {
+        float: right;
+    }
+</style>

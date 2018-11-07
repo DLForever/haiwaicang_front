@@ -176,8 +176,12 @@
 					},
 					params
 				}).then((res) => {
-					this.tableData = res.data.data;
-					this.totals = res.data.count
+					if(res.data.code) {
+						this.tableData = res.data.data;
+						this.totals = res.data.count
+					}
+				}).catch((res) => {
+					console.log('error')
 				})
 			},
 			search() {
