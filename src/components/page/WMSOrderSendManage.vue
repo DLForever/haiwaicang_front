@@ -359,13 +359,6 @@
 						'Authorization': localStorage.getItem('token_admin')
 					}
 				}).then((res) => {
-					//					res.data.data.forEach((data) => {
-					//						data.cargo_ids = []
-					//						data.cargo_store_outs.forEach((data2) => {
-					//							data2.warehouse = []
-					//							data.cargo_ids.push(data2.cargo_id)
-					//						})
-					//					})
 					this.tableData = res.data.data;
 					this.totals = res.data.count
 					this.paginationShow = true
@@ -560,10 +553,8 @@
 					}).then((res) => {
 						if(res.data.code == 200) {
 							res.data.data.forEach((data) => {
-								//							data.ware_sum = ''
 								data.warehouse = []
 								data.cargo_ware_houses.forEach((data2) => {
-									//								data.ware_sum = data.ware_sum.concat(data2.ware_house_name + '(' + data2.sum + ') ')
 									data2.ware_house_name = data2.ware_house_name + '(' + data2.sum + ')'
 								})
 							})
@@ -599,8 +590,6 @@
 			},
 			// 打包
 			saveEdit(form) {
-				//				this.$refs[form].validate((valid) => {
-				//					if(valid) {
 				let boxes_temp = []
 				for(let i = 0; i < this.dynamicTags.length; i++) {
 					boxes_temp.push(Number(this.dynamicTags[i].split('_')[0]))
@@ -676,12 +665,6 @@
 				}).catch((res) => {
 					this.$message.error(res)
 				})
-				//					} else {
-				//						this.$message.error('请填写完整内容')
-				//						return false
-				//					}
-				//				})
-
 			},
 			//发货
 			sendEnd() {

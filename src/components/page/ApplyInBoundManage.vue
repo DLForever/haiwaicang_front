@@ -63,6 +63,15 @@
 				</el-table-column>
 			</el-table>
 			<br />
+			<el-table v-if="this.batch_list.length" :data="address" border style="width: 100%">
+				<el-table-column prop="address1" label="地址一"></el-table-column>
+				<el-table-column prop="address2" label="地址二"></el-table-column>
+				<el-table-column prop="recipients" label="联系人"></el-table-column>
+				<el-table-column prop="tel" label="电话"></el-table-column>
+				<el-table-column prop="city" label="城市"></el-table-column>
+				<el-table-column prop="zip" label="邮编"></el-table-column>
+				<el-table-column prop="area" label="地区"></el-table-column>
+			</el-table>
 		</el-dialog>
 
 		<!-- 删除提示框 -->
@@ -98,6 +107,7 @@
 				mix_list: [],
 				inputValue: '',
 				idx: -1,
+				address: [{address1: '12851 Telegraph Rd', address2: 'Santa Fe Springs', recipients: 'SP9015', tel: '5177753674', city: 'Los Angeles', zip: '90670', area: 'CA'}]
 			}
 		},
 		created() {

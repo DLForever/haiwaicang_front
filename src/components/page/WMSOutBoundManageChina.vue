@@ -183,18 +183,18 @@
 				<el-table-column prop="total_plan_sum" label="计划数量"></el-table-column>
 				<el-table-column prop="total_arrive_sum" label="到达数量"></el-table-column>
 				<el-table-column prop="created_at" label="创建时间" :formatter="formatter_created_at"></el-table-column>
-				<el-table-column prop="updated_at" label="更新时间" :formatter="formatter_updated_at"></el-table-column>
+				<!-- <el-table-column prop="updated_at" label="更新时间" :formatter="formatter_updated_at"></el-table-column> -->
 			</el-table>
 			<br>
 			<el-table v-if="this.checkData5.length != 0" :data="checkData5" border style="width: 100%" @selection-change="productSelectionChange">
 				<el-table-column type="selection" width="55"></el-table-column>
 				<el-table-column prop="fnsku" label="fnsku"></el-table-column>
 				<el-table-column prop="plan_sum" label="计划数量"></el-table-column>
-				<el-table-column prop="way_sum" label="在途数量"></el-table-column>
+				<!-- <el-table-column prop="way_sum" label="在途数量"></el-table-column> -->
 				<el-table-column prop="arrive_sum" label="到达数量"></el-table-column>
 				<el-table-column prop="check_sum" label="已结算数量"></el-table-column>
 				<el-table-column prop="created_at" label="创建时间" :formatter="formatter_created_at"></el-table-column>
-				<el-table-column prop="updated_at" label="更新时间" :formatter="formatter_updated_at"></el-table-column>
+				<el-table-column prop="stock_time" label="存留时间(天/小时)"></el-table-column>
 				<el-table-column label="结算数量">
 					<template slot-scope="scope">
 						<el-input placeholder="输入结算数量" :value="scope.row.check_sum2" v-model="scope.row.check_sum2"></el-input>
@@ -763,6 +763,8 @@
 				this.packageVisible = false
 			},
 			check(index, row) {
+				// let temptime = new Date()
+				// console.log(temptime)
 				this.check_id = row.id
 				this.$axios.get('/admin/outbound_orders/' + row.id + '/settlement', {
 					headers: {
@@ -776,6 +778,19 @@
 						this.checkData4 = res.data.data.store_ins
 						res.data.data.product_store_ins.forEach((data) => {
 							data.check_sum2 = ''
+						})
+						res.data.data.product_store_ins.forEach((data) => {
+							let temptime = data.created_at.substr(0, 19)
+							console.log(temptime)
+							let temptime2 = temptime.replace(/T/g, " ")
+							let temptime3 = new Date(temptime2.replace(/-/g, "/"))
+							console.log(temptime3)
+							let dateEnd = new Date()
+							let dateDiff = dateEnd.getTime() - temptime3.getTime()
+							let dayDiff = Math.floor(dateDiff / (24 * 3600 * 1000))
+							let leave1 = dateDiff%(24*3600*1000)
+							let hours = Math.floor(leave1/(3600*1000))
+							data.stock_time = dayDiff + 'd' + hours + 'h'
 						})
 						this.checkData5 = res.data.data.product_store_ins
 						this.checkVisible = true

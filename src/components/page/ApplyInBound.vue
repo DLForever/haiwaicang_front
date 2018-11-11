@@ -16,7 +16,7 @@
 								<div class="el-upload__text">将文件拖到此处，或<em>点击上传</em></div>
 								<div class="el-upload__tip" slot="tip">只能上传xls/xlsx文件</div>
 							</el-upload>
-							<!--<a href="">模板下载</a>-->
+							<a :href="$axios.defaults.baseURL +'/apply.xlsx'">模板下载</a>
 						</el-form-item>
 						<el-form-item label="备注">
 							<el-input v-model="remark"></el-input>

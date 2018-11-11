@@ -179,6 +179,10 @@
 				},
 			}
 		},
+		beforeRouteEnter: (to, from, next) => {
+			console.log('Hi,i am comming')
+			next()
+		},
 		methods: {
 			submitUpload(content) {
 				this.formData = new FormData();

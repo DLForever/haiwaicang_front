@@ -96,24 +96,24 @@
 			<!-- 添加出库弹出框 -->
 			<el-dialog title="创建出库单" :visible.sync="outboundVisible" width="70%" @close="closeOutbound">
 				<el-table :data="form" border style="width: 100%" ref="multipleTable">
-					<el-table-column prop="total" label="原fnsku">
+					<el-table-column prop="total" label="原fnsku" width="260">
 						<template slot-scope="scope">
 							<el-select v-model="scope.row.product_id" placeholder="选择产品" class="handle-select mr10">
 								<el-option v-for="item in options" :key="item.id" :label="item.fnsku" :value="item.id"></el-option>
 							</el-select>
 						</template>
 					</el-table-column>
-					<el-table-column prop="new_fnsku" label="新的fnsku">
+					<el-table-column prop="new_fnsku" label="新的fnsku" width="260">
 						<template slot-scope="scope">
 							<el-input v-model.trim="scope.row.new_fnsku" placeholder="新的fnsku"></el-input>
 						</template>
 					</el-table-column>
-					<el-table-column prop="sku" label="sku">
+					<el-table-column prop="sku" label="sku" width="200">
 						<template slot-scope="scope">
-							<el-input v-model.trim="scope.row.sku" placeholder="sku"></el-input>
+							<el-input v-model.trim="scope.row.sku" placeholder="sku" ></el-input>
 						</template>
 					</el-table-column>
-					<el-table-column prop="plan_sum" label="数量">
+					<el-table-column prop="plan_sum" label="数量" width="150">
 						<template slot-scope="scope">
 							<el-input v-model.trim="scope.row.plan_sum" placeholder="计划数量"></el-input>
 						</template>
@@ -159,10 +159,16 @@
 						<el-button @click="back" :disabled="isDisableBu" type="danger">撤销</el-button>
 					</div>
 					<br>
-					<el-form-item label="是否混装">
-						<el-radio v-model="radio" label="true">是</el-radio>
-						<el-radio v-model="radio" label="false">否</el-radio>
+					<el-form-item label="是否混装" required>
+						<el-radio v-model="radio" label="true" border>是</el-radio>
+						<el-radio v-model="radio" label="false" border>否</el-radio>
 					</el-form-item>
+					<!-- <el-form-item label="是否混装">
+						<el-radio-group v-model="radio">
+							<el-radio-button label="true">是</el-radio-button>
+							<el-radio-button label="false">否</el-radio-button>
+						</el-radio-group>
+					</el-form-item> -->
 					<el-form-item label="备注">
 						<el-input v-model="remark"></el-input>
 					</el-form-item>
@@ -241,9 +247,15 @@
 					</div>
 					<br>
 					<el-form-item label="是否混装">
-						<el-radio v-model="updateRadio" label="true">是</el-radio>
-						<el-radio v-model="updateRadio" label="false">否</el-radio>
+						<el-radio v-model="updateRadio" label="true" border>是</el-radio>
+						<el-radio v-model="updateRadio" label="false" border>否</el-radio>
 					</el-form-item>
+					<!-- <el-form-item label="是否混装">
+						<el-radio-group v-model="updateRadio">
+							<el-radio-button label="true">是</el-radio-button>
+							<el-radio-button label="false">否</el-radio-button>
+						</el-radio-group>
+					</el-form-item> -->
 					<el-form-item label="备注">
 						<el-input v-model="remark"></el-input>
 					</el-form-item>
@@ -356,7 +368,7 @@
 					</el-carousel-item>
 				</el-carousel>
 				<div v-if="pdf_show" v-for="item in form.pictures">
-					<a target="_blank" :href="$axios.defaults.baseURL+item.url.url">{{'查看' + item.id + '.pdf'}}</a>
+					<a target="_blank" :href="$axios.defaults.baseURL + ':3000' +item.url.url">{{'查看' + item.id + '.pdf'}}</a>
 				</div>
 				<span slot="footer" class="dialog-footer">
                 <!--<el-button @click="showImg = false">取 消</el-button>-->
@@ -394,7 +406,7 @@
 				select_batch: '',
 				product_id: '',
 				remark: '',
-				radio: 'true',
+				radio: undefined,
 				updateRadio: undefined,
 				form2: {
 					remark: ''
@@ -681,6 +693,12 @@
                 })
             },
 			onSubmit() {
+				if(this.radio == undefined) {
+					this.$message.error("请选择是否混装")
+					return
+				}
+				console.log('lllll')
+				console.log(this.radio)
 				let logistics_number = []
 				let product_ids = []
 				let plan_sum = []
@@ -741,37 +759,6 @@
 						this.getDatas()
 						this.outboundVisible = false
 						this.getMessageCount()
-						// let mesId =  JSON.parse(localStorage.getItem('notifyid')) || []
-						// this.$axios.get('/notifications', {
-		    //                 headers: {
-		    //                     'Authorization': localStorage.getItem('token')
-		    //                 },
-		    //             }).then((res) => {
-		    //                 if(res.data.code == 200) {
-		    //                     res.data.data.forEach((data, index) => {
-		    //                         let offsettemp = 100 + 70 * index
-		    //                         if(mesId.indexOf(data.id) == -1) {
-		    //                             this.notifications.push(this.$notify({
-      //                                       title: '您有新的消息',
-      //                                       dangerouslyUseHTMLString: true,
-      //                                       offset: offsettemp,
-      //                                       message: data.message + `&nbsp<img src="${notificatinImg}"></img>`,
-      //                                       onClick: this.popTest.bind(null,this.notifications.length,data.id),
-      //                                       customClass: "testlzh",
-      //                                       duration: 7000,
-      //                                       showClose: false
-      //                                   }))
-		    //                             mesId.push(data.id)
-		    //                             localStorage.removeItem('notifyid')
-		    //                             localStorage.setItem('notifyid', JSON.stringify(mesId))  
-		    //                         }
-		    //                     })
-		    //                 }
-		    //             }).catch((res) => {
-		    //                 console.log('error')
-		    //             })
-		    
-
 					}
 				}).catch((res) => {
 					this.$message.error('提交失败！');
@@ -888,6 +875,7 @@
 			closeOutbound() {
 				this.my_uploaderVisible = false
 				this.remark = ''
+				this.radio = undefined
 				this.form = [{
 							plan_sum: '',
 							new_fnsku: '',

@@ -67,7 +67,7 @@
 						</el-form>
 					</div>
 				</el-tab-pane>
-				<!-- <el-tab-pane label="批量上传" name="second">
+				<el-tab-pane label="批量上传" name="second">
 					<el-form label-width="85px">
 						<el-form-item label="批量上传">
 							<el-upload class="upload-demo" drag action="" :file-list="fileList" :on-remove="handleRemove" :on-exceed="exceed" :auto-upload="false" :on-change="changeFile" :limit="1" multiple>
@@ -75,13 +75,13 @@
 								<div class="el-upload__text">将文件拖到此处，或<em>点击上传</em></div>
 								<div class="el-upload__tip" slot="tip">只能上传xls/xlsx文件</div>
 							</el-upload>
-							<a href="">模板下载</a>
+							<a :href="$axios.defaults.baseURL +'/store_ins.xlsx'">模板下载</a>
 						</el-form-item>
 						<el-form-item>
 							<el-button type="primary" @click="addFile">上传</el-button>
 						</el-form-item>
 					</el-form>
-				</el-tab-pane> -->
+				</el-tab-pane>
 			</el-tabs>
 		</div>
 	</div>
@@ -300,6 +300,19 @@
 					this.$message.error("请选择xlsx文件")
 					return false;
 				}
+				const extension = this.fileList[0].name.split('.')[1] === 'xls';
+                const extension2 = this.fileList[0].name.split('.')[1] === 'xlsx';
+                const maxSzie = this.fileList[0].size / 1024 / 1024 < 10;
+                if (!extension && !extension2) {
+                    console.log('格式有误，请上传xls、xlsx格式的文件！');
+                    this.$message.error('上传失败，请上传xls、xlsx格式的文件！')
+                    return false
+                }
+                if (!maxSzie) {
+                    console.log('上传文件不能超过10MB！')
+                    this.$message.error('上传文件不能超过10MB!')
+                    return false
+                }
 				let formData = new FormData()
 				let config = {
 					headers: {
@@ -309,12 +322,12 @@
 				this.fileList.forEach((item) => {
 					formData.append('file', item.raw)
 				})
-				formData.append('remark', this.remark)
-				this.$axios.post('', formData, config).then((res) => {
+				// formData.append('remark', this.remark)
+				this.$axios.post('/store_ins/batch', formData, config).then((res) => {
 					if(res.data.code == 200) {
 						this.$message.success("提交成功")
 						this.fileList = []
-						this.remark = ''
+						// this.remark = ''
 					}
 				}).catch((res) => {
 					this.$message.error("失败，请核对无误后联系管理员")
