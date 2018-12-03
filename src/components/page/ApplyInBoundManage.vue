@@ -107,7 +107,7 @@
 				mix_list: [],
 				inputValue: '',
 				idx: -1,
-				address: [{address1: '12851 Telegraph Rd', address2: 'Santa Fe Springs', recipients: 'SP9015', tel: '5177753674', city: 'Los Angeles', zip: '90670', area: 'CA'}]
+				address: [{address1: '12851 Telegraph Rd', address2: 'Santa Fe Springs', recipients: '', tel: '5177753674', city: 'Los Angeles', zip: '90670', area: 'CA'}]
 			}
 		},
 		created() {
@@ -235,6 +235,9 @@
 				}).then((res) => {
 					if(res.data.code == 200) {
 						this.batch_list = res.data.data
+						res.data.data.forEach((data) => {
+							this.address[0]['recipients'] = data.batch_number
+						})
 						this.detailVisible = true
 					}
 				}).catch((res) => {

@@ -177,6 +177,24 @@
 					},
 					{
 						icon: 'el-icon-printer',
+						index: '10',
+						title: 'WMS用户管理',
+						subs: [{
+							index: 'WMSusermanage',
+							title: 'WMS用户管理'
+						}]
+					},
+					{
+						icon: 'el-icon-printer',
+						index: '11',
+						title: 'WMS产品管理',
+						subs: [{
+							index: 'WMSproductmanage',
+							title: 'WMS产品管理'
+						}]
+					},
+					{
+						icon: 'el-icon-printer',
 						index: '8',
 						title: 'WMS库位管理',
 						subs: [{
@@ -225,12 +243,16 @@
 						index: '9',
 						title: 'WMS货物管理',
 						subs: [{
-							index: 'WMSproductmanage',
+							index: 'WMSgoodsmanage',
 							title: 'WMS货物管理'
 						},
 						{
 							index: 'WMSImportStock',
 							title: '导入库存'
+						},
+						{
+							index: 'WMSImportStockDetail',
+							title: '导入记录'
 						},
 						]
 					},

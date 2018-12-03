@@ -42,17 +42,31 @@ router.beforeEach((to, from, next) => {
     }
 })
 
-// var defaultHost = window.location.protocol + "//" + window.location.hostname
-var defaultHost = 'http://47.74.177.128'
+var defaultHost = window.location.protocol + "//" + window.location.hostname
+// var defaultHost = 'http://47.74.177.128'
 axios.defaults.baseURL = defaultHost
 
-axios.interceptors.response.use((config) => {
-	console.log(config)
-	if (config.data.code != 200){
-		ElementUI.Message.error(config.data.message)
-	}
-	return config
-})
+// axios.interceptors.response.use((config) => {
+// 	console.log(config)
+// 	if (config.data.code != 200){
+// 		ElementUI.Message.error(config.data.message)
+// 	}
+//     (err) => {
+//         ElementUI.Message.error('服务器更新中')
+//     }
+// 	return config
+// })
+axios.interceptors.response.use(
+    response => {
+        if (response.data.code != 200) {
+            ElementUI.Message.error(response.data.message)
+        }
+        return response
+    },
+    error => {
+        ElementUI.Message.error('服务器更新中')
+    }
+    )
 new Vue({
     router,
     render: h => h(App)

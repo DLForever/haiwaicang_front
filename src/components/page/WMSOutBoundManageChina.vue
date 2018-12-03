@@ -107,8 +107,14 @@
 					<el-table-column prop="sum" label="数量"></el-table-column>
 					<el-table-column label="新标" width="120px">
 						<template slot-scope="scope">
-							<img class="img_fnsku" :src="$axios.defaults.baseURL+scope.row.pictures[0].url.url" />					
+							<!-- <span>{{scope.row.pictures[0]}}</span> -->
+							<img class="img_fnsku" v-if="scope.row.pictures[0] != undefined && !(scope.row.pictures[0].url.url.match(/.pdf/))" :src="$axios.defaults.baseURL+scope.row.pictures[0].url.url"/>
+							<a v-else :href="$axios.defaults.baseURL+scope.row.pictures[0].url.url" target="_blank">{{scope.row.pictures[0].url.url.split('/').pop()}}</a>
+							<!-- <span v-else>无</span> -->
 						</template>
+						<!-- <template slot-scope="scope">
+							<img class="img_fnsku" :src="$axios.defaults.baseURL+scope.row.pictures[0].url.url" />					
+						</template> -->
 					</el-table-column>
 					<!-- <el-table-column prop="labal_ware_houses" label="取货详情"></el-table-column> -->
 					<!--<el-table-column prop="created_at" :formatter="formatter_created_at" label="创建时间"></el-table-column>
@@ -205,7 +211,7 @@
 			<div class="dialog-footer-check">
 				<span slot="footer" class="dialog-footer">
 					<el-button type="default" @click="closeCheckVisible">取消</el-button>
-					<el-button type="primary" @click="check_done">提交</el-button>
+					<el-button type="primary" @click="check_done" :disabled="check_doneDisabled">提交</el-button>
 				</span>
 			</div>
 			
@@ -324,6 +330,7 @@
 				img_show: 1,
 				l_type: '1',
 				pdf_show: 0,
+				check_doneDisabled: false,
 				pagesize: 20,
 				tableData: [],
 				select_cate: '',
@@ -543,6 +550,8 @@
 				})
 			},
 			clear_search() {
+				this.paginationShow = false
+				this.cur_page = 1
 				this.select_cate = ''
 				this.search_fnsku = ''
 				this.getData()
@@ -639,32 +648,43 @@
 					obj.complete()
 				}
 			},
-			getUserDatasFirst() {
-				if(this.select_cate == -1) {
-					this.paginationShow = false
-					this.cur_page = 1
-					this.getData()
-					return
-				}
-				this.paginationShow = false
-				this.cur_page = 1
-				this.$axios.get('/admin/outbound_orders?page=' + this.cur_page + '&user_id=' + this.select_cate, {
-					headers: {
-						'Authorization': localStorage.getItem('token_admin')
-					},
-				}).then((res) => {
-					this.tableData = res.data.data
-					this.totals = res.data.count
-					this.paginationShow = true
-				})
-			},
+			// getUserDatasFirst() {
+			// 	if(this.select_cate == -1) {
+			// 		this.paginationShow = false
+			// 		this.cur_page = 1
+			// 		this.getData()
+			// 		return
+			// 	}
+			// 	this.paginationShow = false
+			// 	this.cur_page = 1
+			// 	this.$axios.get('/admin/outbound_orders?page=' + this.cur_page + '&user_id=' + this.select_cate + '&wms=false' + '&out=false&fnsku=' + this.search_fnsku, {
+			// 	// this.$axios.get('/admin/outbound_orders?page=' + this.cur_page + '&user_id=' + this.select_cate, {
+			// 		headers: {
+			// 			'Authorization': localStorage.getItem('token_admin')
+			// 		},
+			// 	}).then((res) => {
+			// 		this.tableData = res.data.data
+			// 		this.totals = res.data.count
+			// 		this.paginationShow = true
+			// 	})
+			// },
 			getUserDatas() {
-				this.$axios.get('/admin/outbound_orders?page=' + this.cur_page + '&user_id=' + this.select_cate, {
+				this.$axios.get('/admin/outbound_orders?page=' + this.cur_page + '&user_id=' + this.select_cate + '&wms=false' + '&out=false&fnsku=' + this.search_fnsku, {
+				// this.$axios.get('/admin/outbound_orders?page=' + this.cur_page + '&user_id=' + this.select_cate, {
 					headers: {
 						'Authorization': localStorage.getItem('token_admin')
 					},
 				}).then((res) => {
 					if(res.data.code == 200) {
+						res.data.data.forEach((data) => {
+							if(data.is_mix) {
+								data.is_mix = '混装'
+							} else {
+								data.is_mix = '不混装'
+							}
+							data.barcode = 'hwc_' + data.id
+							// data.tempcode = 'wzsv587-' + data.id
+						})
 						this.tableData = res.data.data
 						this.totals = res.data.count
 					}
@@ -815,19 +835,25 @@
 					product_store_in_ids: product_store_in_ids,
 					sum: sum
 				}
-				this.$axios.post('/admin/outbound_orders/' + this.check_id + '/check', params, {
-					headers: {
-						'Authorization': localStorage.getItem('token_admin')
-					},
-				}).then((res) => {
-					if(res.data.code == 200) {
-						this.getData()
-						this.checkVisible = false
-						this.$message.success('审核成功')
-					}
-				}).catch((res) => {
-					console.log('error')
-				})
+				if(!this.check_doneDisabled) {
+					this.check_doneDisabled = true
+					setTimeout(() => {
+						this.check_doneDisabled = false
+					}, 5000)
+					this.$axios.post('/admin/outbound_orders/' + this.check_id + '/check', params, {
+						headers: {
+							'Authorization': localStorage.getItem('token_admin')
+						},
+					}).then((res) => {
+						if(res.data.code == 200) {
+							this.getData()
+							this.checkVisible = false
+							this.$message.success('审核成功')
+						}
+					}).catch((res) => {
+						console.log('error')
+					})
+				}
 			},
 			closeCheckVisible() {
 				this.checkVisible = false
@@ -965,11 +991,12 @@
 					},
 				}).then((res) => {
 					if(res.data.code == 200) {
-						if(row.is_mix) {
-							this.is_mix = '可混装'
-						} else {
-							this.is_mix = '不混装'
-						}
+						this.is_mix = row.is_mix
+						// if(row.is_mix) {
+						// 	this.is_mix = '可混装'
+						// } else {
+						// 	this.is_mix = '不混装'
+						// }
 						res.data.data.label_changes.forEach((data) => {
 							// data.labal_ware_houses = ''
 							data.label_ware_houses.forEach((data2) => {

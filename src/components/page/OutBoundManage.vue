@@ -74,7 +74,7 @@
 				</el-table-column>
 			</el-table>
 			<div class="pagination">
-				<el-pagination v-if="paginationShow"  :page-size="pagesize" layout="prev, pager, next" :total="totals">
+				<el-pagination v-if="paginationShow" @current-change="handleCurrentChange" :current-page='cur_page'  :page-size="pagesize" layout="prev, pager, next" :total="totals">
 				</el-pagination>
 			</div>
 		<!-- </el-tab-pane>
@@ -98,8 +98,24 @@
 				<el-table :data="form" border style="width: 100%" ref="multipleTable">
 					<el-table-column prop="total" label="原fnsku" width="260">
 						<template slot-scope="scope">
-							<el-select v-model="scope.row.product_id" placeholder="选择产品" class="handle-select mr10">
-								<el-option v-for="item in options" :key="item.id" :label="item.fnsku" :value="item.id"></el-option>
+							<!-- <table>
+								<tbody>
+									<tr>
+										<td>
+											<el-select v-model="scope.row.product_id" filterable remote placeholder="选择产品" class="handle-select mr10" :loading="loading" @visible-change="selectVisble" :remote-method="remoteMethod">
+												<el-option v-for="item in options" :key="item.id" :label="item.fnsku" :value="item.id" ></el-option>
+												<infinite-loading :on-infinite="onInfinite_product" ref="infiniteLoading"></infinite-loading>
+											</el-select>
+										</td>
+									</tr>
+								</tbody>
+							</table> -->
+							<el-select v-model="scope.row.product_id" filterable remote placeholder="选择产品" class="handle-select mr10" :loading="loading" @visible-change="selectVisble" :remote-method="remoteMethod">
+								<el-option v-for="item in options" :key="item.id" :label="item.fnsku" :value="item.id" ></el-option>
+								<span v-for="(q, index6) in form" v-if="index6===0">
+									<infinite-loading :on-infinite="onInfinite_product" ref="infiniteLoading"></infinite-loading>
+								</span>
+								<!-- <infinite-loading :on-infinite="onInfinite_product" ref="infiniteLoading"></infinite-loading> -->
 							</el-select>
 						</template>
 					</el-table-column>
@@ -175,7 +191,7 @@
 					<!-- <el-form-item> -->
 					<div class="confirm">
 						<el-button type="default" @click="closeOutbound">取消</el-button>
-						<el-button type="primary" @click="onSubmit">新建</el-button>
+						<el-button type="primary" @click="onSubmit" :disabled="submitDisable">新建</el-button>
 					</div>
 					<!-- </el-form-item> -->
 				</el-form>
@@ -184,10 +200,21 @@
 			<!-- 更新出库弹出框 -->
 			<el-dialog title="更新出库单" :visible.sync="updateVisible" width="60%" @close="closeUpdate">
 				<el-table :data="updateform" border style="width: 100%" ref="multipleTable">
-					<el-table-column prop="total" label="原fnsku">
+					<!-- <el-table-column prop="total" label="原fnsku">
 						<template slot-scope="scope">
 							<el-select v-model="scope.row.product_id" placeholder="选择产品" class="handle-select mr10">
 								<el-option v-for="item in options" :key="item.id" :label="item.fnsku" :value="item.id"></el-option>
+							</el-select>
+						</template>
+					</el-table-column> -->
+					<el-table-column prop="total" label="原fnsku" width="260">
+						<template slot-scope="scope">
+							<el-select v-model="scope.row.product_id" filterable remote placeholder="选择产品" class="handle-select mr10" :loading="loading" @visible-change="selectVisble" :remote-method="remoteMethod">
+								<el-option v-for="item in options" :key="item.id" :label="item.fnsku" :value="item.id" ></el-option>
+								<span v-for="(q, index6) in form" v-if="index6===0">
+									<infinite-loading :on-infinite="onInfinite_product" ref="infiniteLoading"></infinite-loading>
+								</span>
+								<!-- <infinite-loading :on-infinite="onInfinite_product" ref="infiniteLoading"></infinite-loading> -->
 							</el-select>
 						</template>
 					</el-table-column>
@@ -208,10 +235,10 @@
 					</el-table-column>
 					<el-table-column label="新标">
 						<template slot-scope="scope">
-							<my-uploader v-if="scope.row.picturefileList != ''" :onChange="updateLabel.bind(null,scope.$index)" :defaultImg="$axios.defaults.baseURL+scope.row.picturefileList"></my-uploader>
-							<my-uploader v-else :onChange="updateLabel.bind(null,scope.$index)"></my-uploader>
+							<my-uploader v-if="checkIfPicture(scope.row.picturefileList)" :onChange="updateLabel.bind(null,scope.$index)"></my-uploader>
+							<my-uploader v-else :onChange="updateLabel.bind(null,scope.$index)" :defaultImg="$axios.defaults.baseURL+scope.row.picturefileList"></my-uploader>
+							<a v-if="typeof(scope.row.picturefileList) == 'string' && checkIfPicture(scope.row.picturefileList)" :href="$axios.defaults.baseURL+scope.row.picturefileList" target="_blank">pdf文件</a>
 						</template>
-						
 					</el-table-column>
 				</el-table>
 				<!-- <el-form :rules="rules" label-width="115px">
@@ -261,7 +288,7 @@
 					</el-form-item>
 					<div class="confirm">
 						<el-button type="default" @click="closeUpdate">取消</el-button>
-						<el-button type="primary" @click="submitUpdate">更新</el-button>
+						<el-button type="primary" @click="submitUpdate" :disabled="updateDisabled">更新</el-button>
 					</div>
 				</el-form>
 			</el-dialog>
@@ -276,9 +303,11 @@
 					<el-table-column prop="fnsku" label="fnsku"></el-table-column>
 					<el-table-column prop="dst_fnsku" label="新fnsku"></el-table-column>
 					<el-table-column prop="sum" label="数量"></el-table-column>
-					<el-table-column prop="sum" label="新标" width="150px">
+					<el-table-column prop="sum" label="新标" width="120" show-overflow-tooltip>
 						<template slot-scope="scope">
-							<img class="img_fnsku" v-if="scope.row.pictures[0] != undefined" :src="$axios.defaults.baseURL+scope.row.pictures[0].url.url"/>
+							<!-- <span>{{scope.row.pictures[0]}}</span> -->
+							<img class="img_fnsku" v-if="scope.row.pictures[0] != undefined && !(scope.row.pictures[0].url.url.match(/.pdf/))" :src="$axios.defaults.baseURL+scope.row.pictures[0].url.url"/>
+							<a v-else :href="$axios.defaults.baseURL+scope.row.pictures[0].url.url" target="_blank">{{scope.row.pictures[0].url.url.split('/').pop()}}</a>
 							<span v-else>无</span>
 						</template>
 					</el-table-column>
@@ -352,7 +381,6 @@
 							<!--<div class="el-upload__tip" slot="tip">只能上传jpg/png文件，且不超过500kb</div>-->
 						</el-upload>
 					</el-form-item>
-
 				</el-form>
 				<span slot="footer" class="dialog-footer">
                 <el-button @click="editVisible = false">取 消</el-button>
@@ -389,16 +417,20 @@
 			return {
 				url: './static/vuetable.json',
 				message: 'first',
+				submitDisable: false,
+				updateDisabled: false,
 				totals: 0,
 				drag:false,
 				batch_totals: 0,
 				cur_page: 1,
 				batch_page: 1,
+				outbound_page: 1,
 				details_id: undefined,
 				label_del_id: undefined,
 				update_id: undefined,
 				tableData: [],
 				options: [],
+				outbound_totals: [],
 				OutBoundTable: [],
 				order_box_cargos: [],
 				batch_options: [],
@@ -417,6 +449,7 @@
 					sku: '',
 					plan_sum: '',
 					picturefileList: '',
+					infiniteLoading: []
 				}],
 				newForm: {
 					product_id: '',
@@ -424,6 +457,7 @@
 					sku: '',
 					plan_sum: '',
 					picturefileList: '',
+					infiniteLoading: []
 				},
 				newForm2: {
 					product_id: '',
@@ -431,6 +465,7 @@
 					sku: '',
 					plan_sum: '',
 					picturefileList: '',
+					infiniteLoading: []
 				},
 				updateform: [],
 				updateform2: {
@@ -440,6 +475,7 @@
 					sku: '',
 					plan_sum: '',
 					picturefileList: '',
+					infiniteLoading: []
 				},
 				updateLength: undefined,
 				inputVisible: false,
@@ -476,7 +512,11 @@
 				},
 				my_uploaderVisible: true,
 				notifications: [],
-				search_fnsku: ''
+				search_fnsku: '',
+				search_fnsku2: '',
+				loading: false,
+				query: undefined,
+				infiniteLoading: []
 			}
 		},
 		props:{
@@ -512,7 +552,8 @@
 			//类型转换
 			statusFilter(status) {
 				const statusMap = {
-					3: 'primary',
+					3: 'warning',
+					4: 'warning',
 					1: 'warning',
 					8: 'danger',
 					2: 'success',
@@ -524,15 +565,73 @@
 			},
 		},
 		methods: {
-			getData() {
-				this.$axios.get('/cargos?page=' + this.cur_page, {
+			getData(callback = undefined) {
+				this.$axios.get('/cargos/search_by_fnsku?page=' + this.outbound_page + '&query=' + this.search_fnsku2, {
 					headers: {
 						'Authorization': localStorage.getItem('token')
 					}
 				}).then((res) => {
 					this.options = this.options.concat(res.data.data)
-					this.totals = res.data.count
+					this.outbound_totals = res.data.count
+					if(callback) {
+						callback()
+					}
 				})
+			},
+			onInfinite_product(obj) {
+				if((this.outbound_page * 20) < this.outbound_totals) {
+					this.outbound_page += 1
+					this.remoteMethod(this.query,obj.loaded)
+					// this.getData(obj.loaded)
+				} else {
+					obj.complete()
+				}
+			},
+			selectVisble(visible) {
+				if(visible){
+					this.query = undefined
+				  	this.remoteMethod("")
+				}  
+			},
+			remoteMethod(query,callback=undefined) {
+				if(query != "" || this.query != "" || callback){
+					let reload = false
+					if(this.query != query){
+						this.loading = true
+						this.outbound_page = 1
+						this.query = query
+						reload = true
+						for(let i = 0; i < this.$refs.infiniteLoading.length; i++) {
+							if(this.$refs.infiniteLoading[i].isComplete){
+								this.$refs.infiniteLoading[i].stateChanger.reset()
+							}
+						}
+						// if(this.$refs.infiniteLoading.isComplete){
+						// 	this.$refs.infiniteLoading.stateChanger.reset()
+						// }
+					}
+					this.$axios.get('/cargos/search_by_fnsku?page=' + this.outbound_page + '&query=' + query.trim(), {
+						headers: {
+						'Authorization': localStorage.getItem('token')
+					},
+					}).then((res) => {
+						if(res.data.code == 200){
+							this.loading = false
+//							this.options = res.data.data
+							if(reload){
+								this.options = res.data.data
+							}else{
+								this.options = this.options.concat(res.data.data)
+							}
+							this.outbound_totals = res.data.count
+							if(callback){
+								callback()
+							}
+						}
+					}).catch((res) => {
+						console.log('失败')
+					})
+				}
 			},
 			getDatas() {
 				this.$axios.get('/outbound_orders?page=' + this.cur_page + '&fnsku=' + this.search_fnsku, {
@@ -581,6 +680,8 @@
 				})
 			},
 			clear_search() {
+				this.paginationShow = false
+				this.cur_page = 1
 				this.search_fnsku = ''
 				this.getDatas()
 			},
@@ -651,20 +752,22 @@
 					new_fnsku: '',
 					sku: '',
 					product_id: '',
-					picturefileList: ''
+					picturefileList: '',
+					infiniteLoading: []
 					//					form_branch: [{
 					//						logistics_number: '',
 					//						select_cate: ''
 					//					}],
 				}
-				console.log(this.form)
+				// console.log(this.form)
 			},
 			orderAdd(index) {
 				this.form[index]['form_branch'].push(this.newForm)
 				this.newForm = {
 					product_id: '',
 					newfnsku: '',
-					plan_sum: ''
+					plan_sum: '',
+					infiniteLoading: []
 				}
 			},
 			orderDel(index) {
@@ -676,6 +779,7 @@
 			},
 			back() {
 				this.form.pop(this.newForm2)
+				// this.selectVisble()
 			},
 			popTest(index,id) {
                 this.notifications[index].close()
@@ -718,7 +822,7 @@
 				})
 				if(noPic) {
 					this.$message.error("请上传新标")
-					return false
+					return
 				}
 				this.form.forEach((data) => {
 					formData.append('cargo_ids[]', data['product_id'])
@@ -739,6 +843,10 @@
 					is_mix: this.radio,
 					remark: this.remark
 				}
+				this.submitDisable = true
+				// setTimeout(() => {
+				// 	this.submitDisable = false
+				// }, 10000)
 				this.$axios.post('/outbound_orders', formData, {
 					headers: {
 						'Authorization': localStorage.getItem('token')
@@ -754,17 +862,22 @@
 							new_fnsku: '',
 							sku: '',
 							product_id: '',
-							picturefileList: ''
+							picturefileList: '',
+							infiniteLoading: []
 						}]
 						this.getDatas()
 						this.outboundVisible = false
+						this.submitDisable = false
 						this.getMessageCount()
+					}else {
+						this.submitDisable = false
 					}
 				}).catch((res) => {
-					this.$message.error('提交失败！');
+					this.submitDisable = false
 				})
 			},
 			submitUpdate() {
+				this.updateDisabled = true
 				let noPic = undefined
 				let formData = new FormData()
 				this.updateform.forEach((data, index) => {
@@ -785,10 +898,13 @@
 				})
 				if(noPic) {
 					this.$message.error("请上传新标")
-					return false
+					return
 				}
 				formData.append('is_mix', this.updateRadio)
 				formData.append('remark', this.remark)
+				// setTimeout(() => {
+				// 	this.updateDisabled = false
+				// }, 3000)
 				this.$axios.patch('/outbound_orders/' + this.update_id, formData, {
 					headers: {
 						'Authorization': localStorage.getItem('token')
@@ -799,6 +915,7 @@
 						this.updateVisible  =false
 						this.getMessageCount()
 					}
+					this.updateDisabled = false
 				}).catch((res) => {
 					console.log(res)
 				})
@@ -833,6 +950,10 @@
 					},
 				}).then((res) => {
 					res.data.data.label_changes.forEach((data, index) => {
+						console.log(this.options.find((option) => option.id == data.cargo_id))
+						if(!(this.options.find((option) => option.id == data.cargo_id))){
+							this.options.push({fnsku:data.fnsku,id:data.cargo_id})
+						}
 						this.updateLength = res.data.data.label_changes.length
 						this.updateform.push(this.updateform2)
 						this.updateform[index].id = data.id
@@ -850,6 +971,7 @@
 							sku: '',
 							plan_sum: '',
 							picturefileList: '',
+							infiniteLoading: []
 						}
 					})
 					this.remark = res.data.data.user_remark
@@ -867,6 +989,7 @@
 					sku: '',
 					plan_sum: '',
 					picturefileList: '',
+					infiniteLoading: []
 				}
 			},
 			updateCancel() {
@@ -881,7 +1004,8 @@
 							new_fnsku: '',
 							sku: '',
 							product_id: '',
-							picturefileList: ''
+							picturefileList: '',
+							infiniteLoading: []
 						}]
 				this.outboundVisible = false
 			},
@@ -896,7 +1020,7 @@
 				let cargo_number = []
 				let formData = new FormData()
 				this.order_box_cargos.forEach((data) => {
-					formData.append('order_box_ids[]', data.box_id)
+					formData.append('order_box_ids[]', data.id)
 					formData.append('cargo_number[]', data.cargo_number)
 				})
 				console.log(cargo_number)
@@ -1047,6 +1171,11 @@
 				// console.log(this.form)
 			},
 			updateLabel(index, file) {
+				// if(file.type === 'image/jpeg') {
+				// 	this.updateform[index].picturefileList = file
+				// } else {
+				// 	this.updateform[index].picturefileList = ''
+				// }
 				this.updateform[index].picturefileList = file
 			},
 			beforeAvatarUpload(file) {
@@ -1093,7 +1222,7 @@
 				} else if(status == 2) {
 					return "正在拣货"
 				} else if (status == 3) {
-					return "待换标"
+					return "等待换标"
 				} else if (status == 4) {
 					return "待审核"
 				}else if (status == 5) {
@@ -1116,6 +1245,28 @@
 					return '其他'
 				}
 			},
+			checkIfPicture(pictures){
+				if(!pictures){
+					return true
+				}else{
+					if(typeof(pictures) == "string"){
+						if(pictures.match(/(jpg|png|zip|jpeg)/)){
+							return false
+						}else{
+							return true
+						}
+						
+					}else{
+						if(pictures.type.match(/image/)){
+							return false
+						}else{
+							return true
+						}
+						
+					}
+				}
+				
+			}
 		},
 		components: {
 			"infinite-loading": VueInfiniteLoading,

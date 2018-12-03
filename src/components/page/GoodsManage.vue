@@ -262,6 +262,7 @@
 					if(res.data.code == 200) {
 						this.tableData = res.data.data
 						this.totals = res.data.count
+						this.paginationShow = true
 					}
 				}).catch((res) => {
 					console.log('error')
@@ -285,6 +286,8 @@
 				})
 			},
 			clear_filter() {
+				this.paginationShow = false
+				this.cur_page = 1
 				this.search_fnsku = ''
 				this.getData()
 			},

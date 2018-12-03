@@ -22,7 +22,7 @@
 							<el-input v-model="remark"></el-input>
 						</el-form-item>
 						<el-form-item>
-							<el-button type="primary" @click="onSubmit">上传申请</el-button>
+							<el-button type="primary" @click="onSubmit" :disabled="isDisabled">上传申请</el-button>
 						</el-form-item>
 					</el-form>
 				</el-tab-pane>
@@ -41,6 +41,7 @@
 				fileList: [],
 				remark: '',
 				tag: '',
+				isDisabled: false
 			}
 		},
 		methods: {
@@ -49,6 +50,7 @@
 					this.$message.error("请选择xlsx文件")
 					return false;
 				}
+				this.isDisabled = true
 				let formData = new FormData()
 				let config = {
 					headers: {
@@ -64,6 +66,8 @@
 						this.$message.success("提交成功")
 						this.fileList = []
 						this.remark = ''
+						this.isDisabled = false
+						this.$router.push('/applyinboundmanage')
 					}
 				}).catch((res) => {
 					this.$message.error("失败，请核对无误后联系管理员")

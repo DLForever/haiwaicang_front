@@ -35,7 +35,7 @@
 					<el-radio v-model="ruleForm.radio" label="false">女</el-radio>
 				</el-form-item>
 				<div class="login-btn">
-					<el-button type="primary" @click="submitForm('ruleForm')">注册</el-button>
+					<el-button type="primary" @click="submitForm('ruleForm')" :disabled="resgisterDisable">注册</el-button>
 				</div>
 				<p style="font-size:12px;line-height:30px;color:#999;">已有账号?
 					<router-link to="/login" class="logout">去登陆</router-link>
@@ -118,9 +118,10 @@
 					card: '',
 					sex: '',
 					radio: 'true',
-					remark: ''
+					remark: '',
+					
 				},
-
+				resgisterDisable: false,
 				rules: {
 					username: [{
 						required: true,
@@ -182,26 +183,34 @@
 				//				sex= this.ruleForm.radio,
 				this.$refs[formName].validate((valid) => {
 					if(valid) {
-						this.$axios.post('/users', {
-							username: this.ruleForm.username,
-							password: this.ruleForm.pass,
-							name: this.ruleForm.name,
-							email: this.ruleForm.email,
-							phone: this.ruleForm.phone,
-							card: this.ruleForm.card,
-							remark: this.ruleForm.remark,
-							sex: this.ruleForm.radio
-						}, {
-							headers: {
-								'Content-Type': 'application/json; charset=UTF-8'
-							}
-						}).then((res) => {
-							if(res.data.code == 200) {
-								localStorage.setItem('ms_username', this.ruleForm.username);
-								localStorage.setItem('token', res.data.data.token);
-								this.$router.push('/');
-							}							
-						})
+						if(!this.resgisterDisable) {
+							this.resgisterDisable = true
+							setTimeout(() => {
+								this.resgisterDisable = false
+							}, 5000)
+							this.$axios.post('/users', {
+								username: this.ruleForm.username,
+								password: this.ruleForm.pass,
+								name: this.ruleForm.name,
+								email: this.ruleForm.email,
+								phone: this.ruleForm.phone,
+								card: this.ruleForm.card,
+								remark: this.ruleForm.remark,
+								sex: this.ruleForm.radio
+							}, {
+								headers: {
+									'Content-Type': 'application/json; charset=UTF-8'
+								}
+							}).then((res) => {
+								if(res.data.code == 200) {
+									localStorage.setItem('ms_username', this.ruleForm.username);
+									localStorage.setItem('token', res.data.data.token);
+									this.$router.push('/');
+								}							
+							}).catch((res) => {
+								console.log('error')
+							})
+						}
 					} else {
 						this.$message.error('请填写完整信息')
 					}

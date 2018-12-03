@@ -74,7 +74,7 @@
 						<el-input type="textarea" rows="5" v-model="form.desc"></el-input>
 					</el-form-item>-->
 							<el-form-item>
-								<el-button type="primary" @click="onSubmit('form')">新建</el-button>
+								<el-button type="primary" @click="onSubmit('form')" :disabled="submitDisabled">新建</el-button>
 							</el-form-item>
 						</el-form>
 					</div>
@@ -108,6 +108,7 @@
 		data: function() {
 			return {
 				message: 'first',
+				submitDisabled: false,
 				product_pictures: [],
 				fileList: [],
 				fileList2: [],
@@ -198,6 +199,10 @@
 				let formData = new FormData()
 				this.$refs[formName].validate((valid) => {
 					if(valid) {
+						this.submitDisabled = true
+						// setTimeout(() => {
+						// 	this.submitDisabled = false
+						// }, 10000)
 						// if (this.fileList.length == 0){
 						// 	this.$message.error('请上传产品图片')
 						// 	return false
@@ -235,8 +240,9 @@
 								this.fileList2 = []
 								this.$router.push('/productmanage')
 							}
+							this.submitDisabled = false
 						}).catch((res) => {
-							this.$message.error('提交有误')
+							console.log('err')
 						})
 					} else {
 						this.$message.error("请填写完整信息")

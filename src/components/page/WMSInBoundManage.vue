@@ -36,6 +36,8 @@
 				</el-table-column>
 				<el-table-column prop="batch_number" label="申请批次" width="100">
 				</el-table-column>
+				<el-table-column prop="order_number" label="订单编码" show-overflow-tooltip>
+				</el-table-column>
 				<el-table-column prop="total_plan_sum" label="计划总数量" width="150">
 				</el-table-column>
 				<el-table-column prop="total_arrive_sum" label="已收到数量" width="120">
@@ -121,7 +123,7 @@
 			</el-form>
 			<span slot="footer" class="dialog-footer">
                 <el-button @click="editVisible = false">取 消</el-button>
-                <el-button type="primary" @click="saveEdit('form')">确 定</el-button>
+                <el-button type="primary" @click="saveEdit('form')" :disabled="submitDisable">确 定</el-button>
             </span>
 		</el-dialog>
 
@@ -206,7 +208,8 @@
 				idx: -1,
 				inputVisible: true,
 				inputValue: '',
-				search_fnsku: ''
+				search_fnsku: '',
+				submitDisable: false
 			}
 		},
 		created() {
@@ -241,7 +244,8 @@
 //					2: 'info',
 					1: 'warning',
 					4: 'success',
-					5: 'danger'
+					5: 'danger',
+					7: 'warning'
 				}
 				return statusMap[status]
 			},
@@ -303,6 +307,8 @@
 				})
 			},
 			clear_search() {
+				this.paginationShow = false
+				this.cur_page = 1
 				this.select_cate = ''
 				this.select_batch = ''
 				this.search_fnsku = ''
@@ -568,6 +574,7 @@
 			},
 			// 入库
 			saveEdit(form) {
+				this.submitDisable = true
 				let id = this.form.id
 				let product_store_ins = []
 				let sum = []
@@ -610,6 +617,7 @@
 						this.$message.success('入库完成')
 						this.getData()
 					}
+					this.submitDisable = false
 				}).catch((res) => {
 					this.$message.error(res)
 				})
@@ -654,7 +662,7 @@
 				}else if (status == 6) {
 					return "已结算"
 				}else if (status == 7) {
-					return "审核通过"
+					return "等待入库"
 				} else {
 					return "已入库"
 				}

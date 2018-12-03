@@ -4,7 +4,7 @@
     <div class="show_img_contaier">
       <img :src="img_url" class="upload_img" @click="chooseFile"/>
       <img src="@/assets/close.png" class="close above_img" @click="removeFile" v-if="this.file.type && this.file.type.match(/image/)">
-      <span v-if="file.type && !(file.type.match(/image/))">{{file.name}}<img src="@/assets/close.png" class="close" @click="removeFile"></span></span>
+      <span  v-if="file.type && !(file.type.match(/image/))"><a :href="file.url" target="_blank">{{file.name}}</a><img src="@/assets/close.png" class="close" @click="removeFile"></span>
     </div>
   </div>
 </template>

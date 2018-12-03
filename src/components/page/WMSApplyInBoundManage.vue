@@ -73,7 +73,7 @@
 			<span slot="footer" class="dialog-footer">
                 <el-button @click="editVisible = false">取 消</el-button>
                 <el-button type="danger" @click="refuseEdit('form')">拒 绝</el-button>
-                <el-button type="primary" @click="saveEdit('form')">确 定</el-button>
+                <el-button type="primary" @click="saveEdit('form')" :disabled="isDisabled">确 定</el-button>
             </span>
 		</el-dialog>
 		
@@ -109,6 +109,7 @@
 			return {
 				url: './static/vuetable.json',
 				paginationShow: true,
+				isDisabled: false,
 				query: undefined,
 				tableData: [],
 				options: [],
@@ -371,24 +372,34 @@
 			},
 			// 入库
 			saveEdit(form) {
+				// setTimeout(() => {
+				// 	this.isDisabled = false
+				// }, 3000)
 				let apply_store_in_id = this.form.apply_store_in_id
 				let user_id = this.form.user_id
-				this.$axios.post('/admin/batch_store_ins', {
-					apply_store_in_id: apply_store_in_id,
-					user_id: user_id,
-				}, {
-					headers: {
-						'Authorization': localStorage.getItem('token_admin')
-					},
-				}).then((res) => {
-					if(res.data.code == 200) {
-						this.editVisible = false;
-						this.$message.success('创建成功')
-						this.getData()
-					}
-				}).catch((res) => {
-					this.$message.error(res)
-				})
+				if(!this.isDisabled) {
+					this.isDisabled = true
+					setTimeout(() => {
+						this.isDisabled = false
+					}, 3000)
+					this.$axios.post('/admin/batch_store_ins', {
+						apply_store_in_id: apply_store_in_id,
+						user_id: user_id,
+					}, {
+						headers: {
+							'Authorization': localStorage.getItem('token_admin')
+						},
+					}).then((res) => {
+						if(res.data.code == 200) {
+							this.editVisible = false;
+							// this.isDisabled = false
+							this.$message.success('创建成功')
+							this.getData()
+						}
+					}).catch((res) => {
+						this.$message.error(res)
+					})
+				}	
 			},
 			refuseEdit(form) {
 				this.$axios.delete('/admin/apply_store_ins/' + this.form.apply_store_in_id, {

@@ -31,7 +31,7 @@
 							<el-input v-model="remark"></el-input>
 						</el-form-item>
 						<el-form-item>
-							<el-button type="primary" @click="onSubmit">上传文件</el-button>
+							<el-button type="primary" @click="onSubmit" :disabled="isDisabled">上传文件</el-button>
 						</el-form-item>
 					</el-form>
 					
@@ -52,6 +52,7 @@
 				fileList: [],
 				remark: '',
 				tag: '',
+				isDisabled: false
 			}
 		},
 		methods: {
@@ -84,10 +85,15 @@
 					formData.append('data', item.raw)
 				})
 				// formData.append('remark', this.remark)
+				this.isDisabled = true
+				setTimeout(() => {
+					this.isDisabled = false
+				}, 3000)
 				this.$axios.post('/outbound_orders/batch', formData, config).then((res) => {
 					if(res.data.code == 200) {
 						this.$message.success("提交成功")
 						this.xlsxList = []
+						this.$router.push('/outboundmanage')
 						// this.remark = ''
 					}
 				}).catch((res) => {

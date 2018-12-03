@@ -10,41 +10,41 @@
 			<el-tabs v-model="message">
 				<el-tab-pane label="创建入库单" name="first">
 					<div class="form-box">
-						<el-form :rules="rules" label-width="115px">
+						<el-form :rules="rules" label-width="140px">
 							<el-form-item label="批次" required>
 								<el-select v-model="select_batch" placeholder="选择批次" class="handle-select mr10">
 									<el-option v-for="item in batch_options" :key="item.id" :label="item.batch_number" :value="item.id"></el-option>
-									<infinite-loading :on-infinite="onInfiniteBatch" ref="infiniteLoading"></infinite-loading>
+									<infinite-loading :on-infinite="onInfiniteBatch" ref="infiniteLoading2"></infinite-loading>
 								</el-select>
 							</el-form-item>
-							<!--<el-form-item label="产品" required>
-								<el-select v-model="select_cate" placeholder="选择产品" multiple class="handle-select mr10">
-									<el-option v-for="item in options" :key="item.id" :label="item.name" :value="item.id"></el-option>
-									<infinite-loading :on-infinite="onInfinite" ref="infiniteLoading"></infinite-loading>
-								</el-select>
-							</el-form-item>-->
-							<el-form-item label="物流单" required>
+							<el-form-item label="物流编号/订单编码" required>
 								<table class="table text-center">
 									<tbody v-for="(p,index) in form">
 										<td>
 											<el-input v-model.trim="p.logistics_number" placeholder="物流编号"></el-input>
 										</td>
-										<i class="el-icon-circle-plus" @click="orderAdd(index)" :disabled="false"></i>
+										<!-- <i class="el-icon-circle-plus" @click="orderAdd(index)" :disabled="false"></i>
 										<span>&nbsp</span>
-										<i class="el-icon-remove" @click="orderDel(index)"></i>
-										<tr v-for="(q,index) in p['form_branch']">
+										<i class="el-icon-remove" @click="orderDel(index)"></i> -->
+										<td>
+											<el-input v-model.trim="p.order_number" placeholder="订单编码"></el-input>
+										</td>
+										<tr v-for="(q,index2) in p['form_branch']">
 											<td>
-												<el-select v-model="q.product_id" placeholder="选择产品" class="handle-select mr10">
+												<el-select v-model="q.product_id" filterable remote placeholder="选择产品" class="handle-select mr10" :loading="loading" @visible-change="selectVisble" :remote-method="remoteMethod">
 													<el-option v-for="item in options" :key="item.id" :label="item.fnsku" :value="item.id"></el-option>
 													<infinite-loading :on-infinite="onInfinite" ref="infiniteLoading"></infinite-loading>
 												</el-select>
 											</td>
 											<!--<el-col class="line" :span="1">&nbsp-</el-col>-->
 											<td>
-												<td>
-													<el-input v-model.trim="q.plan_sum" placeholder="计划数量"></el-input>
-												</td>
+												<el-input v-model.trim="q.plan_sum" placeholder="计划数量"></el-input>
 											</td>
+											<div v-if="index2 == 0">
+												<i class="el-icon-circle-plus" @click="orderAdd(index)" :disabled="false"></i>
+												<span>&nbsp</span>
+												<i class="el-icon-remove" @click="orderDel(index)"></i>
+											</div>
 										</tr>
 										<span>-----</span>
 									</tbody>
@@ -55,14 +55,14 @@
 								<el-button @click="back" :disabled="isDisableBu" type="danger">撤销</el-button>
 							</div>
 							<br>
-							<el-form-item label="订单编码">
+							<!-- <el-form-item label="订单编码">
 								<el-input v-model.trim="order_number"></el-input>
-							</el-form-item>
+							</el-form-item> -->
 							<el-form-item label="备注">
 								<el-input v-model.trim="remark"></el-input>
 							</el-form-item>
 							<el-form-item>
-								<el-button type="primary" @click="onSubmit">新建</el-button>
+								<el-button type="primary" @click="onSubmit" :disabled="submitDisabled">新建</el-button>
 							</el-form-item>
 						</el-form>
 					</div>
@@ -78,7 +78,7 @@
 							<a :href="$axios.defaults.baseURL +'/store_ins.xlsx'">模板下载</a>
 						</el-form-item>
 						<el-form-item>
-							<el-button type="primary" @click="addFile">上传</el-button>
+							<el-button type="primary" @click="addFile" :disabled="uploadDisabled">上传</el-button>
 						</el-form-item>
 					</el-form>
 				</el-tab-pane>
@@ -97,6 +97,8 @@
 			return {
 				url: './static/vuetable.json',
 				message: 'first',
+				submitDisabled: false,
+				uploadDisabled: false,
 				totals: 0,
 				batch_totals: 0,
 				cur_page: 1,
@@ -109,20 +111,22 @@
 				remark: '',
 				form: [{
 					logistics_number: '',
+					order_number: '',
 					form_branch: [{
 						product_id: '',
-						plan_sum: ''
+						plan_sum: '',
 					}],
 				}],
 				newForm: {
 					product_id: '',
-					plan_sum: ''
+					plan_sum: '',
 				},
 				newForm2: {
 					logistics_number: '',
+					order_number: '',
 					form_branch: [{
 						product_id: '',
-						plan_sum: ''
+						plan_sum: '',
 					}]
 				},
 				inputVisible: false,
@@ -141,7 +145,9 @@
 					}],
 				},
 				notifications: [],
-				order_number: undefined
+				order_number: undefined,
+				loading: false,
+				query: undefined,
 			}
 		},
 		created() {
@@ -169,8 +175,6 @@
 				}).then((res) => {
 					this.options = this.options.concat(res.data.data)
 					this.totals = res.data.count
-					console.log('message')
-					console.log(Header.data)
 				})
 			},
 			getBatchInbound() {
@@ -183,10 +187,11 @@
 					this.batch_totals = res.data.count
 				})
 			},
-			onInfinite(obj) {
+			onInfinite(obj, index) {
 				if((this.cur_page * 20) < this.totals) {
 					this.cur_page += 1
-					this.getData(obj.loaded)
+					this.remoteMethod(this.query,obj.loaded)
+					// this.getData(obj.loaded)
 				} else {
 					obj.complete()
 				}
@@ -210,7 +215,6 @@
 						select_cate: ''
 					}],
 				}
-
 			},
 			orderAdd(index) {
 				this.form[index]['form_branch'].push(this.newForm)
@@ -248,10 +252,10 @@
                 })
             },
 			onSubmit() {
-				// if(!this.order_number) {
-				// 	this.$message.error("请输入完整信息")
-				// 	return false
-				// }
+				if(!this.select_batch) {
+					this.$message.error("请输入完整信息")
+					return false
+				}
 				let logistics_number = []
 				let product_id = []
 				let plan_sum = []
@@ -265,8 +269,9 @@
 					})
 					let params_temp = {
 						logistics_number: data['logistics_number'],
+						order_number: data['order_number'],
 						plan_sum: temp_plan_sum,
-						product_id: temp_product_id
+						product_id: temp_product_id,
 					}
 					store_ins.push(params_temp)
 				})
@@ -275,6 +280,10 @@
 					batch_store_in_id: this.select_batch,
 					remark: this.remark
 				}
+				this.submitDisabled = true
+				setTimeout(() => {
+					this.submitDisabled = false
+				}, 3000)
 				this.$axios.post('/store_ins', params, {
 					headers: {
 						'Authorization': localStorage.getItem('token')
@@ -286,7 +295,7 @@
 						this.remark = ''
 						this.form = [{
 							plan_sum: '',
-							logistics_number: ''
+							product_id: '',
 						}]
 						this.getMessageCount()
 						this.$router.push('/inboundmanage')
@@ -313,6 +322,7 @@
                     this.$message.error('上传文件不能超过10MB!')
                     return false
                 }
+                this.uploadDisabled = true
 				let formData = new FormData()
 				let config = {
 					headers: {
@@ -327,6 +337,8 @@
 					if(res.data.code == 200) {
 						this.$message.success("提交成功")
 						this.fileList = []
+						this.uploadDisabled = false
+						this.$router.push('/inboundmanage')
 						// this.remark = ''
 					}
 				}).catch((res) => {
@@ -344,6 +356,54 @@
 			},
 			exceed() {
 				this.$message.error("对不起，超过个数限制")
+			},
+			selectVisble(visible) {
+				if(visible){
+					this.query = undefined
+				  	this.remoteMethod("")
+				}  
+			},
+			remoteMethod(query,callback=undefined, index) {
+				console.log(this.$refs.infiniteLoading)
+				if(query != "" || this.query != "" || callback){
+					let reload = false
+					if(this.query != query){
+						this.loading = true
+						this.cur_page = 1
+						this.query = query
+						reload = true
+						for(let i = 0; i < this.$refs.infiniteLoading.length; i++) {
+							if(this.$refs.infiniteLoading[i].isComplete){
+								this.$refs.infiniteLoading[i].stateChanger.reset()
+							}
+						}
+					}
+					this.$axios.get('/products?page=' + this.cur_page + '&fnsku=' + query.trim(), {
+						headers: {
+						'Authorization': localStorage.getItem('token')
+					},
+					}).then((res) => {
+						if(res.data.code == 200){
+							this.loading = false
+//							this.options = res.data.data
+							if(reload){
+								this.options = res.data.data
+							}else{
+								this.options = this.options.concat(res.data.data)
+							}
+							this.totals = res.data.count
+							if(callback){
+								callback()
+							}
+						}
+					}).catch((res) => {
+						console.log('失败')
+					})
+				}
+			},
+			infiniteIndex(index) {
+				console.log('index')
+				console.log(index)
 			}
 		},
 		components: {

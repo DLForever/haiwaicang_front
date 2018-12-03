@@ -102,10 +102,16 @@
 					<el-table-column prop="fnsku" label="fnsku"></el-table-column>
 					<el-table-column prop="dst_fnsku" label="新fnsku"></el-table-column>
 					<el-table-column prop="sum" label="数量"></el-table-column>
-					<el-table-column prop="sum" label="新标" width="120px">
+					<el-table-column prop="sum" label="新标" width="120px" show-overflow-tooltip>
 						<template slot-scope="scope">
-							<img class="img_fnsku" :src="$axios.defaults.baseURL+scope.row.pictures[0].url.url" />					
+							<!-- <span>{{scope.row.pictures[0]}}</span> -->
+							<img class="img_fnsku" v-if="scope.row.pictures[0] != undefined && !(scope.row.pictures[0].url.url.match(/.pdf/))" :src="$axios.defaults.baseURL+scope.row.pictures[0].url.url"/>
+							<a v-else :href="$axios.defaults.baseURL+scope.row.pictures[0].url.url" target="_blank">{{scope.row.pictures[0].url.url.split('/').pop()}}</a>
+							<!-- <span v-else>无</span> -->
 						</template>
+						<!-- <template slot-scope="scope">
+							<img class="img_fnsku" :src="$axios.defaults.baseURL+scope.row.pictures[0].url.url" />					
+						</template> -->
 					</el-table-column>
 					<!-- <el-table-column prop="labal_ware_houses" label="取货详情"></el-table-column> -->
 					<!--<el-table-column prop="created_at" :formatter="formatter_created_at" label="创建时间"></el-table-column>
@@ -457,6 +463,7 @@
 				}
 			},
 			getData() {
+				// this.paginationShow = false
 				this.$axios.get('/admin/outbound_orders?page=' + this.cur_page + '&user_id=' + this.select_cate + '&wms=true' + '&out=false&fnsku=' + this.search_fnsku, {
 					headers: {
 						'Authorization': localStorage.getItem('token_admin')
@@ -506,6 +513,8 @@
 				})
 			},
 			clear_search() {
+				this.paginationShow = false
+				this.cur_page = 1
 				this.select_cate = ''
 				this.search_fnsku = ''
 				this.getData()
@@ -621,12 +630,22 @@
 			// 	})
 			// },
 			getUserDatas() {
-				this.$axios.get('/admin/outbound_orders?page=' + this.cur_page + '&user_id=' + this.select_cate, {
+				this.$axios.get('/admin/outbound_orders?page=' + this.cur_page + '&user_id=' + this.select_cate + '&wms=true' + '&out=false&fnsku=' + this.search_fnsku, {
+				// this.$axios.get('/admin/outbound_orders?page=' + this.cur_page + '&user_id=' + this.select_cate, {
 					headers: {
 						'Authorization': localStorage.getItem('token_admin')
 					},
 				}).then((res) => {
 					if(res.data.code == 200) {
+						res.data.data.forEach((data) => {
+							if(data.is_mix) {
+								data.is_mix = '混装'
+							} else {
+								data.is_mix = '不混装'
+							}
+							data.barcode = 'hwc_' + data.id
+							// data.tempcode = 'wzsv587-' + data.id
+						})
 						this.tableData = res.data.data
 						this.totals = res.data.count
 					}
@@ -646,8 +665,11 @@
 						this.refresh_detail()
 						this.getData()
 					} else {
-						this.$message.error("失败,请联系管理员")
+						console.log('error')
+						// this.$message.error("失败,请联系管理员")
 					}
+				}).catch((res) => {
+					console.log('error')
 				})
 			},
 			//打包
@@ -882,11 +904,13 @@
 					},
 				}).then((res) => {
 					if(res.data.code == 200) {
-						if(row.is_mix) {
-							this.is_mix = '可混装'
-						} else {
-							this.is_mix = '不混装'
-						}
+						console.log(1111)
+						this.is_mix = row.is_mix
+						// if(row.is_mix) {
+						// 	this.is_mix = '可混装'
+						// } else {
+						// 	this.is_mix = '不混装'
+						// }
 						res.data.data.label_changes.forEach((data) => {
 							// data.labal_ware_houses = ''
 							data.label_ware_houses.forEach((data2) => {

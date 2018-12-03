@@ -28,38 +28,47 @@
             <!--<el-table :data="data.slice((cur_page-1)*pagesize, cur_page*pagesize)" border style="width: 100%" ref="multipleTable" @selection-change="handleSelectionChange">-->
             <el-table :data="data" border style="width: 100%" ref="multipleTable" @selection-change="handleSelectionChange">
                 <el-table-column type="selection" width="55"></el-table-column>
-                <el-table-column prop="shopname" label="店铺名" width="200">
+                <el-table-column prop="shopname" label="店铺名" show-overflow-tooltip>
                 </el-table-column>
-                <el-table-column prop="erp_number" label="erp 编码" width="200">
+                <el-table-column prop="erp_number" label="erp 编码" show-overflow-tooltip>
                 </el-table-column>
-                <el-table-column prop="fnsku" label="FNSKU" width="200">
+                <el-table-column prop="fnsku" label="FNSKU" show-overflow-tooltip>
                 </el-table-column>
-                <el-table-column prop="name" label="产品名称">
+                <el-table-column prop="name" label="产品名称" show-overflow-tooltip>
+                </el-table-column>
+                <el-table-column prop="price" label="申报价值">
                 </el-table-column>
                 <el-table-column prop="size" label="尺寸(长*宽*高)" width="110">
                 </el-table-column>
                 <el-table-column prop="weight" label="重量" width="110">
                 </el-table-column>
-                <el-table-column prop="created_at" label="创建时间" :formatter="formatter_created_at" sortable width="150">
+                <el-table-column prop="created_at" label="创建时间" :formatter="formatter_created_at" sortable width="140">
                 </el-table-column>
-                <el-table-column prop="updated_at" label="更新时间" :formatter="formatter_updated_at" sortable width="150">
+                <el-table-column prop="updated_at" label="更新时间" :formatter="formatter_updated_at" sortable width="140">
                 </el-table-column>
                 <el-table-column prop="remark" label="备注" width="180" show-overflow-tooltip>
                 </el-table-column>
-                <!--<el-table-column prop="status" label="状态" width="120">
-                </el-table-column>                -->
-                <!--<el-table-column prop="date" label="日期" sortable width="150">
-                </el-table-column>
-                <el-table-column prop="name" label="姓名" width="120">
-                </el-table-column>-->
-                <!--<el-table-column prop="address" label="地址" :formatter="formatter">
-                </el-table-column>-->
-                <!--<el-table-column label="操作" width="100">
+                <el-table-column label="操作" width="100">
                     <template slot-scope="scope">
-                        <el-button size="small" @click="handleEdit(scope.$index, scope.row)">编辑</el-button>
-                        <el-button size="small" type="danger" @click="handleDelete(scope.$index, scope.row)">删除</el-button>
+                        <el-dropdown>
+                            <el-button type="primary">
+                                操作<i class="el-icon-arrow-down el-icon--right"></i>
+                            </el-button>
+                            <el-dropdown-menu slot="dropdown">
+                                <el-dropdown-item>
+                                    <el-button @click="showProduct(scope.$index, scope.row)" type="text">&nbsp产品图片</el-button>
+                                </el-dropdown-item>
+                                <el-dropdown-item>
+                                    <el-button @click="showPackage(scope.$index, scope.row)" type="text">外包装图片</el-button>
+                                </el-dropdown-item>
+                                <el-dropdown-item>
+                                    <el-button @click="handleEdit(scope.$index, scope.row)" type="text">&nbsp&nbsp&nbsp&nbsp编&nbsp&nbsp辑</el-button>
+                                </el-dropdown-item>
+                            </el-dropdown-menu>
+                        </el-dropdown>
                     </template>
-                </el-table-column>-->
+                </el-table-column>
+            </el-table>
             </el-table>
             <div class="pagination">
                 <el-pagination v-if="paginationShow" @current-change="handleCurrentChange" @size-change="handleSizeChange" :page-size="pagesize" layout="prev, pager, next" :total="totals">
@@ -68,22 +77,69 @@
         </div>
 
         <!-- 编辑弹出框 -->
-        <el-dialog title="编辑" :visible.sync="editVisible" width="30%">
-            <el-form ref="form" :model="form" label-width="50px">
-                <el-form-item label="日期">
-                    <el-date-picker type="date" placeholder="选择日期" v-model="form.date" value-format="yyyy-MM-dd" style="width: 100%;"></el-date-picker>
-                </el-form-item>
-                <el-form-item label="姓名">
+        <el-dialog title="编辑" :visible.sync="editVisible" width="50%">
+            <el-form ref="form" :model="form" label-width="100px">
+                <el-form-item label="产品名称">
                     <el-input v-model="form.name"></el-input>
                 </el-form-item>
-                <el-form-item label="地址">
-                    <el-input v-model="form.address"></el-input>
+               <!--  <el-form-item label="fnsku">
+                    <el-input v-model="form.fnsku"></el-input>
+                </el-form-item> -->
+                <el-form-item label="sku">
+                    <el-input v-model="form.sku"></el-input>
                 </el-form-item>
-
+                <el-form-item label="申报价值">
+                    <el-input v-model="form.price"></el-input>
+                </el-form-item>
+                <el-form-item label="外包装尺寸">
+                    <template slot-scope="scope">
+                        <el-col :span="7">
+                            <el-form-item prop="length">
+                                <el-input v-model.trim="form.length" placeholder="长(英寸)"></el-input>
+                            </el-form-item>
+                        </el-col>
+                        <el-col class="line" :span="1">-</el-col>
+                        <el-col :span="7">
+                            <el-form-item prop="width">
+                                <el-input v-model.trim="form.width" placeholder="宽(英寸)"></el-input>
+                            </el-form-item>
+                        </el-col>
+                        <el-col class="line" :span="1">-</el-col>
+                        <el-col :span="7">
+                            <el-form-item prop="height">
+                                <el-input v-model.trim="form.height" placeholder="高(英寸)"></el-input>
+                            </el-form-item>
+                        </el-col>
+                    </template>
+                </el-form-item>
+                <el-form-item label="重量">
+                    <el-input v-model="form.weight"></el-input>
+                </el-form-item>
+                <el-form-item label="店铺名">
+                    <el-input v-model="form.shopname"></el-input>
+                </el-form-item>
+                <el-form-item label="erp编码">
+                    <el-input v-model="form.erp_number"></el-input>
+                </el-form-item>
+                 <el-form-item label="备注">
+                    <el-input v-model="form.remark"></el-input>
+                </el-form-item>
+                <el-form-item label="产品图片">
+                    <el-upload class="upload-demo" drag action="" :file-list="fileList" :on-remove="handleRemove" :auto-upload="false" :on-change="changeFile" :limit="5" multiple>
+                        <i class="el-icon-upload"></i>
+                        <div class="el-upload__text">将文件拖到此处，或<em>点击上传</em></div>
+                    </el-upload>
+                </el-form-item>
+                <el-form-item label="外包装图片">
+                    <el-upload class="upload-demo" drag action="" :file-list="fileList2" :on-remove="handleRemove2" :auto-upload="false" :on-change="changeFile2" :limit="5" multiple>
+                        <i class="el-icon-upload"></i>
+                        <div class="el-upload__text">将文件拖到此处，或<em>点击上传</em></div>
+                    </el-upload>
+                </el-form-item>
             </el-form>
             <span slot="footer" class="dialog-footer">
                 <el-button @click="editVisible = false">取 消</el-button>
-                <el-button type="primary" @click="saveEdit">确 定</el-button>
+                <el-button type="primary" @click="saveEdit" :disabled="submitDisabled">确 定</el-button>
             </span>
         </el-dialog>
 
@@ -94,6 +150,91 @@
                 <el-button @click="delVisible = false">取 消</el-button>
                 <el-button type="primary" @click="deleteRow">确 定</el-button>
             </span>
+        </el-dialog>
+
+    <!-- 查看产品图片 -->
+        <el-dialog title="产品图片" :visible.sync="productVisible" width="20%" @close="closeProduct">
+            <el-table :data="picturesProductList" border style="width: 100%">
+                <el-table-column prop="sum" label="产品图片">
+                    <template slot-scope="scope">
+                        <!-- <span>{{scope.row.url}}</span> -->
+                        <img class="img_fnsku" v-if="scope.row.url.url != undefined && !(scope.row.url.url.match(/.pdf/))" :src="$axios.defaults.baseURL+scope.row.url.url"/>
+                        <a v-else :href="$axios.defaults.baseURL+scope.row.url.url" target="_blank">{{scope.row.url.url.split('/').pop()}}</a>
+                        <!-- <span v-else>无</span> -->
+                    </template>
+                    <!-- <template slot-scope="scope">
+                        <img class="img_fnsku" :src="$axios.defaults.baseURL+scope.row.pictures[0].url.url" />                  
+                    </template> -->
+                </el-table-column>
+                <el-table-column label="操作" width="100">
+                    <template slot-scope="scope">
+                        <el-button type="danger" @click="handleDeletePro(scope.$index, scope.row)">删除</el-button>
+                    </template>
+                </el-table-column>
+            </el-table>
+            
+            <!-- <el-carousel :interval="4000" type="card" height="200px" v-if="img_product">
+                <el-carousel-item v-for="item in form.pictures">
+                    <img :src="$axios.defaults.baseURL+item.url.url" />
+                </el-carousel-item>
+            </el-carousel>
+            <div v-if="pdf_product" v-for="item in form.pictures">
+                <a target="_blank" :href="$axios.defaults.baseURL + ':3000' +item.url.url">{{'查看' + item.id + '.pdf'}}</a>
+            </div> -->
+            <!-- <span slot="footer" class="dialog-footer"> -->
+            <!--<el-button @click="showImg = false">取 消</el-button>-->
+            <!-- <el-button type="primary" @click="productVisible = false">确 定</el-button> -->
+        </span>
+        </el-dialog>
+        <!-- 查看包装图片 -->
+        <el-dialog title="产品图片" :visible.sync="packageVisible" width="20%" @close="closePackage">
+            <el-table :data="picturesPackageList" border style="width: 100%">
+                <el-table-column prop="sum" label="包装图片">
+                    <template slot-scope="scope">
+                        <!-- <span>{{scope.row.url}}</span> -->
+                        <img class="img_fnsku" v-if="scope.row.url.url != undefined && !(scope.row.url.url.match(/.pdf/))" :src="$axios.defaults.baseURL+scope.row.url.url"/>
+                        <a v-else :href="$axios.defaults.baseURL+scope.row.url.url" target="_blank">{{scope.row.url.url.split('/').pop()}}</a>
+                        <!-- <span v-else>无</span> -->
+                    </template>
+                    <!-- <template slot-scope="scope">
+                        <img class="img_fnsku" :src="$axios.defaults.baseURL+scope.row.pictures[0].url.url" />                  
+                    </template> -->
+                </el-table-column>
+                
+                <el-table-column label="操作" width="100">
+                    <template slot-scope="scope">
+                        <el-button type="danger" @click="handleDeletePac(scope.$index, scope.row)">删除</el-button>
+                    </template>
+                </el-table-column>
+            </el-table>
+            <!-- <el-carousel :interval="4000" type="card" height="200px" v-if="img_package">
+                <el-carousel-item v-for="item in form.pictures">
+                    <img :src="$axios.defaults.baseURL+item.url.url" />
+                </el-carousel-item>
+            </el-carousel>
+            <div v-if="pdf_package" v-for="item in form.pictures">
+                <a target="_blank" :href="$axios.defaults.baseURL + ':3000' +item.url.url">{{'查看' + item.id + '.pdf'}}</a>
+            </div> -->
+            <!-- <span slot="footer" class="dialog-footer"> -->
+            <!--<el-button @click="showImg = false">取 消</el-button>-->
+            <!-- <el-button type="primary" @click="packageVisible = false">确 定</el-button> -->
+        </span>
+        </el-dialog>
+        <!-- 删除产品图片提示 -->
+        <el-dialog title="删除产品图片" :visible.sync="confirmDelProVis" width="35%">
+            <div class="del-dialog-cnt">删除不可恢复，是否确定删除？</div>
+            <span slot="footer" class="dialog-footer">
+            <el-button @click="confirmDelProVis = false">取 消</el-button>
+            <el-button type="danger" @click="deleteProductImg">确 定</el-button>
+        </span>
+        </el-dialog>
+        <!-- 删除包装图片提示 -->
+        <el-dialog title="删除产品图片" :visible.sync="confirmDElPacVis" width="35%">
+            <div class="del-dialog-cnt">删除不可恢复，是否确定删除？</div>
+            <span slot="footer" class="dialog-footer">
+            <el-button @click="confirmDElPacVis = false">取 消</el-button>
+            <el-button type="danger" @click="deletePackageImg">确 定</el-button>
+        </span>
         </el-dialog>
     </div>
 </template>
@@ -113,6 +254,8 @@
                 select_cate: '',
                 select_word: '',
                 del_list: [],
+                fileList: [],
+                fileList2: [],
                 is_search: false,
                 editVisible: false,
                 delVisible: false,
@@ -125,7 +268,20 @@
                     date: '',
                     address: '',
                 },
-                idx: -1
+                idx: -1,
+                productVisible: false,
+                packageVisible: false,
+                img_product: 1,
+                pdf_product: 0,
+                img_package: 1,
+                pdf_package: 0,
+                picturesProductList: [],
+                picturesPackageList: [],
+                product_id: undefined,
+                confirmDelProVis: false,
+                confirmDElPacVis: false,
+                picture_id: undefined,
+                submitDisabled: false
             }
         },
         created() {
@@ -180,6 +336,7 @@
                     })
                         this.tableData = res.data.data
                         this.totals = res.data.count
+                        this.paginationShow = true
                     }
                 }).catch((res) => {
                 	console.log('error')
@@ -205,6 +362,8 @@
                 })
             },
             clear_filter() {
+                this.paginationShow = false
+                this.cur_page = 1
                 this.search_fnsku = ''
                 this.search_shopname = ''
                 this.getData()
@@ -228,9 +387,18 @@
                 this.idx = index;
                 const item = this.tableData[index];
                 this.form = {
+                    id: item.id,
                     name: item.name,
-                    date: item.date,
-                    address: item.address
+                    fnsku: item.fnsku,
+                    sku: item.sku,
+                    price: item.price,
+                    length: item.length,
+                    width: item.width,
+                    height: item.height,
+                    weight: item.weight,
+                    shopname: item.shopname,
+                    erp_number: item.erp_number,
+                    remark: item.remark
                 }
                 this.editVisible = true;
             },
@@ -253,9 +421,74 @@
             },
             // 保存编辑
             saveEdit() {
-                this.$set(this.tableData, this.idx, this.form);
-                this.editVisible = false;
-                this.$message.success(`修改第 ${this.idx+1} 行成功`);
+                this.submitDisabled = true
+                let params = {
+                    remark: this.form.remark,
+                }
+                let formData = new FormData()
+                formData.append('product[shopname]', this.form.shopname)
+                formData.append('product[erp_number]', this.form.erp_number)
+                // formData.append('product[fnsku]', this.form.fnsku)
+                formData.append('product[name]', this.form.name)
+                formData.append('product[sku]', this.form.sku)
+                formData.append('product[length]', this.form.length)
+                formData.append('product[width]', this.form.width)
+                formData.append('product[height]', this.form.height)
+                formData.append('product[weight]', this.form.weight)
+                formData.append('product[price]', this.form.price)
+                formData.append('product[remark]', this.form.remark)
+                this.fileList.forEach((item) => {
+                    formData.append('product_pictures[]', item.raw)
+                })
+                this.fileList2.forEach((item) => {
+                    formData.append('package_pictures[]', item.raw)
+                })
+                let config = {
+                    headers: {
+                        'Authorization': localStorage.getItem('token')
+                    }
+                }
+                this.$axios.patch('/products/' + this.form.id, formData, config).then((res) => {
+                    if(res.data.code == 200) {
+                        this.$message.success('更新成功！')
+                        this.fileList = []
+                        this.fileList2 = []
+                        this.getData()
+                        this.editVisible = false
+                    }
+                    this.submitDisabled = false
+                }).catch((res) => {
+                    console.log('err')
+                })
+                // this.$axios.patch('/admin/users/' + this.form.id, params, {
+                //     headers: {
+                //         'Authorization': localStorage.getItem('token_admin')
+                //     },
+                // }).then((res) => {
+                //     if(res.data.code == 200) {
+                //         this.$message.success('更新成功')
+                //         this.editVisible = false
+                //         this.getData()
+                //         this.remark = ''
+                //     }
+                // }).catch((res) => {
+                //     console.log('error')
+                // })
+            },
+            changeFile(file) {
+                this.fileList.push(file)
+            },
+            handleRemove(a, b) {
+                this.fileList = b
+            },
+            changeFile2(file) {
+                this.fileList2.push(file)
+            },
+            handleRemove2(a, b) {
+                this.fileList2 = b
+            },
+            changeBatch(file) {
+                this.batchList.push(file)
             },
             // 确定删除
             deleteRow(){
@@ -278,7 +511,129 @@
             	this.$message.error("删除失败")
             })
                 this.delVisible = false;
-            }
+            },
+            // showProduct(index, row) {
+            //     this.idx = index;
+            //     let pictures = []
+            //     const item = this.tableData[index];
+            //     item.pictures.forEach((data) => {
+            //         if(data.remark == 'product') {
+            //             pictures.push(data)
+            //         }
+            //     })
+            //     this.form = {
+            //         id: item.id,
+            //         pictures: pictures
+            //     }
+            //     if(item.pictures.length == 0) {
+            //         this.$message.error('抱歉，该用户暂未提供附件')
+            //         return false;
+            //     }
+            //     if(item.pictures[0].url.url.endsWith('.pdf')) {
+            //         this.img_product = 0
+            //         this.pdf_product = 1
+            //     } else {
+            //         this.img_product = 1
+            //         this.pdf_product = 0
+            //     }
+            //     this.productVisible = true;
+            // },
+            // showPackage(index, row) {
+            //     this.idx = index;
+            //     let pictures = []
+            //     const item = this.tableData[index];
+            //     item.pictures.forEach((data) => {
+            //         if(data.remark == 'package') {
+            //             pictures.push(data)
+            //         }
+            //     })
+            //     this.form = {
+            //         id: item.id,
+            //         pictures: pictures
+            //     }
+            //     if(item.pictures.length == 0) {
+            //         this.$message.error('抱歉，该用户暂未提供附件')
+            //         return false;
+            //     }
+            //     if(item.pictures[0].url.url.endsWith('.pdf')) {
+            //         this.img_package = 0
+            //         this.pdf_package = 1
+            //     } else {
+            //         this.img_package = 1
+            //         this.pdf_package = 0
+            //     }
+            //     this.productVisible = true;
+            // },
+            showProduct(index, row) {
+                this.product_id = row.id
+                const item = this.tableData[index]
+                item.pictures.forEach((data) => {
+                    if(data.remark == 'product') {
+                        this.picturesProductList.push(data)
+                    }
+                })
+                this.productVisible = true;
+            },
+            showPackage(index, row) {
+                this.product_id = row.id
+                const item = this.tableData[index]
+                item.pictures.forEach((data) => {
+                    if(data.remark == 'package') {
+                        this.picturesPackageList.push(data)
+                    }
+                })
+                this.packageVisible = true;
+            },
+            closeProduct() {
+                this.productVisible = false
+                this.picturesProductList = []
+            },
+            closePackage() {
+                this.packageVisible = false
+                this.picturesPackageList = []
+            },
+            deleteProductImg() {
+                this.$axios.get('/products/' + this.product_id+ '/delete_picture?picture_id=' + this.picture_id ,{
+                     headers: {
+                        'Authorization': localStorage.getItem('token')
+                    }
+                }).then((res) => {
+                    if(res.data.code == 200) {
+                        this.picturesProductList.splice(this.idx, 1);
+                        this.getData()
+                        this.$message.success("删除成功")
+                        this.confirmDelProVis = false
+                    }
+                }).catch((res) => {
+
+                })
+            },
+            deletePackageImg() {
+                this.$axios.get('/products/' + this.product_id+ '/delete_picture?picture_id=' + this.picture_id ,{
+                     headers: {
+                        'Authorization': localStorage.getItem('token')
+                    }
+                }).then((res) => {
+                    if(res.data.code == 200) {
+                        this.picturesPackageList.splice(this.idx, 1);
+                        this.getData()
+                        this.$message.success("删除成功")
+                        this.confirmDElPacVis = false
+                    }
+                }).catch((res) => {
+
+                })
+            },
+            handleDeletePro(index, row) {
+                this.picture_id = row.id
+                this.idx = index;
+                this.confirmDelProVis = true;
+            },
+            handleDeletePac(index, row) {
+                this.picture_id = row.id
+                this.idx = index;
+                this.confirmDElPacVis = true;
+            },
         }
     }
 
@@ -304,5 +659,10 @@
 
     .fnsku_filter {
         float: right;
+    }
+
+    .img_fnsku {
+        width:6rem;
+        height:6rem;
     }
 </style>

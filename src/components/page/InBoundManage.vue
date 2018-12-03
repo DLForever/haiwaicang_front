@@ -35,6 +35,8 @@
 				</el-table-column>
 				<el-table-column prop="batch_number" label="申请批次" width="100">
 				</el-table-column>
+				<el-table-column prop="order_number" label="订单编码" width="100">
+				</el-table-column>
 				<el-table-column prop="total_plan_sum" label="计划数量" width="120">
 				</el-table-column>
 				<el-table-column prop="total_arrive_sum" label="接收数量" width="120">
@@ -180,7 +182,8 @@
 				const statusMap = {
 					1: 'warning',
 					4: 'success',
-					5: 'danger'
+					5: 'danger',
+					7: 'warning'
 				}
 				return statusMap[status]
 			},
@@ -242,6 +245,8 @@
 				})
 			},
 			clear_filter() {
+				this.paginationShow = false
+				this.cur_page = 1
 				this.select_batch = ''
 				this.search_fnsku = ''
 				this.getData()
@@ -450,7 +455,7 @@
 				} else if(status == 5) {
 					return "删除待审核"
 				}else if (status == 7) {
-					return "审核通过"
+					return "等待入库"
 				} else {
 					return "其他"
 				}

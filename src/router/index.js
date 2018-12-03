@@ -97,6 +97,16 @@ export default new Router({
                     meta: { title: 'WMS新建库位', permission: true  }
                 },
                 {
+                    path: '/WMSusermanage',
+                    component: resolve => require(['../components/page/WMSUserManage.vue'], resolve),
+                    meta: { title: 'WMS用户管理', permission: true  }
+                },
+                 {
+                    path: '/WMSproductmanage',
+                    component: resolve => require(['../components/page/WMSProductManage.vue'], resolve),
+                    meta: { title: 'WMS产品管理', permission: true  }
+                },
+                {
                     path: '/WMSwaremanage',
                     component: resolve => require(['../components/page/WMSWareManage.vue'], resolve),
                     meta: { title: 'WMS库位管理', permission: true  }
@@ -142,14 +152,19 @@ export default new Router({
 //                  meta: { title: 'WMS发货订单管理', permission: true  }
 //              },
                 {
-                    path: '/WMSproductmanage',
-                    component: resolve => require(['../components/page/WMSProductManage.vue'], resolve),
+                    path: '/WMSgoodsmanage',
+                    component: resolve => require(['../components/page/WMSGoodsManage.vue'], resolve),
                     meta: { title: 'WMS货物管理', permission: true }
                 },
                 {
                     path: '/WMSImportStock',
                     component: resolve => require(['../components/page/WMSImportStock.vue'], resolve),
-                    meta: { title: 'WMS货物管理', permission: true }
+                    meta: { title: 'WMS导入库存', permission: true }
+                },
+                {
+                    path: '/WMSImportStockDetail',
+                    component: resolve => require(['../components/page/WMSImportStockDetail.vue'], resolve),
+                    meta: { title: 'WMS导入详情', permission: true }
                 },
                 {
                     // 权限页面
