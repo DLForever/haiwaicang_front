@@ -21,8 +21,14 @@
 						<el-option v-for="item in batchoptions" :key="item.id" :label="item.batch_number" :value="item.id"></el-option>
 						<infinite-loading :on-infinite="onInfinite_batch" ref="infiniteLoading2"></infinite-loading>
 					</el-select>
-					fnsku:
-					<el-input style="width:150px" placeholder="请输入fnsku" v-model.trim="search_fnsku"></el-input>
+					状态:
+					<el-select v-model="statusSelect" placeholder="请选择" class="handle-select mr10">
+						<el-option v-for="item in statusOptions" :key="item.value" :label="item.label" :value="item.value"></el-option>
+					</el-select>
+					Fnsku:
+					<el-input style="width:150px" placeholder="请输入Fnsku" v-model.trim="search_fnsku"></el-input>
+					追踪编码:
+					<el-input style="width:150px" placeholder="请输入追踪编码" v-model.trim="search_logistics_number"></el-input>
 					<el-button @click="clear_search" type="default">重置</el-button>
 	                <el-button @click="filter_inbound" type="primary">查询</el-button>
                 </div>
@@ -32,7 +38,7 @@
 			<!--<el-table :data="data.slice((cur_page-1)*pagesize, cur_page*pagesize)" border style="width: 100%" model="form" ref="multipleTable" @selection-change="handleSelectionChange">-->
 			<el-table :data="data" border style="width: 100%" model="form" ref="multipleTable" @selection-change="handleSelectionChange">
 				<el-table-column type="selection" width="55"></el-table-column>
-				<el-table-column prop="logistics_number" label="入库单号" width="200">
+				<el-table-column prop="logistics_number" label="追踪编码" width="200">
 				</el-table-column>
 				<el-table-column prop="batch_number" label="申请批次" width="100">
 				</el-table-column>
@@ -209,7 +215,10 @@
 				inputVisible: true,
 				inputValue: '',
 				search_fnsku: '',
-				submitDisable: false
+				submitDisable: false,
+				statusOptions: [{value: 7, label: '待入库'}, {value: 5, label: '待删除'}, {value: 4, label: '已入库'}, {value: 6, label: '已结算'}],
+				statusSelect: '',
+				search_logistics_number: ''
 			}
 		},
 		created() {
@@ -266,7 +275,7 @@
 				if(process.env.NODE_ENV === 'development') {
 					//					this.url = '/ms/table/list';
 				};				
-				this.$axios.get('/admin/store_ins?page=' + this.cur_page + '&batch_store_in_id=' + this.select_batch + '&user_id=' + this.select_cate + '&fnsku=' + this.search_fnsku, {
+				this.$axios.get('/admin/store_ins?page=' + this.cur_page + '&batch_store_in_id=' + this.select_batch + '&user_id=' + this.select_cate + '&fnsku=' + this.search_fnsku + '&status=' + this.statusSelect + '&logistics_number=' + this.search_logistics_number, {
 					headers: {
 						'Authorization': localStorage.getItem('token_admin')
 					},
@@ -290,7 +299,7 @@
 			filter_inbound() {
 				this.paginationShow = false
 				this.cur_page = 1
-				this.$axios.get('/admin/store_ins?page=' + this.cur_page + '&batch_store_in_id=' + this.select_batch + '&user_id=' + this.select_cate + '&fnsku=' + this.search_fnsku, {
+				this.$axios.get('/admin/store_ins?page=' + this.cur_page + '&batch_store_in_id=' + this.select_batch + '&user_id=' + this.select_cate + '&fnsku=' + this.search_fnsku + '&status=' + this.statusSelect + '&logistics_number=' + this.search_logistics_number, {
 					headers: {
 						'Authorization': localStorage.getItem('token_admin')
 					},
@@ -312,6 +321,8 @@
 				this.select_cate = ''
 				this.select_batch = ''
 				this.search_fnsku = ''
+				this.statusSelect = ''
+				this.search_logistics_number = ''
 				this.getData()
 			},
 			allUser() {	
@@ -656,7 +667,7 @@
 				}else if (status == 3) {
 					return "删除"
 				}else if (status == 4) {
-					return "已完成"
+					return "已入库"
 				}else if(status == 5) {
 					return "删除待审核"
 				}else if (status == 6) {
@@ -664,7 +675,7 @@
 				}else if (status == 7) {
 					return "等待入库"
 				} else {
-					return "已入库"
+					return "其他"
 				}
 			},
 			detailsShow(index, row) {

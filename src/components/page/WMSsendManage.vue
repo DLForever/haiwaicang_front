@@ -15,8 +15,12 @@
 						<el-option v-for="item in options" :label="item.name" :value="item.id"></el-option>
 						<infinite-loading :on-infinite="onInfinite" ref="infiniteLoading"></infinite-loading>
 					</el-select>
-					fnsku:
-                    <el-input style="width:150px" placeholder="请输入fnsku" v-model.trim="search_fnsku"></el-input>
+					Fnsku:
+                    <el-input style="width:150px" placeholder="请输入Fnsku" v-model.trim="search_fnsku"></el-input>
+                    状态:
+					<el-select v-model="statusSelect" placeholder="请选择" class="handle-select mr10">
+						<el-option v-for="item in statusOptions" :key="item.value" :label="item.label" :value="item.value"></el-option>
+					</el-select>
                     <el-button @click="clear_search" type="default">重置</el-button>
                     <el-button @click="filter_inbound" type="primary">查询</el-button>
                 </div>
@@ -97,7 +101,8 @@
 					<el-table-column label="新标" width="120px">
 						<template slot-scope="scope">
 							<!-- <span>{{scope.row.pictures[0]}}</span> -->
-							<img class="img_fnsku" v-if="scope.row.pictures[0] != undefined && !(scope.row.pictures[0].url.url.match(/.pdf/))" :src="$axios.defaults.baseURL+scope.row.pictures[0].url.url"/>
+							<span v-if="scope.row.pictures.length === 0">无</span>
+							<img class="img_fnsku" v-else-if="scope.row.pictures[0] != undefined && !(scope.row.pictures[0].url.url.match(/.pdf/))" :src="$axios.defaults.baseURL+scope.row.pictures[0].url.url"/>
 							<a v-else :href="$axios.defaults.baseURL+scope.row.pictures[0].url.url" target="_blank">{{scope.row.pictures[0].url.url.split('/').pop()}}</a>
 							<!-- <span v-else>无</span> -->
 						</template>
@@ -126,6 +131,7 @@
 					<el-table-column prop="sum" label="数量"></el-table-column>
 					<el-table-column prop="box_size" label="箱子尺寸(长*宽*高)"></el-table-column>
 					<el-table-column prop="weight" label="箱子重量"></el-table-column>
+					<el-table-column prop="repeat" label="箱子数量"></el-table-column>
 				</el-table>
 			</div>
 		</el-dialog>
@@ -176,7 +182,20 @@
 		
 		<!-- 图片弹出框 -->
 		<el-dialog title="附件详情" :visible.sync="showImg" width="30%">
-			<el-carousel :interval="4000" type="card" height="200px" v-if="img_show">
+			<el-table :data="form.pictures" border style="width: 100%">
+                <el-table-column prop="sum" label="箱标图片">
+                    <template slot-scope="scope">
+                        <img class="img_fnsku" v-if="scope.row.url.url != undefined && !(scope.row.url.url.match(/.pdf/))" :src="$axios.defaults.baseURL+scope.row.url.url"/>
+                        <a v-else :href="$axios.defaults.baseURL+scope.row.url.url" target="_blank">{{scope.row.url.url.split('/').pop()}}</a>
+                    </template>
+                </el-table-column>
+                <!-- <el-table-column label="操作" width="100">
+                    <template slot-scope="scope">
+                        <el-button type="danger" @click="handleDel(scope.$index, scope.row)">删除</el-button>
+                    </template>
+                </el-table-column> -->
+            </el-table>
+			<!-- <el-carousel :interval="4000" type="card" height="200px" v-if="img_show">
 				<el-carousel-item v-for="item in form.pictures">
 					<img :src="$axios.defaults.baseURL+item.url.url" />
 				</el-carousel-item>
@@ -185,9 +204,9 @@
 				<a target="_blank" :href="$axios.defaults.baseURL+item.url.url">{{'查看' + item.id + '.pdf'}}</a>
 			</div>
 			<span slot="footer" class="dialog-footer">
-                <!--<el-button @click="showImg = false">取 消</el-button>-->
+                <el-button @click="showImg = false">取 消</el-button>
                 <el-button type="primary" @click="showImg = false">确 定</el-button>
-            </span>
+            </span> -->
 		</el-dialog>
 
 		<!-- 删除提示框 -->
@@ -286,7 +305,9 @@
 				check_id: undefined,
 				sendProductId: undefined,
 				importStockTable:[{id:1},{id:2},{id:3},{id:4},{id:5},{id:6},{id:7},{id:8},{id:9},{id:10}],
-				search_fnsku: ''
+				search_fnsku: '',
+				statusOptions: [{value: 6, label: '待发货'}, {value: 10, label: '已完成'}],
+				statusSelect: '',
 			}
 		},
 		created() {
@@ -315,9 +336,9 @@
 			statusFilter(status) {
 				const statusMap = {
 					5: 'primary',
-					1: 'warning',
+					6: 'warning',
 					8: 'danger',
-					2: 'success',
+					10: 'success',
 					7: 'info'
 				}
 				return statusMap[status]
@@ -381,7 +402,7 @@
 				}
 			},
 			getData() {
-				this.$axios.get('/admin/outbound_orders?page=' + this.cur_page + '&user_id=' + this.select_cate + '&wms=true' + '&out=true&fnsku=' + this.search_fnsku, {
+				this.$axios.get('/admin/outbound_orders?page=' + this.cur_page + '&user_id=' + this.select_cate + '&wms=true' + '&out=true&fnsku=' + this.search_fnsku + '&status=' + this.statusSelect, {
 					headers: {
 						'Authorization': localStorage.getItem('token_admin')
 					},
@@ -407,7 +428,7 @@
 			filter_inbound() {
 				this.paginationShow = false
 				this.cur_page = 1
-				this.$axios.get('/admin/outbound_orders?page=' + this.cur_page + '&user_id=' + this.select_cate + '&wms=true' + '&out=true&fnsku=' + this.search_fnsku, {
+				this.$axios.get('/admin/outbound_orders?page=' + this.cur_page + '&user_id=' + this.select_cate + '&wms=true' + '&out=true&fnsku=' + this.search_fnsku + '&status=' + this.statusSelect, {
 					headers: {
 						'Authorization': localStorage.getItem('token_admin')
 					},
@@ -435,6 +456,7 @@
 				this.cur_page = 1
 				this.select_cate = ''
 				this.search_fnsku = ''
+				this.statusSelect = ''
 				this.getData()
 			},
 			getUser(callback = undefined) {
@@ -665,11 +687,12 @@
 					},
 				}).then((res) => {
 					if(res.data.code == 200) {
-						if(row.is_mix) {
-							this.is_mix = '可混装'
-						} else {
-							this.is_mix = '不混装'
-						}
+						this.is_mix = row.is_mix
+						// if(row.is_mix) {
+						// 	this.is_mix = '可混装'
+						// } else {
+						// 	this.is_mix = '不混装'
+						// }
 						res.data.data.label_changes.forEach((data) => {
 							data.label_ware_houses.forEach((data2) => {
 								this.ware_houseTable.push(data2)
@@ -785,6 +808,8 @@
 			},
 			closeSendPrint() {
 				this.ware_houseTable = []
+				this.order_box_cargos = []
+				this.ware_houseTable2 = []
 			},
 			getStatusName(status) {
 				if(status == 1) {
@@ -794,13 +819,13 @@
 				} else if (status == 3) {
 					return "待换标"
 				} else if (status == 4) {
-					return "待审核"
+					return "待自审"
 				}else if (status == 5) {
 					return "审核通过"
 				}else if(status == 8) {
 					return "删除待审核"
 				} else if(status == 6) {
-					return '已提供箱标'
+					return '待发货'
 				}else if (status == 7) {
 					return "被删除"
 				}else if (status == 9) {

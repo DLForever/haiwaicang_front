@@ -12,8 +12,12 @@
 			<div class="handle-box">
 				<el-button type="primary" @click="showOutBound">创建出库单</el-button>
 				<div class="fnsku_filter">
-					fnsku:
-                    <el-input style="width:150px" placeholder="请输入fnsku" v-model.trim="search_fnsku"></el-input>
+					Fnsku:
+                    <el-input style="width:150px" placeholder="请输入Fnsku" v-model.trim="search_fnsku"></el-input>
+                    状态:
+					<el-select v-model="statusSelect" placeholder="请选择" class="handle-select mr10">
+						<el-option v-for="item in statusOptions" :key="item.value" :label="item.label" :value="item.value"></el-option>
+					</el-select>
                     <el-button @click="clear_search" type="default">重置</el-button>
                     <el-button @click="filter_inbound" type="primary">查询</el-button>
                 </div>
@@ -25,6 +29,8 @@
 				</el-table-column>
 				<el-table-column prop="updated_at" label="更新时间" :formatter="formatter_updated_at" width="150">
 				</el-table-column>				-->
+				<el-table-column prop="barcode" label="出库单单号">
+				</el-table-column>
 				<el-table-column prop="total" label="数量">
 				</el-table-column>
 				<el-table-column prop="user_remark" label="用户备注" show-overflow-tooltip>
@@ -330,6 +336,7 @@
 					<el-table-column prop="sum" label="数量"></el-table-column>
 					<el-table-column prop="box_size" label="箱子尺寸(长*宽*高)"></el-table-column>
 					<el-table-column prop="weight" label="箱子重量"></el-table-column>
+					<el-table-column prop="repeat" label="箱子数量"></el-table-column>
 				</el-table>
 			</el-dialog>
 			<!-- 删除出库单提示 -->
@@ -390,17 +397,30 @@
 
 			<!-- 查看外箱标 -->
 			<el-dialog title="附件详情" :visible.sync="showImg" width="30%">
-				<el-carousel :interval="4000" type="card" height="200px" v-if="img_show">
+				<el-table :data="form.pictures" border style="width: 100%">
+                <el-table-column prop="sum" label="箱标图片">
+                    <template slot-scope="scope">
+                        <img class="img_fnsku" v-if="scope.row.url.url != undefined && !(scope.row.url.url.match(/.pdf/))" :src="$axios.defaults.baseURL+scope.row.url.url"/>
+                        <a v-else :href="$axios.defaults.baseURL+scope.row.url.url" target="_blank">{{scope.row.url.url.split('/').pop()}}</a>
+                    </template>
+	                </el-table-column>
+	                <!-- <el-table-column label="操作" width="100">
+	                    <template slot-scope="scope">
+	                        <el-button type="danger" @click="handleDel(scope.$index, scope.row)">删除</el-button>
+	                    </template>
+	                </el-table-column> -->
+	            </el-table>
+				<!-- <el-carousel :interval="4000" type="card" height="200px" v-if="img_show">
 					<el-carousel-item v-for="item in form.pictures">
 						<img :src="$axios.defaults.baseURL+item.url.url" />
 					</el-carousel-item>
 				</el-carousel>
 				<div v-if="pdf_show" v-for="item in form.pictures">
 					<a target="_blank" :href="$axios.defaults.baseURL + ':3000' +item.url.url">{{'查看' + item.id + '.pdf'}}</a>
-				</div>
-				<span slot="footer" class="dialog-footer">
-                <!--<el-button @click="showImg = false">取 消</el-button>-->
-                <el-button type="primary" @click="showImg = false">确 定</el-button>
+				</div> -->
+				<!-- <span slot="footer" class="dialog-footer">
+                <el-button @click="showImg = false">取 消</el-button>
+                <el-button type="primary" @click="showImg = false">确 定</el-button> -->
             </span>
 			</el-dialog>
 		</div>
@@ -516,7 +536,9 @@
 				search_fnsku2: '',
 				loading: false,
 				query: undefined,
-				infiniteLoading: []
+				infiniteLoading: [],
+				statusOptions: [{value: 1, label: '待自审'}, {value: 11, label: '待拣货'}, {value: 2, label: '拣货中'}, {value: 3, label: '待换标'}, {value: 12, label: '已装箱'}, {value: 4, label: '待结算'}, {value: 5, label: '待贴箱标'}, {value: 6, label: '已提供箱标'}, {value: 8, label: '待删除'}, {value: 10, label: '已完成'}],
+				statusSelect: '',
 			}
 		},
 		props:{
@@ -559,7 +581,8 @@
 					2: 'success',
 					7: 'info',
 					6: 'warning',
-					10: 'success'
+					10: 'success',
+					5: 'warning',
 				}
 				return statusMap[status]
 			},
@@ -634,13 +657,14 @@
 				}
 			},
 			getDatas() {
-				this.$axios.get('/outbound_orders?page=' + this.cur_page + '&fnsku=' + this.search_fnsku, {
+				this.$axios.get('/outbound_orders?page=' + this.cur_page + '&fnsku=' + this.search_fnsku + '&status=' + this.statusSelect, {
 					headers: {
 						'Authorization': localStorage.getItem('token')
 					}
 				}).then((res) => {
 					if(res.data.code == 200) {
 						res.data.data.forEach((data) => {
+							data.barcode = 'hwc_' + data.id
 							if(data.is_mix) {
 								data.is_mix = '混装'
 							} else {
@@ -658,13 +682,14 @@
 			filter_inbound() {
 				this.paginationShow = false
 				this.cur_page = 1
-				this.$axios.get('/outbound_orders?page=' + this.cur_page + '&fnsku=' + this.search_fnsku, {
+				this.$axios.get('/outbound_orders?page=' + this.cur_page + '&fnsku=' + this.search_fnsku + '&status=' + this.statusSelect, {
 					headers: {
 						'Authorization': localStorage.getItem('token')
 					}
 				}).then((res) => {
 					if(res.data.code == 200) {
 						res.data.data.forEach((data) => {
+							data.barcode = 'hwc_' + data.id
 							if(data.is_mix) {
 								data.is_mix = '混装'
 							} else {
@@ -683,6 +708,7 @@
 				this.paginationShow = false
 				this.cur_page = 1
 				this.search_fnsku = ''
+				this.statusSelect = ''
 				this.getDatas()
 			},
 			handleCurrentChange(val) {
@@ -1218,15 +1244,15 @@
 			},
 			getStatusName(status) {
 				if(status == 1) {
-					return "待审核"
+					return "待自审"
 				} else if(status == 2) {
 					return "正在拣货"
 				} else if (status == 3) {
 					return "等待换标"
 				} else if (status == 4) {
-					return "待审核"
+					return "待仓库审核"
 				}else if (status == 5) {
-					return "审核通过"
+					return "待贴箱标"
 				}else if(status == 8) {
 					return "删除待审核"
 				} else if(status == 6) {
@@ -1238,9 +1264,9 @@
 				}else if (status == 10) {
 					return "已完成"
 				}else if (status == 11) {
-					return "待拣货"
+					return "等待拣货"
 				}else if (status == 12) {
-					return '已换标'
+					return '已装箱'
 				} else {
 					return '其他'
 				}
@@ -1265,7 +1291,9 @@
 						
 					}
 				}
-				
+			},
+			handleDel(index, row) {
+				this.$message.error("功能暂未开放")
 			}
 		},
 		components: {
@@ -1290,6 +1318,10 @@
 		line-height: 30px;
 		padding-top: 0;
 		padding-bottom: 0;
+	}
+
+	.handle-select {
+		width: 120px;
 	}
 	
 	.input-new-tag {

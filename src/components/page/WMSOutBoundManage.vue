@@ -15,8 +15,12 @@
 						<el-option v-for="item in options" :label="item.name" :value="item.id"></el-option>
 						<infinite-loading :on-infinite="onInfinite" ref="infiniteLoading"></infinite-loading>
 					</el-select>
-					fnsku:
-                    <el-input style="width:150px" placeholder="请输入fnsku" v-model.trim="search_fnsku"></el-input>
+					Fnsku:
+                    <el-input style="width:150px" placeholder="请输入Fnsku" v-model.trim="search_fnsku"></el-input>
+                    状态:
+					<el-select v-model="statusSelect" placeholder="请选择" class="handle-select mr10">
+						<el-option v-for="item in statusOptions" :key="item.value" :label="item.label" :value="item.value"></el-option>
+					</el-select>
                     <el-button @click="clear_search" type="default">重置</el-button>
                     <el-button @click="filter_inbound" type="primary">查询</el-button>
                 </div>
@@ -62,6 +66,9 @@
 								<el-dropdown-item>
 									<el-button @click="showImgs(scope.$index, scope.row)" type="text">查看附件</el-button>
 								</el-dropdown-item>
+								<el-dropdown-item>
+									<el-button @click="printStock(scope.$index, scope.row)" type="text">打印出库单&nbsp&nbsp&nbsp</el-button>
+								</el-dropdown-item>
 								<!-- <el-dropdown-item>
 									<el-button @click="package(scope.$index, scope.row)" type="text">&nbsp&nbsp&nbsp打&nbsp包&nbsp&nbsp&nbsp</el-button>
 								</el-dropdown-item>
@@ -105,7 +112,8 @@
 					<el-table-column prop="sum" label="新标" width="120px" show-overflow-tooltip>
 						<template slot-scope="scope">
 							<!-- <span>{{scope.row.pictures[0]}}</span> -->
-							<img class="img_fnsku" v-if="scope.row.pictures[0] != undefined && !(scope.row.pictures[0].url.url.match(/.pdf/))" :src="$axios.defaults.baseURL+scope.row.pictures[0].url.url"/>
+							<span v-if="scope.row.pictures.length === 0">无</span>
+							<img class="img_fnsku" v-else-if="scope.row.pictures[0] != undefined && !(scope.row.pictures[0].url.url.match(/.pdf/))" :src="$axios.defaults.baseURL+scope.row.pictures[0].url.url"/>
 							<a v-else :href="$axios.defaults.baseURL+scope.row.pictures[0].url.url" target="_blank">{{scope.row.pictures[0].url.url.split('/').pop()}}</a>
 							<!-- <span v-else>无</span> -->
 						</template>
@@ -289,6 +297,23 @@
                 <el-button type="danger" @click="deleteRow">删 除</el-button>
             </span>
 		</el-dialog>
+		<!-- 打印出库提示框 -->
+		<el-dialog title="详情" :visible.sync="importStockVisible" width="50%">
+			<div class="creat">
+				<el-button type="primary" @click="printImport">打印</el-button>
+			</div>
+			<div id="importStock">
+				<h1 style="text-align:center" class="ismix">{{is_mix}}</h1>
+				<barcode :value="barcode" :options="{displayValue:true}" tag="img" width="300" height="100"></barcode>
+				<el-table :data="importStockTable" border style="width: 100%">
+					<el-table-column prop="id" label="id" width="50"></el-table-column>
+					<el-table-column label="箱子"></el-table-column>
+					<el-table-column label="箱子重量"></el-table-column>
+					<el-table-column label="fnsku"></el-table-column>
+					<el-table-column label="数量"></el-table-column>
+				</el-table>
+			</div>
+		</el-dialog>
 	</div>
 </template>
 
@@ -375,7 +400,11 @@
 				checkData5: [],
 				check_id: undefined,
 				sendProductId: undefined,
-				search_fnsku: ''
+				search_fnsku: '',
+				importStockTable:[{id:1},{id:2},{id:3},{id:4},{id:5},{id:6},{id:7},{id:8},{id:9},{id:10}],
+				importStockVisible: false,
+				statusOptions: [{value: 11, label: '待拣货'}, {value: 2, label: '拣货中'}, {value: 3, label: '待换标'}],
+				statusSelect: '',
 			}
 		},
 		created() {
@@ -407,7 +436,8 @@
 					1: 'warning',
 					8: 'danger',
 					2: 'success',
-					7: 'info'
+					7: 'info',
+					3: 'warning',
 				}
 				return statusMap[status]
 			},
@@ -464,7 +494,7 @@
 			},
 			getData() {
 				// this.paginationShow = false
-				this.$axios.get('/admin/outbound_orders?page=' + this.cur_page + '&user_id=' + this.select_cate + '&wms=true' + '&out=false&fnsku=' + this.search_fnsku, {
+				this.$axios.get('/admin/outbound_orders?page=' + this.cur_page + '&user_id=' + this.select_cate + '&wms=true' + '&out=false&fnsku=' + this.search_fnsku + '&status=' + this.statusSelect, {
 					headers: {
 						'Authorization': localStorage.getItem('token_admin')
 					},
@@ -489,7 +519,7 @@
 			},
 			filter_inbound() {
 				this.cur_page = 1
-				this.$axios.get('/admin/outbound_orders?page=' + this.cur_page + '&user_id=' + this.select_cate + '&wms=true' + '&out=false&fnsku=' + this.search_fnsku, {
+				this.$axios.get('/admin/outbound_orders?page=' + this.cur_page + '&user_id=' + this.select_cate + '&wms=true' + '&out=false&fnsku=' + this.search_fnsku + '&status=' + this.statusSelect, {
 					headers: {
 						'Authorization': localStorage.getItem('token_admin')
 					},
@@ -517,6 +547,7 @@
 				this.cur_page = 1
 				this.select_cate = ''
 				this.search_fnsku = ''
+				this.statusSelect = ''
 				this.getData()
 			},
 			getUser(callback = undefined) {
@@ -988,17 +1019,35 @@
 				this.ware_houseTable = []
 				this.ware_houseTable2 = []
 			},
+			printStock(index, row) {
+				this.is_mix = row.is_mix
+				// if(row.is_mix) {
+				// 	this.is_mix = '可混装'
+				// } else {
+				// 	this.is_mix = '不混装'
+				// }
+				// this.barcode = 'hwc_7896541'
+				this.barcode = 'hwc_' + row.id
+				this.importStockVisible = true
+			},
+			printImport() {
+				Print({
+					printable: 'importStock',
+					type: 'html',
+					targetStyle: ['text-align'],
+				})
+			},
 			getStatusName(status) {
 				if(status == 1) {
 					return "待审核"
 				} else if(status == 2) {
 					return "正在拣货"
 				} else if (status == 3) {
-					return "待换标"
+					return "等待换标"
 				} else if (status == 4) {
-					return "待审核"
+					return "待结算"
 				}else if (status == 5) {
-					return "审核通过"
+					return "已结算"
 				}else if(status == 8) {
 					return "删除待审核"
 				} else if(status == 6) {
@@ -1012,7 +1061,7 @@
 				}else if (status == 11) {
 					return "待拣货"
 				}else if (status == 12) {
-					return '已换标'
+					return '已装箱'
 				} else {
 					return '其他'
 				}

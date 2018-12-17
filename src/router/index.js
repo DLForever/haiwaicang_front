@@ -64,7 +64,7 @@ export default new Router({
                 {
                     path: '/goodsmanage',
                     component: resolve => require(['../components/page/GoodsManage.vue'], resolve),
-                    meta: { title: '货物管理' }
+                    meta: { title: '库存管理' }
                 },
                 {
                     path: '/ordermanage',

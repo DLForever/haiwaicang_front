@@ -23,8 +23,8 @@
                     </el-select>
                     店铺名:
                     <el-input style="width:150px" placeholder="请输入店铺名" v-model.trim="search_shopname"></el-input>
-                    fnsku:
-                    <el-input style="width:150px" placeholder="请输入fnsku" v-model.trim="search_fnsku"></el-input>
+                    Fnsku:
+                    <el-input style="width:150px" placeholder="请输入Fnsku" v-model.trim="search_fnsku"></el-input>
                     <el-button @click="clear_filter" type="default">重置</el-button>
                     <el-button @click="filter_product" type="primary">查询</el-button>
                 </div>
@@ -37,7 +37,7 @@
                 </el-table-column>
                 <el-table-column prop="erp_number" label="erp 编码" show-overflow-tooltip>
                 </el-table-column>
-                <el-table-column prop="fnsku" label="FNSKU" show-overflow-tooltip>
+                <el-table-column prop="fnsku" label="Fnsku" show-overflow-tooltip>
                 </el-table-column>
                 <el-table-column prop="price" label="申报价值">
                 </el-table-column>

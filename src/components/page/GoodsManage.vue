@@ -2,15 +2,15 @@
 	<div class="table">
 		<div class="crumbs">
 			<el-breadcrumb separator="/">
-				<el-breadcrumb-item><i class="el-icon-tickets"></i> 货物管理</el-breadcrumb-item>
-				<el-breadcrumb-item>货物管理</el-breadcrumb-item>
+				<el-breadcrumb-item><i class="el-icon-tickets"></i> 库存管理</el-breadcrumb-item>
+				<el-breadcrumb-item>库存管理</el-breadcrumb-item>
 			</el-breadcrumb>
 		</div>
 		<div class="container">
 			<div class="handle-box">
 				<div class="fnsku_filter">
-					fnsku:
-                    <el-input style="width:150px" placeholder="请输入fnsku" v-model.trim="search_fnsku"></el-input>
+					Fnsku:
+                    <el-input style="width:150px" placeholder="请输入Fnsku" v-model.trim="search_fnsku"></el-input>
                     <el-button @click="clear_filter" type="default">重置</el-button>
                     <el-button @click="filter_product" type="primary">查询</el-button>
                 </div>
@@ -18,7 +18,7 @@
 			<br><br>
 			<el-table :data="data" border style="width: 100%" model="form" ref="multipleTable" @selection-change="handleSelectionChange">
 				<!-- <el-table-column type="selection" width="55"></el-table-column> -->
-				<el-table-column prop="fnsku" label="FNSKU" width="250">
+				<el-table-column prop="fnsku" label="Fnsku" width="250">
 				</el-table-column>
 				<el-table-column prop="stock_sum" label="库存" width="150">
 				</el-table-column>

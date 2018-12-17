@@ -14,8 +14,8 @@
 						<el-option v-for="item in options" :key="item.id" :label="item.name" :value="item.id"></el-option>
 						<infinite-loading :on-infinite="onInfinite" ref="infiniteLoading"></infinite-loading>
 					</el-select>
-					fnsku:
-					<el-input style="width:150px" placeholder="请输入fnsku" v-model="search_fnsku"></el-input>
+					Fnsku:
+					<el-input style="width:150px" placeholder="请输入Fnsku" v-model="search_fnsku"></el-input>
 					<el-button @click="clear_filter" type="default">重置</el-button>
 					<el-button @click="filter_fnsku" type="primary">查询</el-button>
 				</div>
@@ -23,7 +23,7 @@
 			<br><br>
 			<el-table :data="data" border style="width: 100%" ref="multipleTable" @selection-change="handleSelectionChange">
 				<el-table-column type="selection" width="55"></el-table-column>
-				<el-table-column prop="fnsku" label="fnsku" width="200" show-overflow-tooltip>
+				<el-table-column prop="fnsku" label="Fnsku" width="200" show-overflow-tooltip>
 				</el-table-column>
 				<el-table-column prop="arrive_sum" label="未上架数量" width="150">
 				</el-table-column>

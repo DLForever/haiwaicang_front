@@ -9,8 +9,8 @@
 		<div class="container">
 			<div class="handle-box">
 				<div class="fnsku_filter">
-					fnsku:
-                    <el-input style="width:150px" placeholder="请输入fnsku" v-model.trim="search_fnsku"></el-input>
+					Fnsku:
+                    <el-input style="width:150px" placeholder="请输入Fnsku" v-model.trim="search_fnsku"></el-input>
                     <el-button @click="clear_filter" type="default">重置</el-button>
                     <el-button @click="filter_ware" type="primary">查询</el-button>
                 </div>

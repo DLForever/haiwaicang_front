@@ -72,10 +72,10 @@
 					{
 						icon: 'el-icon-news',
 						index: '4',
-						title: '货物管理',
+						title: '库存管理',
 						subs: [{
 							index: 'goodsmanage',
-							title: '货物管理'
+							title: '库存管理'
 						}, ]
 					},
 					{

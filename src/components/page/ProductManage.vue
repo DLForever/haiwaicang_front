@@ -18,8 +18,8 @@
                 <div class="fnsku_filter">
                     店铺名:
                     <el-input style="width:150px" placeholder="请输入店铺名" v-model.trim="search_shopname"></el-input>
-                    fnsku:
-                    <el-input style="width:150px" placeholder="请输入fnsku" v-model.trim="search_fnsku"></el-input>
+                    Fnsku:
+                    <el-input style="width:150px" placeholder="请输入Fnsku" v-model.trim="search_fnsku"></el-input>
                     <el-button @click="clear_filter" type="default">重置</el-button>
                     <el-button @click="filter_product" type="primary">查询</el-button>
                 </div>
@@ -32,7 +32,7 @@
                 </el-table-column>
                 <el-table-column prop="erp_number" label="erp 编码" show-overflow-tooltip>
                 </el-table-column>
-                <el-table-column prop="fnsku" label="FNSKU" show-overflow-tooltip>
+                <el-table-column prop="fnsku" label="Fnsku" show-overflow-tooltip>
                 </el-table-column>
                 <el-table-column prop="name" label="产品名称" show-overflow-tooltip>
                 </el-table-column>
@@ -152,7 +152,7 @@
             </span>
         </el-dialog>
 
-    <!-- 查看产品图片 -->
+        <!-- 查看产品图片 -->
         <el-dialog title="产品图片" :visible.sync="productVisible" width="20%" @close="closeProduct">
             <el-table :data="picturesProductList" border style="width: 100%">
                 <el-table-column prop="sum" label="产品图片">
@@ -262,7 +262,7 @@
                 paginationShow: true,
                 search_fnsku: '',
                 search_shopname: '',
-                totals: 1,
+                totals: 0,
                 form: {
                     name: '',
                     date: '',

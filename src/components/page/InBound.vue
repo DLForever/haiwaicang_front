@@ -17,11 +17,11 @@
 									<infinite-loading :on-infinite="onInfiniteBatch" ref="infiniteLoading2"></infinite-loading>
 								</el-select>
 							</el-form-item>
-							<el-form-item label="物流编号/订单编码" required>
+							<el-form-item label="追踪编码/订单编码" required>
 								<table class="table text-center">
 									<tbody v-for="(p,index) in form">
 										<td>
-											<el-input v-model.trim="p.logistics_number" placeholder="物流编号"></el-input>
+											<el-input v-model.trim="p.logistics_number" placeholder="追踪编码"></el-input>
 										</td>
 										<!-- <i class="el-icon-circle-plus" @click="orderAdd(index)" :disabled="false"></i>
 										<span>&nbsp</span>

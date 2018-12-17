@@ -1,8 +1,8 @@
 <template>
 	<div class="login-wrap">
-		<div class="ms-title">海外仓系统</div>
 		<div class="ms-login">
-			<el-form :model="ruleForm" :rules="rules" status-icon ref="ruleForm" label-width="0px" class="demo-ruleForm">
+		<div class="ms-title">海外仓系统</div>
+			<el-form :model="ruleForm" :rules="rules" status-icon ref="ruleForm" label-width="0px" class="ms-content">
 				<el-form-item prop="username">
 					<el-input v-model.trim="ruleForm.username" placeholder="用户名"></el-input>
 				</el-form-item>
@@ -256,7 +256,7 @@
 </script>
 
 <style scoped>
-	.login-wrap {
+	/*.login-wrap {
 		position: relative;
 		width: 100%;
 		height: 100%;
@@ -291,5 +291,48 @@
 	.login-btn button {
 		width: 100%;
 		height: 36px;
-	}
+	}*/
+
+	.login-wrap{
+        position: relative;
+        width:100%;
+        height:100%;
+        background-image: url(../../../static/img/login-bg.png);
+        background-size: 100%;
+    }
+
+	.ms-title{
+        width:100%;
+        line-height: 50px;
+        text-align: center;
+        font-size:20px;
+        color: #fff;
+        border-bottom: 1px solid #ddd;
+    }
+    .ms-login{
+        position: absolute;
+        left:50%;
+        top:35%;
+        width:350px;
+        margin:-190px 0 0 -175px;
+        border-radius: 5px;
+        background: rgba(255,255,255, 0.3);
+        overflow: hidden;
+    }
+    .ms-content{
+        padding: 30px 30px;
+    }
+    .login-btn{
+        text-align: center;
+    }
+    .login-btn button{
+        width:100%;
+        height:36px;
+        margin-bottom: 10px;
+    }
+    .login-tips{
+        font-size:12px;
+        line-height:30px;
+        color:#fff;
+    }
 </style>

@@ -15,8 +15,12 @@
 						<el-option v-for="item in options" :label="item.name" :value="item.id"></el-option>
 						<infinite-loading :on-infinite="onInfinite" ref="infiniteLoading"></infinite-loading>
 					</el-select>
-					fnsku:
-                    <el-input style="width:150px" placeholder="请输入fnsku" v-model.trim="search_fnsku"></el-input>
+					Fnsku:
+                    <el-input style="width:150px" placeholder="请输入Fnsku" v-model.trim="search_fnsku"></el-input>
+                    状态:
+					<el-select v-model="statusSelect" placeholder="请选择" class="handle-select mr10">
+						<el-option v-for="item in statusOptions" :key="item.value" :label="item.label" :value="item.value"></el-option>
+					</el-select>
                     <el-button @click="clear_search" type="default">重置</el-button>
                     <el-button @click="filter_inbound" type="primary">查询</el-button>
                 </div>
@@ -71,9 +75,9 @@
 								<!-- <el-dropdown-item>
 									<el-button @click="sendProduct(scope.$index, scope.row)" type="text">&nbsp&nbsp&nbsp发&nbsp货&nbsp&nbsp&nbsp</el-button>
 								</el-dropdown-item> -->
-								<el-dropdown-item>
+								<!-- <el-dropdown-item>
 									<el-button @click="printStock(scope.$index, scope.row)" type="text">打印出库单&nbsp&nbsp&nbsp</el-button>
-								</el-dropdown-item>
+								</el-dropdown-item> -->
 								<el-dropdown-item>
 									<el-button @click="handleDelete(scope.$index, scope.row)" type="text">&nbsp&nbsp&nbsp删&nbsp除&nbsp&nbsp&nbsp</el-button>
 								</el-dropdown-item>
@@ -108,7 +112,8 @@
 					<el-table-column label="新标" width="120px">
 						<template slot-scope="scope">
 							<!-- <span>{{scope.row.pictures[0]}}</span> -->
-							<img class="img_fnsku" v-if="scope.row.pictures[0] != undefined && !(scope.row.pictures[0].url.url.match(/.pdf/))" :src="$axios.defaults.baseURL+scope.row.pictures[0].url.url"/>
+							<span v-if="scope.row.pictures.length === 0">无</span>
+							<img class="img_fnsku" v-else-if="scope.row.pictures[0] != undefined && !(scope.row.pictures[0].url.url.match(/.pdf/))" :src="$axios.defaults.baseURL+scope.row.pictures[0].url.url"/>
 							<a v-else :href="$axios.defaults.baseURL+scope.row.pictures[0].url.url" target="_blank">{{scope.row.pictures[0].url.url.split('/').pop()}}</a>
 							<!-- <span v-else>无</span> -->
 						</template>
@@ -140,6 +145,7 @@
 					<el-table-column prop="sum" label="数量"></el-table-column>
 					<el-table-column prop="box_size" label="箱子尺寸(长*宽*高)"></el-table-column>
 					<el-table-column prop="weight" label="箱子重量"></el-table-column>
+					<el-table-column prop="repeat" label="箱子个数"></el-table-column>
 				</el-table>
 			</div>
 			<!-- </el-scrollbar>
@@ -167,13 +173,14 @@
 		<!-- 检查提示框 -->
 		<el-dialog title="详情" :visible.sync="checkVisible" width="65%" @close="closeCheckVisible">
 			<el-table :data="checkData" border style="width: 100%">
-				<el-table-column prop="total" label="总数"></el-table-column>
+				<el-table-column prop="total" label="货物总数"></el-table-column>
 				<el-table-column prop="box_sum" label="箱子数量"></el-table-column>
 			</el-table>
 			<br>
 			<el-table v-if="this.checkData3.length != 0" :data="checkData3" border style="width: 100%">
-				<el-table-column prop="sum" label="数量"></el-table-column>
+				<el-table-column prop="sum" label="货物数量(每箱)"></el-table-column>
 				<el-table-column prop="weight" label="箱子重量"></el-table-column>
+				<el-table-column prop="repeat" label="箱子数量"></el-table-column>
 			</el-table>
 			<br>
 			<el-table :data="checkData2" border style="width: 100%">
@@ -265,10 +272,12 @@
 								</td>
 								<td>
 									<!-- <td> -->
-										<el-input v-model.trim="q.sum" placeholder="计划数量"></el-input>
+									<el-input v-model.trim="q.sum" placeholder="计划数量"></el-input>
 									<!-- </td> -->
 								</td>
 							</tr>
+							<el-input-number v-model="p.repeat" :min="1" label="箱子重复次数"></el-input-number>
+							<br/>
 							<span>-----</span>
 						</tbody>
 					</table>
@@ -350,6 +359,7 @@
 				form: [{
 					boxes_id: '',
 					boxes_weight: '',
+					repeat: 1,
 					form_branch: [{
 						fnsku: '',
 						sum: ''
@@ -358,6 +368,7 @@
 				new_form: {
 					boxes_id: '',
 					boxes_weight: '',
+					repeat: 1,
 					form_branch: [{
 						fnsku: '',
 						sum: ''
@@ -401,7 +412,9 @@
 				check_id: undefined,
 				sendProductId: undefined,
 				importStockTable:[{id:1},{id:2},{id:3},{id:4},{id:5},{id:6},{id:7},{id:8},{id:9},{id:10}],
-				search_fnsku: ''
+				search_fnsku: '',
+				statusOptions: [{value: 12, label: '待装箱'}, {value: 4, label: '待结算'}, {value: 8, label: '待删除'}, {value: 5, label: '已结算'}],
+				statusSelect: '',
 			}
 		},
 		created() {
@@ -429,11 +442,12 @@
 			//类型转换
 			statusFilter(status) {
 				const statusMap = {
-					5: 'primary',
-					1: 'warning',
+					5: 'success',
+					12: 'warning',
 					8: 'danger',
 					2: 'success',
-					7: 'info'
+					7: 'info',
+					4: 'warning',
 				}
 				return statusMap[status]
 			},
@@ -496,7 +510,7 @@
 				}
 			},
 			getData() {
-				this.$axios.get('/admin/outbound_orders?page=' + this.cur_page + '&user_id=' + this.select_cate + '&wms=false' + '&out=false&fnsku=' + this.search_fnsku, {
+				this.$axios.get('/admin/outbound_orders?page=' + this.cur_page + '&user_id=' + this.select_cate + '&wms=false' + '&out=false&fnsku=' + this.search_fnsku + '&status=' + this.statusSelect, {
 					headers: {
 						'Authorization': localStorage.getItem('token_admin')
 					},
@@ -524,7 +538,7 @@
 			filter_inbound() {
 				this.paginationShow = false
 				this.cur_page = 1
-				this.$axios.get('/admin/outbound_orders?page=' + this.cur_page + '&user_id=' + this.select_cate + '&wms=false' + '&out=false&fnsku=' + this.search_fnsku, {
+				this.$axios.get('/admin/outbound_orders?page=' + this.cur_page + '&user_id=' + this.select_cate + '&wms=false' + '&out=false&fnsku=' + this.search_fnsku + '&status=' + this.statusSelect, {
 					headers: {
 						'Authorization': localStorage.getItem('token_admin')
 					},
@@ -554,6 +568,7 @@
 				this.cur_page = 1
 				this.select_cate = ''
 				this.search_fnsku = ''
+				this.statusSelect = ''
 				this.getData()
 			},
 			getUser(callback = undefined) {
@@ -736,6 +751,7 @@
 				let weight = []
 				let sum = []
 				let fnsku = []
+				let repeat = []
 				this.form.forEach((data) => {
 					let temp_sum = []
 					let temp_fnsku = []
@@ -747,10 +763,12 @@
 					fnsku.push(temp_fnsku)
 					weight.push(data['boxes_weight'])
 					box_ids.push(data['boxes_id'])
+					repeat.push(data['repeat'])
 				})
 				let params = {
 					box_ids: box_ids,
 					weight: weight,
+					repeat: repeat,
 					sum: sum,
 					fnsku: fnsku,
 					remark: this.package_ramark
@@ -775,6 +793,7 @@
 				this.form = [{
 					boxes_id: '',
 					boxes_weight: '',
+					repeat: 1,
 					form_branch: [{
 						fnsku: '',
 						sum: ''
@@ -837,9 +856,9 @@
 				}
 				if(!this.check_doneDisabled) {
 					this.check_doneDisabled = true
-					setTimeout(() => {
-						this.check_doneDisabled = false
-					}, 5000)
+					// setTimeout(() => {
+					// 	this.check_doneDisabled = false
+					// }, 5000)
 					this.$axios.post('/admin/outbound_orders/' + this.check_id + '/check', params, {
 						headers: {
 							'Authorization': localStorage.getItem('token_admin')
@@ -850,6 +869,7 @@
 							this.checkVisible = false
 							this.$message.success('审核成功')
 						}
+						this.check_doneDisabled = false
 					}).catch((res) => {
 						console.log('error')
 					})
@@ -868,6 +888,7 @@
 				this.new_form = {
 					boxes_id: '',
 					boxes_weight: '',
+					repeat: 1,
 					form_branch: [{
 						fnsku: '',
 						sum: ''
@@ -974,11 +995,12 @@
 				this.delVisible = false;
 			},
 			printStock(index, row) {
-				if(row.is_mix) {
-					this.is_mix = '可混装'
-				} else {
-					this.is_mix = '不混装'
-				}
+				this.is_mix = row.is_mix
+				// if(row.is_mix) {
+				// 	this.is_mix = '可混装'
+				// } else {
+				// 	this.is_mix = '不混装'
+				// }
 				// this.barcode = 'hwc_7896541'
 				this.barcode = 'hwc_' + row.id
 				this.importStockVisible = true
@@ -1073,9 +1095,9 @@
 				} else if (status == 3) {
 					return "待换标"
 				} else if (status == 4) {
-					return "待审核"
+					return "等待结算"
 				}else if (status == 5) {
-					return "审核通过"
+					return "已结算"
 				}else if(status == 8) {
 					return "删除待审核"
 				} else if(status == 6) {
@@ -1089,7 +1111,7 @@
 				}else if (status == 11) {
 					return "待拣货"
 				}else if (status == 12) {
-					return '已换标'
+					return '待装箱'
 				} else {
 					return '其他'
 				}
