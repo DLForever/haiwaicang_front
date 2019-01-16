@@ -76,6 +76,7 @@
 							localStorage.setItem('ms_username', this.ruleForm.username)
 							localStorage.setItem('token', res.data.data.token)
 							localStorage.setItem('notifyid', JSON.stringify([])) //保存消息id到本地
+							// localStorage.setItem('notifyidHoliday', '')
 							console.log(localStorage.getItem('token'))
 							this.$router.push('/');
 						}).catch((res) => {

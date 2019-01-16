@@ -11,6 +11,8 @@
 				<div class="fnsku_filter">
 					Fnsku:
                     <el-input style="width:150px" placeholder="请输入Fnsku" v-model.trim="search_fnsku"></el-input>
+                    店铺名:
+                    <el-input style="width:150px" placeholder="请输入Fnsku" v-model.trim="shopname"></el-input>
                     <el-button @click="clear_filter" type="default">重置</el-button>
                     <el-button @click="filter_product" type="primary">查询</el-button>
                 </div>
@@ -21,6 +23,8 @@
 				<el-table-column prop="fnsku" label="Fnsku" width="250">
 				</el-table-column>
 				<el-table-column prop="stock_sum" label="库存" width="150">
+				</el-table-column>
+				<el-table-column prop="shopname" label="店铺" width="150">
 				</el-table-column>
 				<el-table-column prop="arrive_sum" label="未上架数量" width="120">
 				</el-table-column>
@@ -214,13 +218,17 @@
 				},
 				search_fnsku: '',
 				paginationShow: true,
+				shopname: ''
 			}
 		},
 		created() {
 			this.getData();
+			this.getNotify()
 		},
 		watch: {
-			"$route": "getData"
+			"$route": "getData",
+			"search_fnsku": "fnsku_in",
+			"shopname": "shopname_in"
 		},
 		computed: {
 			data() {
@@ -254,12 +262,15 @@
 				if(process.env.NODE_ENV === 'development') {
 					//					this.url = '/ms/table/list';
 				};
-				this.$axios.get('/cargos/search_by_fnsku?page=' + this.cur_page + '&query=' + this.search_fnsku, {
+				this.$axios.get('/cargos/search_by_fnsku?page=' + this.cur_page + '&query=' + this.search_fnsku + '&shopname=' + this.shopname, {
 					headers: {
 						'Authorization': localStorage.getItem('token')
 					}
 				}).then((res) => {
 					if(res.data.code == 200) {
+						res.data.data.forEach((data) => {
+							data.shopname = data.product.shopname
+						})
 						this.tableData = res.data.data
 						this.totals = res.data.count
 						this.paginationShow = true
@@ -271,16 +282,20 @@
 			filter_product() {
 				this.paginationShow = false
 				this.cur_page = 1
-				this.$axios.get('/cargos/search_by_fnsku?page=' + this.cur_page + '&query=' + this.search_fnsku, {
+				this.$axios.get('/cargos/search_by_fnsku?page=' + this.cur_page + '&query=' + this.search_fnsku + '&shopname=' + this.shopname, {
 					headers: {
 						'Authorization': localStorage.getItem('token')
 					}
 				}).then((res) => {
 					if(res.data.code == 200) {
+						res.data.data.forEach((data) => {
+							data.shopname = data.product.shopname
+						})
 						this.tableData = res.data.data
 						this.totals = res.data.count
+						this.paginationShow = true
 					}
-					this.paginationShow = true
+					
 				}).catch((res) => {
 					console.log('error')
 				})
@@ -289,6 +304,7 @@
 				this.paginationShow = false
 				this.cur_page = 1
 				this.search_fnsku = ''
+				this.shopname = ''
 				this.getData()
 			},
 			search() {
@@ -509,6 +525,12 @@
 			cancelChange() {
 				this.editVisible = false
 				this.fileList = []
+			},
+			fnsku_in() {
+				this.shopname = ''
+			},
+			shopname_in() {
+				this.search_fnsku = ''
 			}
 		}
 	}

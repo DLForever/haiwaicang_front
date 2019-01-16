@@ -118,7 +118,7 @@
                         'Authorization': localStorage.getItem('token_admin')
                     },
                 }).then((res) => {
-                    if(res.data.code = 200) {
+                    if(res.data.code == 200) {
                         res.data.data.forEach((data, index) => {
                             this.unread.push(this.unread2)
                             this.unread[index].date = data.created_at.substr(0, 19)
@@ -139,7 +139,7 @@
                         'Authorization': localStorage.getItem('token')
                     },
                 }).then((res) => {
-                    if(res.data.code = 200) {
+                    if(res.data.code == 200) {
                         res.data.data.forEach((data, index) => {
                             this.unread.push(this.unread2)
                             this.unread[index].date = data.created_at.substr(0, 19)
@@ -154,9 +154,6 @@
                     }
                 })
             },
-            readover() {
-                // this.$axios.patch('/admin/notifications/' + )
-            },
             handleRead(index, row) {
                 if(localStorage.getItem('token_admin')) {
                     this.$axios.patch('/admin/notifications/' + row.id, '',{
@@ -164,7 +161,7 @@
                             'Authorization': localStorage.getItem('token_admin')
                         },
                     }).then((res) => {
-                        if(res.data.code = 200) {
+                        if(res.data.code == 200) {
                             this.unread.splice(index, 1);
                             this.changeMessageCount(this.unread.length)
                             this.$message.success('已读消息')
@@ -178,7 +175,7 @@
                             'Authorization': localStorage.getItem('token')
                         },
                     }).then((res) => {
-                        if(res.data.code = 200) {
+                        if(res.data.code == 200) {
                             this.unread.splice(index, 1)
                             this.changeMessageCount(this.unread.length)
                             this.$message.success('已读消息')

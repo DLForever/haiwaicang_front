@@ -184,6 +184,9 @@
 			console.log('Hi,i am comming')
 			next()
 		},
+		created() {
+            this.getNotify()
+        },
 		methods: {
 			submitUpload(content) {
 				this.formData = new FormData();

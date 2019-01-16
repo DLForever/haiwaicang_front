@@ -156,6 +156,7 @@
 		created() {
 			this.getData()
 			this.getBatch()
+			this.getNotify()
 		},
 		watch: {
 			"$route": "getData"

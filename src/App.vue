@@ -5,6 +5,18 @@
     	</transition>
     </div>
 </template>
+<script>
+    export default {
+        created() {
+            this.getNotify()
+        },
+        methods: {
+            getNotify() {
+                localStorage.removeItem('notifyidHoliday')
+            }
+        }
+    }
+</script>
 <style>
     @import "../static/css/main.css";
     @import "../static/css/color-dark.css";

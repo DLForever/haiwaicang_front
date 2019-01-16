@@ -20,6 +20,7 @@
 				<el-table-column type="selection" width="55"></el-table-column>
 				<el-table-column prop="name" label="姓名"></el-table-column>
 				<el-table-column prop="username" label="用户名"></el-table-column>
+				<el-table-column prop="usercode" label="客户编码"></el-table-column>
 				<el-table-column prop="phone" label="电话"></el-table-column>
 				<el-table-column prop="email" label="邮箱"></el-table-column>
 				<el-table-column prop="remark" label="备注"></el-table-column>
@@ -81,6 +82,7 @@
 				paginationShow: true,
 				sex: undefined,
 				submitDisable: false,
+				code: ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z"]
 			}
 		},
 		created() {
@@ -112,6 +114,19 @@
 					},
 				}).then((res) => {
 					if(res.data.code == 200) {
+						res.data.data.forEach((data) => {
+							let tempcode =  String(data.id%1000)
+							let tempindex = parseInt(data.id/1000)
+							if(tempcode.length ==1) {
+								tempcode = '00' + tempcode
+							}else if(tempcode.length ==2) {
+								tempcode = '0' + tempcode
+							}else{
+
+							}
+							console.log(tempcode)
+							data.usercode = this.code[tempindex] + tempcode
+						})
 						this.tableData = res.data.data
 						this.totals = res.data.count
 						this.paginationShow = true

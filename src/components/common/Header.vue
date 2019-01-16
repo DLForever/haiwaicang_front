@@ -91,7 +91,7 @@
                     localStorage.removeItem('token')
                     localStorage.removeItem('token_admin')
                     localStorage.removeItem('notifyid')
-                    
+                    localStorage.removeItem('notifyidHoliday')
 //                  this.token = ''
 //                  this.token_admin = ''
                     this.$router.push('/login');

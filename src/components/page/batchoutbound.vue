@@ -55,6 +55,9 @@
 				isDisabled: false
 			}
 		},
+		created() {
+            this.getNotify()
+        },
 		methods: {
 			onSubmit() {
 				if(this.xlsxList.length == 0) {

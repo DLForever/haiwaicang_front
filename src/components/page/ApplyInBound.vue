@@ -44,6 +44,9 @@
 				isDisabled: false
 			}
 		},
+		created() {
+            this.getNotify()
+        },
 		methods: {
 			onSubmit() {
 				if(this.fileList.length == 0) {

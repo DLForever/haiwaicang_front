@@ -548,6 +548,7 @@
 			this.getData()
 			this.getDatas()
 			this.getBatchInbound()
+			this.getNotify()
 		},
 		computed: {
 			isDisableBu() {

@@ -286,6 +286,7 @@
         },
         created() {
             this.getData();
+            this.getNotify()
         },
         watch: {
         	"$route": "getData"

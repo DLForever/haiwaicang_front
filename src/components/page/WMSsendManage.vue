@@ -308,6 +308,7 @@
 				search_fnsku: '',
 				statusOptions: [{value: 6, label: '待发货'}, {value: 10, label: '已完成'}],
 				statusSelect: '',
+				query: undefined,
 			}
 		},
 		created() {

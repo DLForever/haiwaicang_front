@@ -15,7 +15,7 @@
                             <!--<div class="user-info-list">上次登录时间：<span>2018-01-01</span></div>-->
                             <!--<div class="user-info-list">上次登录地点：<span>东莞</span></div>-->
                         </el-card>
-                        <!--<el-card shadow="hover">
+                        <!-- <el-card shadow="hover">
                             <div slot="header" class="clearfix">
                                 <span>语言详情</span>
                             </div>
@@ -27,7 +27,7 @@
                             <el-progress :percentage="11.9"></el-progress>
                             HTML
                             <el-progress :percentage="1.1" color="#f56c6c"></el-progress>
-                        </el-card>-->
+                        </el-card> -->
                     </el-col>
                 </el-row>
             </el-col>
@@ -67,17 +67,14 @@
                         </el-card>
                     </el-col>
                 </el-row>-->
-                <!--<el-card shadow="hover" :body-style="{ height: '304px'}">
+                <!-- <el-card shadow="hover" :body-style="{ height: '104px'}">
                     <div slot="header" class="clearfix">
-                        <span>待办事项</span>
+                        <span>放假通知</span>
                         <el-button style="float: right; padding: 3px 0" type="text">添加</el-button>
                     </div>
-                    <el-table :data="todoList" :show-header="false" height="304" style="width: 100%;font-size:14px;">
-                        <el-table-column width="40">
-                            <template slot-scope="scope">
-                                <el-checkbox v-model="scope.row.status"></el-checkbox>
-                            </template>
-                        </el-table-column>
+                    <div class="todo-item">{{notify[0].title}}</div>
+                    <el-table :data="notify" :show-header="false" height="104" style="width: 100%;font-size:14px;">
+
                         <el-table-column>
                             <template slot-scope="scope">
                                 <div class="todo-item" :class="{'todo-item-del': scope.row.status}">{{scope.row.title}}</div>
@@ -90,8 +87,7 @@
                             </template>
                         </el-table-column>
                     </el-table>
-                </el-card>-->
-
+                </el-card> -->
             </el-col>
         </el-row>
     </div>
@@ -99,10 +95,13 @@
 
 <script>
     export default {
-        name: 'dashboard',
+        // name: 'dashboard',
         data() {
             return {
                 name: localStorage.getItem('ms_username'),
+                notify: [{
+                    title: '尊敬的客户: 根据国家相关部门关于20**节假日安排的通知，结合本集团实际情况，将于20**年2月7日至18日放假调休，共12天。20**年2月19日(正月十一)正常营业，如有不便，敬请谅解。'
+                }],
                 todoList: [
                     {
                         title: '今天要修复100个bug',
@@ -139,6 +138,24 @@
             		return'普通用户'
             	}
             }
+        },
+        created() {
+            this.getNotify()
+        },
+        methods: {
+            // getNotify() {
+            //     if(localStorage.getItem('notifyidHoliday') != null) {
+            //         return
+            //     }
+            //     this.$notify({
+            //         title: '放假通知',
+            //         message: '尊敬的客户: 根据国家相关部门关于20**节假日安排的通知，结合本集团实际情况，将于20**年2月7日至18日放假调休，共12天。20**年2月19日(正月十一)正常营业,如有不便,敬请谅解.',
+            //         position: 'bottom-left',
+            //         onClose: this.CloseNotify,
+            //         duration: 0
+            //     })
+            //     localStorage.setItem('notifyidHoliday', 'notified')
+            // },
         }
     }
 

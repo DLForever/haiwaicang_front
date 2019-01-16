@@ -153,6 +153,7 @@
 		created() {
 			this.getData();
 			this.getBatchInbound()
+			this.getNotify()
 		},
 		props:{
 			getMessageCount:Function

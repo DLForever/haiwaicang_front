@@ -113,9 +113,9 @@
 						<template slot-scope="scope">
 							<!-- <span>{{scope.row.pictures[0]}}</span> -->
 							<span v-if="scope.row.pictures.length === 0">无</span>
+							<!-- <span v-else-if="scope.row.pictures[0].url.url != null">无</span> -->
 							<img class="img_fnsku" v-else-if="scope.row.pictures[0] != undefined && !(scope.row.pictures[0].url.url.match(/.pdf/))" :src="$axios.defaults.baseURL+scope.row.pictures[0].url.url"/>
 							<a v-else :href="$axios.defaults.baseURL+scope.row.pictures[0].url.url" target="_blank">{{scope.row.pictures[0].url.url.split('/').pop()}}</a>
-							<!-- <span v-else>无</span> -->
 						</template>
 						<!-- <template slot-scope="scope">
 							<img class="img_fnsku" :src="$axios.defaults.baseURL+scope.row.pictures[0].url.url" />					
@@ -405,6 +405,7 @@
 				importStockVisible: false,
 				statusOptions: [{value: 11, label: '待拣货'}, {value: 2, label: '拣货中'}, {value: 3, label: '待换标'}],
 				statusSelect: '',
+				query: undefined,
 			}
 		},
 		created() {
