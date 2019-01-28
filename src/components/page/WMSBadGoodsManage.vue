@@ -3,7 +3,7 @@
 		<div class="crumbs">
 			<el-breadcrumb separator="/">
 				<el-breadcrumb-item><i class="el-icon-tickets"></i> WMS货物订单</el-breadcrumb-item>
-				<el-breadcrumb-item>货物管理</el-breadcrumb-item>
+				<el-breadcrumb-item>不良品管理</el-breadcrumb-item>
 			</el-breadcrumb>
 		</div>
 		<div class="container">
@@ -23,26 +23,13 @@
 			<br><br>
 			<el-table :data="data" border style="width: 100%" ref="multipleTable" @selection-change="handleSelectionChange">
 				<el-table-column type="selection" width="55"></el-table-column>
-				<el-table-column fixed prop="fnsku" label="Fnsku" width="200" show-overflow-tooltip>
+				<el-table-column fixed prop="fnsku" label="Fnsku" show-overflow-tooltip>
 				</el-table-column>
-				<el-table-column prop="name" label="名称" width="150" show-overflow-tooltip>
+				<el-table-column prop="name" label="名称" show-overflow-tooltip>
 				</el-table-column>
-				<el-table-column prop="usercode" label="用户" width="80">
+				<el-table-column prop="usercode" label="用户">
 				</el-table-column>
-				<el-table-column prop="arrive_sum" label="未上架数量" width="150">
-				</el-table-column>
-				<el-table-column prop="stock_sum" label="库存数量" width="150">
-				</el-table-column>
-				<el-table-column prop="done_sum" label="已发出数量" width="150">
-				</el-table-column>
-				<el-table-column prop="lock_sum" label="已锁定数量" width="120">
-				</el-table-column>
-				<el-table-column prop="remark" label="备注" show-overflow-tooltip>
-				</el-table-column>
-				<el-table-column prop="status" label="状态" width="120">
-					<template slot-scope="scope">
-						<el-tag :type="scope.row.status | statusFilter">{{getStatusName(scope.row.status)}}</el-tag>
-					</template>
+				<el-table-column prop="defect_sum" label="不良品数量">
 				</el-table-column>
 				<el-table-column prop="created_at" :formatter="formatter_created_at" label="创建时间" width="150">
 				</el-table-column>
@@ -59,7 +46,10 @@
 									<el-button @click="detailsShow(scope.$index, scope.row)" type="text">详情</el-button>
 								</el-dropdown-item>
 								<el-dropdown-item>
-									<el-button @click="grounding(scope.$index, scope.row)" type="text">上架</el-button>
+									<el-button @click="handleTransfer(scope.$index, scope.row)" type="text">转良品</el-button>
+								</el-dropdown-item>
+								<el-dropdown-item>
+									<el-button @click="handleOut(scope.$index, scope.row)" type="text">出库</el-button>
 								</el-dropdown-item>
 							</el-dropdown-menu>
 						</el-dropdown>
@@ -72,42 +62,38 @@
 			</div>
 		</div>
 
-		<!-- 上架弹出框 -->
+		<!-- 转换弹出框 -->
 		<el-dialog title="编辑" :visible.sync="editVisible" width="40%" @close="closePutVisible">
-			<el-table :data="product_store_ins" border style="width: 100%">
-				<el-table-column prop="fnsku" label="fnsku"></el-table-column>
-				<el-table-column prop="arrive_sum" label="到达数量"></el-table-column>
-			</el-table>
-			<br>
 			<el-table :data="waretable" border style="width: 100%">
 				<el-table-column label="库位选择">
 					<template slot-scope="scope">
-						<el-select v-model="scope.row.ware" placeholder="选择库位" class="handle-select mr10">
+						<el-select v-model="ware_id" placeholder="选择库位" class="handle-select mr10">
 							<el-option v-for="item in wareoptions" :label="item.name" :value="item.id"></el-option>
 							<infinite-loading :on-infinite="onInfinite_ware" ref="infiniteLoading"></infinite-loading>
 						</el-select>
 					</template>
 				</el-table-column>
-				<el-table-column label="上架数量">
+				<el-table-column label="转换数量">
 					<template scope="scope">
-						<el-input class="input-new-tag" placeholder="输入数量" v-model.trim="scope.row.sum" ref="saveTagInput" size="small">
-						</el-input>
+						<el-input-number :min="0" :max="transferMaxSum" v-model="transferSum"></el-input-number>
+						<!-- <el-input class="input-new-tag" placeholder="输入数量" v-model.trim="transferSum" ref="saveTagInput" size="small">
+						</el-input> -->
 					</template>
 				</el-table-column>
 			</el-table>
 			<br>
 			<el-form ref="form" :model="form" label-width="60px">
-				<div class="newWare">
+				<!-- <div class="newWare">
 					<el-button @click="createWare">添加库位</el-button>
 					<el-button @click="back" :disabled="isDisableBu" type="danger">撤销</el-button>
 				</div>
 				<br>
 				<el-form-item label="不良品">
 					<el-input-number :min="0" v-model="bad_number"></el-input-number>
-				</el-form-item>
+				</el-form-item> -->
 				
 				<el-form-item label="备注">
-					<el-input v-model="form.remark"></el-input>
+					<el-input v-model="remark"></el-input>
 				</el-form-item>
 			</el-form>
 			<span slot="footer" class="dialog-footer">
@@ -117,16 +103,18 @@
 		</el-dialog>
 
 		<!-- 详情提示框 -->
-		<el-dialog title="详情" :visible.sync="detailVisible" width="50%">
+		<el-dialog title="不良品记录" :visible.sync="detailVisible" width="50%">
 			<el-table :data="form.cargo_ware_houses" border style="width: 100%">
-				<el-table-column prop="fnsku" label="fnsku"></el-table-column>
-				<el-table-column prop="ware_house_name" label="所在库位"></el-table-column>
 				<el-table-column prop="sum" label="数量"></el-table-column>
-				<el-table-column prop="lock_sum" label="锁定数量"></el-table-column>
-				<el-table-column label="操作">
+				<el-table-column prop="type" label="类型">
 					<template slot-scope="scope">
-						<el-button type="text" @click="handleTransfer(scope.$index, scope.row)">转成不良品</el-button>
+						<el-tag :type="scope.row.status | statusFilterdefect">{{getStatusNameDefect(scope.row.status)}}</el-tag>
 					</template>
+				</el-table-column>
+				<el-table-column prop="remark" label="备注"></el-table-column>
+				<el-table-column prop="created_at" :formatter="formatter_created_at" label="创建时间" width="150">
+				</el-table-column>
+				<el-table-column prop="updated_at" :formatter="formatter_updated_at" label="更新时间" width="150">
 				</el-table-column>
 			</el-table>
 		</el-dialog>
@@ -140,19 +128,19 @@
             </span>
 		</el-dialog>
 
-		<!-- 转换提示框 -->
-        <el-dialog title="编辑" :visible.sync="transferVisible" width="50%">
+		<!-- 出库提示框 -->
+        <el-dialog title="编辑" :visible.sync="outVisible" width="50%">
         	<el-form ref="form" label-width="80px">
-        		<el-form-item label="数量" required>
-        			<el-input-number :min="0" :max="transferMax" v-model="transferSum"></el-input-number>
+        		<el-form-item label="数量">
+        			<el-input-number :min="0" :max="outMax" v-model="outSum"></el-input-number>
         		</el-form-item>
-        		<el-form-item label="备注" required>
+        		<el-form-item label="备注">
         			<el-input v-model.trim="remark"></el-input>
         		</el-form-item>
         	</el-form>
         	<span slot="footer" class="dialog-footer">
-                <el-button @click="transferVisible = false">取 消</el-button>
-                <el-button type="primary" @click="onSubmit" :disabled="submitDisable">确 定</el-button>
+                <el-button @click="outVisible = false">取 消</el-button>
+                <el-button type="primary" @click="onSubmitOut" :disabled="submitDisable">确 定</el-button>
             </span>
 		</el-dialog>
 	</div>
@@ -216,13 +204,17 @@
 				},
 				code: ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z"],
 				bad_number: 0,
-				transferVisible: false,
+				ware_id: '',
 				transferSum: 0,
+				cargo_id: '',
 				remark: '',
-				transferMax: 0,
+				transferMaxSum: 0,
+				outVisible: false,
+				outMax: 0,
+				outSum: 0,
+				outId: undefined,
 				submitDisable: false,
-				transferId: undefined,
-				cargo_warehouse_id: undefined
+				outId2: undefined
 			}
 		},
 		created() {
@@ -249,10 +241,11 @@
 		},
 		filters: {
 			//类型转换
-			statusFilter(status) {
+			statusFilterdefect(status) {
 				const statusMap = {
-					1: 'success',
-					2: 'danger'
+					1: 'warning',
+					2: 'success',
+					3: 'default',
 				}
 				return statusMap[status]
 			},
@@ -273,7 +266,7 @@
 			},
 			// 获取 easy-mock 的模拟数据
 			getData() {
-				this.$axios.get("/admin/cargos/search_by_fnsku?page=" + this.cur_page + '&query=' + this.search_fnsku.trim() + '&user_id=' + this.select_cate , {
+				this.$axios.get("/admin/cargos/search_by_fnsku?page=" + this.cur_page + '&defect=true' + '&query=' + this.search_fnsku.trim() + '&user_id=' + this.select_cate , {
 					headers: {
 						'Authorization': localStorage.getItem('token_admin')
 					}
@@ -345,31 +338,24 @@
 				}]
 				this.editVisible = false
 			},
-			// 上架
+			// 不良品换良品
 			saveEdit(form) {
-				console.log(this.waretable)
-				let sum = []
-				let ware_house_ids = []
-				this.waretable.forEach((data) => {
-					sum.push(data.sum)
-					ware_house_ids.push(data.ware)
-				})
 				let params = {
-					sum: sum,
-					ware_house_ids: ware_house_ids,
-					defect: this.bad_number
+					cargo_id: this.cargo_id,
+					sum: this.transferSum,
+					ware_house_id: this.ware_id,
+					remark: this.remark
 				}
-				this.$axios.post('/admin/cargos/' + this.form.id + '/putaway', params, {
+				this.$axios.post('/admin/transfer_records/out', params, {
 					headers: {
 						'Authorization': localStorage.getItem('token_admin')
 					},
 				}).then((res) => {
 					if(res.data.code == 200) {
 						this.editVisible = false;
+						this.detailVisible = false
 						this.getData()
-						this.$message.success('入库完成')
-						this.bround_sum = ''
-						this.ware_house_ids = []
+						this.$message.success('转换完成')
 					}
 				}).catch((res) => {
 					console.log('error')
@@ -445,7 +431,7 @@
 				// }
 				this.cur_page = 1
 				this.paginationShow = false
-				this.$axios.get("/admin/cargos/search_by_fnsku?page=" + this.user_page + '&query=' + this.search_fnsku.trim() + '&user_id=' + this.select_cate , {
+				this.$axios.get("/admin/cargos/search_by_fnsku?page=" + this.user_page + '&defect=true' + '&query=' + this.search_fnsku.trim() + '&user_id=' + this.select_cate , {
 					headers: {
 						'Authorization': localStorage.getItem('token_admin')
 					},
@@ -528,11 +514,25 @@
 			},
 			detailsShow(index, row) {
 				this.idx = index
-				const item = this.tableData[index]
-				this.form = {
-					cargo_ware_houses: item.cargo_ware_houses,
-				}
-				this.detailVisible = true
+				this.$axios.get('/admin/transfer_records?cargo_id=' + row.product_id, {
+					headers: {
+						'Authorization': localStorage.getItem('token_admin')
+					},
+				}).then((res) => {
+					if(res.data.code == 200) {
+						// res.data.data.forEach((data) => {
+						// 	if(data.transfer_in == false) {
+						// 		data.type = '3'
+						// 	}else if(data.transfer_in == true) {
+						// 		data.type = '4'
+						// 	}
+						// })
+						this.form = {
+							cargo_ware_houses: res.data.data,
+						}
+						this.detailVisible = true
+					}
+				})
 			},
 
 			search() {
@@ -570,11 +570,15 @@
 				this.$message.success('删除成功')
 				this.delVisible = false
 			},
-			getStatusName(status) {
+			getStatusNameDefect(status) {
 				if(status == 1) {
-					return "有库存"
+					return "转不良品"
+				}else if(status == 2){
+					return "转良品"
+				}else if(status == 3){
+					return "不良品出库"
 				} else {
-					return "无库存"
+					return "其他"
 				}
 			},
 			onInfinite_ware(obj) {
@@ -587,30 +591,37 @@
 				}
 			},
 			handleTransfer(index, row) {
+				this.ware_id = ''
 				this.transferSum = 0
-				this.transferMax = row.sum
+				this.transferMaxSum = row.defect_sum
+				this.cargo_id = row.product_id
 				this.remark = ''
-				this.transferId = row.cargo_id
-				this.cargo_warehouse_id = row.id
-				this.transferVisible = true
+				this.editVisible = true
 			},
-			onSubmit() {
+			handleOut(index, row) {
+				this.outMax = row.defect_sum
+				this.outSum = 0
+				this.remark = ''
+				this.outId = row.product_id
+				this.outId2 = row.id
+				this.outVisible = true
+			},
+			onSubmitOut() {
 				this.submitDisable = true
 				let params = {
-					cargo_id: this.transferId,
+					cargo_id: this.outId,
 					remark: this.remark,
-					sum: this.transferSum,
-					cargo_warehouse_id: this.cargo_warehouse_id
+					sum: this.outSum,
 				}
-				this.$axios.post('/admin/transfer_records', params, {
+				this.$axios.delete('/admin/transfer_records/' + this.outId2, {
 					headers: {
 						'Authorization': localStorage.getItem('token_admin')
 					},
+					params
 				}).then((res) => {
 					if(res.data.code == 200) {
-						this.$message.success('转换成功')
-						this.transferVisible = false
-						this.detailVisible = false
+						this.$message.success('出库成功')
+						this.outVisible = false
 						this.getData()
 					}
 				}).catch((res) => {

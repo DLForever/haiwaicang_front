@@ -3,11 +3,25 @@
 		<div class="crumbs">
 			<el-breadcrumb separator="/">
 				<el-breadcrumb-item><i class="el-icon-tickets"></i> WMS货物订单</el-breadcrumb-item>
-				<el-breadcrumb-item>货物管理</el-breadcrumb-item>
+				<el-breadcrumb-item>盘点管理</el-breadcrumb-item>
 			</el-breadcrumb>
 		</div>
 		<div class="container">
-			<div class="handle-box">
+			用户:
+			<el-select :clearable="true" v-model="select_cate" filterable remote placeholder="选择用户" class="handle-select mr10" :loading="loading" @visible-change="selectVisble" :remote-method="remoteMethod">
+				<el-option v-for="item in options" :key="item.id" :label="item.name" :value="item.id"></el-option>
+				<infinite-loading :on-infinite="onInfinite" ref="infiniteLoading"></infinite-loading>
+			</el-select>
+			&nbsp&nbsp&nbsp&nbsp
+			<el-tooltip class="item" effect="dark" content="不选择用户则导出所有库存数据" placement="right">
+				<el-button type="primary" >
+					<a style="color:#fff;" :href="$axios.defaults.baseURL + '/admin/cargos/export_stock?user_id=' + select_cate + '&token=' + export_token">盘点库存</a>
+				</el-button>
+			</el-tooltip>
+			
+			
+				
+			<!-- <div class="handle-box">
 				<div class="fnsku_filter">
 					用户:
 					<el-select v-model="select_cate" filterable remote placeholder="选择用户" class="handle-select mr10" :loading="loading" @visible-change="selectVisble" :remote-method="remoteMethod">
@@ -69,7 +83,7 @@
 			<div class="pagination">
 				<el-pagination v-if="paginationShow" @current-change="handleCurrentChange" :current-page='cur_page' :page-size="20" layout="prev, pager, next" :total="totals">
 				</el-pagination>
-			</div>
+			</div> -->
 		</div>
 
 		<!-- 上架弹出框 -->
@@ -222,7 +236,8 @@
 				transferMax: 0,
 				submitDisable: false,
 				transferId: undefined,
-				cargo_warehouse_id: undefined
+				cargo_warehouse_id: undefined,
+				export_token: undefined
 			}
 		},
 		created() {
@@ -273,32 +288,33 @@
 			},
 			// 获取 easy-mock 的模拟数据
 			getData() {
-				this.$axios.get("/admin/cargos/search_by_fnsku?page=" + this.cur_page + '&query=' + this.search_fnsku.trim() + '&user_id=' + this.select_cate , {
-					headers: {
-						'Authorization': localStorage.getItem('token_admin')
-					}
-				}, ).then((res) => {
-					if(res.data.code == 200) {
-						res.data.data.forEach((data) => {
-							data.name = data.product.name
-							let tempcode =  String(data.user_id%1000)
-							let tempindex = parseInt(data.user_id/1000)
-							if(tempcode.length ==1) {
-								tempcode = '00' + tempcode
-							}else if(tempcode.length ==2) {
-								tempcode = '0' + tempcode
-							}else{
+				this.export_token = localStorage.getItem('token_admin')
+				// this.$axios.get("/admin/cargos/search_by_fnsku?page=" + this.cur_page + '&query=' + this.search_fnsku.trim() + '&user_id=' + this.select_cate , {
+				// 	headers: {
+				// 		'Authorization': localStorage.getItem('token_admin')
+				// 	}
+				// }, ).then((res) => {
+				// 	if(res.data.code == 200) {
+				// 		res.data.data.forEach((data) => {
+				// 			data.name = data.product.name
+				// 			let tempcode =  String(data.user_id%1000)
+				// 			let tempindex = parseInt(data.user_id/1000)
+				// 			if(tempcode.length ==1) {
+				// 				tempcode = '00' + tempcode
+				// 			}else if(tempcode.length ==2) {
+				// 				tempcode = '0' + tempcode
+				// 			}else{
 
-							}
-							data.usercode = this.code[tempindex] + tempcode
-						})
-						this.tableData = res.data.data
-						this.totals = res.data.count
-						this.paginationShow = true
-					}				
-				}).catch((res) => {
-					this.$message.error(res)
-				})
+				// 			}
+				// 			data.usercode = this.code[tempindex] + tempcode
+				// 		})
+				// 		this.tableData = res.data.data
+				// 		this.totals = res.data.count
+				// 		this.paginationShow = true
+				// 	}				
+				// }).catch((res) => {
+				// 	this.$message.error(res)
+				// })
 			},
 			getWarehouse(callback = undefined) {
 				this.$axios.get('/admin/warehouses?page=' + this.ware_page, {

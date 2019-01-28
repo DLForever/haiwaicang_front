@@ -11,6 +11,8 @@
 				<div class="fnsku_filter">
 					Fnsku:
                     <el-input style="width:150px" placeholder="请输入Fnsku" v-model.trim="search_fnsku"></el-input>
+                    库位:
+                    <el-input style="width:150px" placeholder="请输入库位" v-model.trim="warename"></el-input>
                     <el-button @click="clear_filter" type="default">重置</el-button>
                     <el-button @click="filter_ware" type="primary">查询</el-button>
                 </div>
@@ -71,13 +73,16 @@
 				},
 				search_fnsku: '',
 				paginationShow: true,
+				warename: ''
 			}
 		},
 		created() {
 			this.getData()
 		},
 		watch: {
-			"$route": "getData"
+			"$route": "getData",
+			"search_fnsku": "clear_warename",
+			"warename": "clear_fnsku"
 		},
 		computed: {
 			data() {
@@ -95,7 +100,7 @@
 				this.multipleSelection = val
 			},
 			getData() {
-				this.$axios.get('/admin/warehouses?page=' + this.cur_page + '&fnsku=' + this.search_fnsku, {
+				this.$axios.get('/admin/warehouses?page=' + this.cur_page + '&fnsku=' + this.search_fnsku + '&name=' + this.warename, {
 					headers: {
 						'Authorization': localStorage.getItem('token_admin')
 					},
@@ -121,7 +126,7 @@
 			filter_ware() {
 				this.paginationShow = false
 				this.cur_page = 1
-				this.$axios.get('/admin/warehouses?page=' + this.cur_page + '&fnsku=' + this.search_fnsku, {
+				this.$axios.get('/admin/warehouses?page=' + this.cur_page + '&fnsku=' + this.search_fnsku + '&name=' + this.warename, {
 					headers: {
 						'Authorization': localStorage.getItem('token_admin')
 					},
@@ -148,6 +153,7 @@
 				this.paginationShow = false
 				this.cur_page = 1
 				this.search_fnsku = ''
+				this.warename = ''
 				this.getData()
 			},
 			detailsShow(index, row) {
@@ -158,6 +164,12 @@
 				}
 				this.detailVisible = true
 			},
+			clear_warename() {
+				this.warename = ''
+			},
+			clear_fnsku() {
+				this.search_fnsku = ''
+			}
 		},
 	}
 </script>

@@ -20,7 +20,9 @@
 			<br><br>
 			<el-table :data="data" border style="width: 100%" model="form" ref="multipleTable" @selection-change="handleSelectionChange">
 				<!-- <el-table-column type="selection" width="55"></el-table-column> -->
-				<el-table-column prop="fnsku" label="Fnsku" width="250">
+				<el-table-column fixed prop="fnsku" label="Fnsku" width="250">
+				</el-table-column>
+				<el-table-column prop="name" label="名称" width="250">
 				</el-table-column>
 				<el-table-column prop="stock_sum" label="库存" width="150">
 				</el-table-column>
@@ -31,10 +33,8 @@
 				<el-table-column prop="done_sum" label="已发出数量" width="120">
 				</el-table-column>
 				<el-table-column prop="lock_sum" label="已锁定数量" width="120">
-				</el-table-column>								
-				<el-table-column prop="created_at" label="创建时间" :formatter="formatter_created_at" width="150">
 				</el-table-column>
-				<el-table-column prop="updated_at" label="更新时间" :formatter="formatter_updated_at" width="150">
+				<el-table-column prop="defect_sum" label="不良品数量" width="120">
 				</el-table-column>
 				<el-table-column prop="remark" label="备注">
 				</el-table-column>
@@ -43,7 +43,11 @@
 						<el-tag :type="scope.row.status | statusFilter">{{getStatusName(scope.row.status)}}</el-tag>
 					</template>
 				</el-table-column>
-				<!-- <el-table-column label="操作" width="100">
+				<el-table-column prop="created_at" label="创建时间" :formatter="formatter_created_at" width="150">
+				</el-table-column>
+				<el-table-column prop="updated_at" label="更新时间" :formatter="formatter_updated_at" width="150">
+				</el-table-column>
+				<el-table-column fixed="right" label="操作" width="100">
 					<template slot-scope="scope">
 						<el-dropdown>
 							<el-button type="primary">
@@ -51,15 +55,15 @@
 							</el-button>
 							<el-dropdown-menu slot="dropdown">
 								<el-dropdown-item>
-									<el-button @click="handleEdit(scope.$index, scope.row)" type="text">换标</el-button>
+									<el-button @click="handleDetial(scope.$index, scope.row)" type="text">详情</el-button>
 								</el-dropdown-item>
-								<el-dropdown-item>
-									<el-button @click="handleSendEdit(scope.$index, scope.row)" type="text">发货</el-button>
-								</el-dropdown-item>
+								<!-- <el-dropdown-item>
+									<el-button @click="handleSendEdit(scope.$index, scope.row)" type="text">转良品</el-button>
+								</el-dropdown-item> -->
 							</el-dropdown-menu>
 						</el-dropdown>
 					</template>
-				</el-table-column> -->
+				</el-table-column>
 			</el-table>
 			<div class="pagination">
 				<el-pagination v-if="paginationShow" @current-change="handleCurrentChange" @size-change="handleSizeChange" :page-size="pagesize" layout="prev, pager, next" :total="totals">
@@ -151,6 +155,23 @@
                 <el-button type="primary" @click="deleteRow">确 定</el-button>
             </span>
 		</el-dialog>
+
+		<!-- 详情提示框 -->
+		<el-dialog title="不良品记录" :visible.sync="detailVisible" width="50%">
+			<el-table :data="defect_cargos" border style="width: 100%">
+				<el-table-column prop="sum" label="数量"></el-table-column>
+				<el-table-column prop="type" label="类型">
+					<template slot-scope="scope">
+						<el-tag :type="scope.row.status | statusFilterdefect">{{getStatusNameDefect(scope.row.status)}}</el-tag>
+					</template>
+				</el-table-column>
+				<el-table-column prop="remark" label="备注"></el-table-column>
+				<el-table-column prop="created_at" :formatter="formatter_created_at" label="创建时间" width="150">
+				</el-table-column>
+				<el-table-column prop="updated_at" :formatter="formatter_updated_at" label="更新时间" width="150">
+				</el-table-column>
+			</el-table>
+		</el-dialog>
 	</div>
 </template>
 
@@ -218,7 +239,9 @@
 				},
 				search_fnsku: '',
 				paginationShow: true,
-				shopname: ''
+				shopname: '',
+				detailVisible: false,
+				defect_cargos: []
 			}
 		},
 		created() {
@@ -246,6 +269,14 @@
 				}
 				return statusMap[status]
 			},
+			statusFilterdefect(status) {
+				const statusMap = {
+					1: 'warning',
+					2: 'success',
+					3: 'default',
+				}
+				return statusMap[status]
+			},
 		},
 		methods: {
 			handleSizeChange(val) {
@@ -270,6 +301,7 @@
 					if(res.data.code == 200) {
 						res.data.data.forEach((data) => {
 							data.shopname = data.product.shopname
+							data.name = data.product.name
 						})
 						this.tableData = res.data.data
 						this.totals = res.data.count
@@ -290,6 +322,7 @@
 					if(res.data.code == 200) {
 						res.data.data.forEach((data) => {
 							data.shopname = data.product.shopname
+							data.name = data.product.name
 						})
 						this.tableData = res.data.data
 						this.totals = res.data.count
@@ -469,6 +502,17 @@
 					return "无库存"
 				}
 			},
+			getStatusNameDefect(status) {
+				if(status == 1) {
+					return "转不良品"
+				}else if(status == 2){
+					return "转良品"
+				}else if(status == 3){
+					return "不良品出库"
+				} else {
+					return "其他"
+				}
+			},
 			//混装标签
 //			handleClose(tag) {
 //				this.dynamicTags.splice(this.dynamicTags.indexOf(tag), 1);
@@ -531,6 +575,25 @@
 			},
 			shopname_in() {
 				this.search_fnsku = ''
+			},
+			handleDetial(index, row) {
+				this.$axios.get('/transfer_records?cargo_id=' + row.product_id, {
+					headers: {
+						'Authorization': localStorage.getItem('token')
+					},
+				}).then((res) => {
+					if(res.data.code == 200) {
+						res.data.data.forEach((data) => {
+							if(data.transfer_in == false) {
+								data.sum = data.sum + ' (转为良品)'
+							}
+						})
+						this.defect_cargos = res.data.data
+						this.detailVisible = true
+					}
+				}).catch(() => {
+
+				})
 			}
 		}
 	}

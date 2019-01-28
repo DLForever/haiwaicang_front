@@ -3,7 +3,7 @@
 		<div class="crumbs">
 			<el-breadcrumb separator="/">
 				<el-breadcrumb-item><i class="el-icon-tickets"></i> 入库管理</el-breadcrumb-item>
-				<el-breadcrumb-item>待审核</el-breadcrumb-item>
+				<el-breadcrumb-item>已入库</el-breadcrumb-item>
 			</el-breadcrumb>
 		</div>
 		<div class="container">
@@ -84,10 +84,10 @@
 
 		<!-- 详情弹出框 -->
 		<el-dialog title="详情" :visible.sync="detailVisible" width="50%">
-			<div class="check_button">
+			<!-- <div class="check_button">
 				<el-button type="primary" @click="check">通过审核</el-button>
 			</div>
-			<br>
+			<br> -->
 			<el-table :data="ware_details" border style="width: 100%">
 				<el-table-column prop="fnsku" label="fnsku"></el-table-column>
 				<el-table-column prop="plan_sum" label="计划数量"></el-table-column>
@@ -214,7 +214,7 @@
 				if(process.env.NODE_ENV === 'development') {
 					//                  this.url = '/ms/table/list';
 				};
-				this.$axios.get('/store_ins?page=' + this.cur_page + '&batch_store_in_id=' + this.select_batch + '&fnsku=' + this.search_fnsku + '&status=1', {
+				this.$axios.get('/store_ins?page=' + this.cur_page + '&batch_store_in_id=' + this.select_batch + '&fnsku=' + this.search_fnsku + '&status=4', {
 					headers: {
 						'Authorization': localStorage.getItem('token')
 					},
@@ -233,7 +233,7 @@
 			filter_inbound() {
 				this.paginationShow = false
 				this.cur_page = 1
-				this.$axios.get('/store_ins?page=' + this.cur_page + '&batch_store_in_id=' + this.select_batch + '&fnsku=' + this.search_fnsku + '&status=1', {
+				this.$axios.get('/store_ins?page=' + this.cur_page + '&batch_store_in_id=' + this.select_batch + '&fnsku=' + this.search_fnsku + '&status=4', {
 					headers: {
 						'Authorization': localStorage.getItem('token')
 					},
@@ -410,7 +410,6 @@
 					if(res.data.code == 200) {
 						this.$message.success("审核成功!")
 						this.getData()
-						this.detailVisible = false
 					}
 				}).catch((res) => {
 					console.log(res)

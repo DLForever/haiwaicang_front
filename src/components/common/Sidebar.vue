@@ -1,4 +1,36 @@
 <template>
+    <div class="sidebar">
+        <el-menu class="sidebar-el-menu" :default-active="onRoutes" :collapse="collapse" background-color="#324157" text-color="#bfcbd9" active-text-color="#20a0ff" unique-opened router>
+            <template v-for="item in items">
+                <template v-if="item.subs">
+                    <el-submenu :index="item.index" :key="item.index">
+                        <template slot="title">
+                            <i :class="item.icon"></i><span slot="title">{{ item.title }}</span>
+                        </template>
+                        <template v-for="subItem in item.subs">
+                            <el-submenu v-if="subItem.subs" :index="subItem.index" :key="subItem.index">
+                                <template slot="title">{{ subItem.title }}</template>
+                                <el-menu-item v-for="(threeItem,i) in subItem.subs" :key="i" :index="threeItem.index">
+                                    {{ threeItem.title }}
+                                </el-menu-item>
+                            </el-submenu>
+                            <el-menu-item v-else :index="subItem.index" :key="subItem.index">
+                                {{ subItem.title }}
+                            </el-menu-item>
+                        </template>
+                    </el-submenu>
+                </template>
+                <template v-else>
+                    <el-menu-item :index="item.index" :key="item.index">
+                        <i :class="item.icon"></i><span slot="title">{{ item.title }}</span>
+                    </el-menu-item>
+                </template>
+            </template>
+        </el-menu>
+    </div>
+</template>
+
+<!-- <template>
 	<div class="sidebar">
 		<el-menu class="sidebar-el-menu" :default-active="onRoutes" :collapse="collapse" background-color="#324157" text-color="#bfcbd9" active-text-color="#20a0ff" unique-opened router>
 			<template v-for="item in items">
@@ -20,7 +52,7 @@
 			</template>
 		</el-menu>
 	</div>
-</template>
+</template> -->
 
 <script>
 	import bus from '../common/bus';
@@ -61,22 +93,26 @@
 							},
 							{
 								index: 'inbound',
-								title: '创建入库单'
+								title: '创建入库单',
 							},
 							{
-								index: 'inboundmanage',
-								title: '入库单管理'
+								index: '13',
+								title: '入库单管理',
+								subs:[{
+									index: 'inboundmanage',
+									title: '待审核'
+								},{
+									index: 'inbounding',
+									title: '待入库'
+								},{
+									index: 'inbounded',
+									title: '已入库'
+								},{
+									index: 'inboundsettlement',
+									title: '已结算'
+								}]
 							},
 						]
-					},
-					{
-						icon: 'el-icon-news',
-						index: '4',
-						title: '库存管理',
-						subs: [{
-							index: 'goodsmanage',
-							title: '库存管理'
-						}, ]
 					},
 					{
 						icon: 'el-icon-news',
@@ -92,14 +128,33 @@
 //								title: '发货订单管理'
 //							},
 							{
-								index: 'outboundmanage',
-								title: '出库单管理'
+								index: '14',
+								title: '出库单管理',
+								subs: [{
+									index: 'outboundmanage',
+									title: '待审核'
+								},{
+									index: 'outboundingmanage',
+									title: '正在处理'
+								},{
+									index: 'outboundedmanage',
+									title: '已完成'
+								}]
 							},
 							{
 								index: 'batchoutboundmanage',
 								title: '批量出库'
 							},
 						]
+					},
+					{
+						icon: 'el-icon-news',
+						index: '4',
+						title: '库存管理',
+						subs: [{
+							index: 'goodsmanage',
+							title: '库存管理'
+						}, ]
 					},
 					//                  {
 					//                      icon: 'el-icon-printer',
@@ -211,8 +266,18 @@
 								title: 'WMS入库申请'
 							},
 							{
-								index: 'WMSinmanage',
-								title: 'WMS入库管理'
+								index: '13',
+								title: 'WMS入库管理',
+								subs: [{
+									index: 'WMSinmanage',
+									title: '待入库'
+								},{
+									index: 'WMSinedmanage',
+									title: '已入库'
+								},{
+									index: 'WMSinsettlement',
+									title: '已结算'
+								}]
 							},
 							//						{
 							//							index: 'WMSbatchinmanage',
@@ -245,6 +310,14 @@
 						subs: [{
 							index: 'WMSgoodsmanage',
 							title: 'WMS货物管理'
+						},
+						{
+							index: 'WMSbadgoodsmanage',
+							title: 'WMS不良品管理',
+						},
+						{
+							index: 'WMSpdgoodsmanage',
+							title: 'WMS盘点管理',
 						},
 						{
 							index: 'WMSImportStock',

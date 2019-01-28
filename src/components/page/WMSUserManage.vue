@@ -48,7 +48,7 @@
 			</div>
 		</div>
 
-		 <!-- 编辑提示框 -->
+		<!-- 编辑提示框 -->
         <el-dialog title="编辑" :visible.sync="detailVisible" width="50%">
         	<el-form ref="form" label-width="80px">
         		<el-form-item label="备注" required>
@@ -124,7 +124,6 @@
 							}else{
 
 							}
-							console.log(tempcode)
 							data.usercode = this.code[tempindex] + tempcode
 						})
 						this.tableData = res.data.data

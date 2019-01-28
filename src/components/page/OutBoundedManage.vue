@@ -3,14 +3,14 @@
 		<div class="crumbs">
 			<el-breadcrumb separator="/">
 				<el-breadcrumb-item><i class="el-icon-date"></i> 出库单管理</el-breadcrumb-item>
-				<el-breadcrumb-item>待审核</el-breadcrumb-item>
+				<el-breadcrumb-item>已完成</el-breadcrumb-item>
 			</el-breadcrumb>
 		</div>
 		<div class="container">
 			<!-- <el-tabs v-model="message">
 				<el-tab-pane label="新建产品" name="first"> -->
 			<div class="handle-box">
-				<el-button type="primary" @click="showOutBound">创建出库单</el-button>
+				<!-- <el-button type="primary" @click="showOutBound">创建出库单</el-button> -->
 				<div class="fnsku_filter">
 					Fnsku:
                     <el-input style="width:150px" placeholder="请输入Fnsku" v-model.trim="search_fnsku"></el-input>
@@ -62,9 +62,9 @@
 								<el-dropdown-item>
 									<el-button @click="detailsShow(scope.$index, scope.row)" type="text">&nbsp&nbsp&nbsp详情&nbsp</el-button>
 								</el-dropdown-item>
-								<el-dropdown-item>
+								<!-- <el-dropdown-item>
 									<el-button @click="updateOutbound(scope.$index, scope.row)" type="text">&nbsp&nbsp&nbsp更新&nbsp</el-button>
-								</el-dropdown-item>
+								</el-dropdown-item> -->
 								<el-dropdown-item>
 									<el-button size="small" @click="handleEdit(scope.$index, scope.row)" type="text">&nbsp外箱标</el-button>
 								</el-dropdown-item>
@@ -658,7 +658,7 @@
 				}
 			},
 			getDatas() {
-				this.$axios.get('/outbound_orders?page=' + this.cur_page + '&fnsku=' + this.search_fnsku + '&status=1', {
+				this.$axios.get('/outbound_orders?page=' + this.cur_page + '&fnsku=' + this.search_fnsku + '&status=10', {
 					headers: {
 						'Authorization': localStorage.getItem('token')
 					}
@@ -683,7 +683,7 @@
 			filter_inbound() {
 				this.paginationShow = false
 				this.cur_page = 1
-				this.$axios.get('/outbound_orders?page=' + this.cur_page + '&fnsku=' + this.search_fnsku + '&status=1', {
+				this.$axios.get('/outbound_orders?page=' + this.cur_page + '&fnsku=' + this.search_fnsku + '&status=10', {
 					headers: {
 						'Authorization': localStorage.getItem('token')
 					}
@@ -894,12 +894,13 @@
 						}]
 						this.getDatas()
 						this.outboundVisible = false
-						this.submitDisable = false
 						this.getMessageCount()
 					}else {
-						this.submitDisable = false
+
 					}
 				}).catch((res) => {
+					
+				}).finally((res) => {
 					this.submitDisable = false
 				})
 			},
@@ -942,9 +943,8 @@
 						this.updateVisible  =false
 						this.getMessageCount()
 					}
-					this.updateDisabled = false
+					
 				}).catch((res) => {
-					console.log(res)
 				}).finally((res) => {
 					this.updateDisabled = false
 				})
@@ -1236,7 +1236,6 @@
 				}).then((res) => {
 					if(res.data.code == 200) {
 						this.$message.success("审核成功!")
-						this.detailVisible = false
 						this.getDatas()
 					}
 				}).catch((res) => {

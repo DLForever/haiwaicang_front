@@ -190,7 +190,7 @@
 				<el-table-column prop="sum" label="数量"></el-table-column>
 			</el-table>
 			<br>
-			<el-table v-if="this.checkData4.length != 0" :data="checkData4" border style="width: 100%" @selection-change="store_insSelectionChange">
+			<el-table v-if="this.checkData4.length != 0" :data="checkData4" border style="width: 100%" ref="multipleCheck" @selection-change="store_insSelectionChange">
 				<el-table-column type="selection" width="55"></el-table-column>
 				<el-table-column prop="logistics_number" label="物流单号"></el-table-column>
 				<el-table-column prop="batch_number" label="任务批次"></el-table-column>
@@ -201,7 +201,7 @@
 			</el-table>
 			<br>
 			<el-table v-if="this.checkData5.length != 0" :data="checkData5" border style="width: 100%" @selection-change="productSelectionChange">
-				<el-table-column type="selection" width="55"></el-table-column>
+				<!-- <el-table-column type="selection" width="55"></el-table-column> -->
 				<el-table-column prop="fnsku" label="fnsku"></el-table-column>
 				<el-table-column prop="plan_sum" label="计划数量"></el-table-column>
 				<!-- <el-table-column prop="way_sum" label="在途数量"></el-table-column> -->
@@ -211,7 +211,7 @@
 				<el-table-column prop="stock_time" label="存留时间(天/小时)"></el-table-column>
 				<el-table-column label="结算数量">
 					<template slot-scope="scope">
-						<el-input placeholder="输入结算数量" :value="scope.row.check_sum2" v-model="scope.row.check_sum2"></el-input>
+						<el-input placeholder="输入结算数量" :value="scope.row.check_sum2" v-model.trim="scope.row.check_sum2"></el-input>
 					</template>
 				</el-table-column>
 			</el-table>
@@ -844,23 +844,63 @@
 				let store_in_ids = []
 				let product_store_in_ids = []
 				let sum = []
-				for(let i = 0; i < this.store_ins_mul.length; i++) {
-					store_in_ids.push(this.store_ins_mul[i].id)
-				}
-				for(let j = 0; j < this.product_store_ins_mul.length; j++) {
-					sum.push(this.product_store_ins_mul[j].check_sum2)
-					product_store_in_ids.push(this.product_store_ins_mul[j].id)
-				}
-				let params = {
-					store_in_ids: store_in_ids,
-					product_store_in_ids: product_store_in_ids,
-					sum: sum
-				}
-				if(!this.check_doneDisabled) {
+				let checkData5_count = 0
+				this.checkData5.forEach((data) => {
+					if(data.check_sum2.trim() != '') {
+						sum.push(data.check_sum2)
+						product_store_in_ids.push(data.id)
+						checkData5_count = 1
+					}
+				})
+				if(this.store_ins_mul.length == 0 || checkData5_count == 0) {
+					this.$confirm('您没有选择物流单号或输入结算数量，是否继续结算？', '提示', {
+						confirmButtonText: '确定',
+						cancelButtonText: '取消',
+						type: "warning"
+					}).then(() => {
+						for(let i = 0; i < this.store_ins_mul.length; i++) {
+							store_in_ids.push(this.store_ins_mul[i].id)
+						}
+						let params = {
+							store_in_ids: store_in_ids,
+							product_store_in_ids: product_store_in_ids,
+							sum: sum
+						}
+						this.check_doneDisabled = true
+						this.$axios.post('/admin/outbound_orders/' + this.check_id + '/check', params, {
+							headers: {
+								'Authorization': localStorage.getItem('token_admin')
+							},
+						}).then((res) => {
+							if(res.data.code == 200) {
+								this.getData()
+								this.$refs.multipleCheck.clearSelection()
+								this.checkVisible = false
+								this.$message.success('审核成功')
+							}
+						}).catch((res) => {
+							console.log('error')
+						}).finally(() => {
+							
+							this.check_doneDisabled = false
+						})
+					}).catch(() => {
+						this.$message.info('取消结算')
+					})
+				}else{
+					for(let i = 0; i < this.store_ins_mul.length; i++) {
+						store_in_ids.push(this.store_ins_mul[i].id)
+					}
+					// for(let j = 0; j < this.product_store_ins_mul.length; j++) {
+					// 	sum.push(this.product_store_ins_mul[j].check_sum2)
+					// 	product_store_in_ids.push(this.product_store_ins_mul[j].id)
+					// }
+					let params = {
+						store_in_ids: store_in_ids,
+						product_store_in_ids: product_store_in_ids,
+						sum: sum
+					}
 					this.check_doneDisabled = true
-					// setTimeout(() => {
-					// 	this.check_doneDisabled = false
-					// }, 5000)
 					this.$axios.post('/admin/outbound_orders/' + this.check_id + '/check', params, {
 						headers: {
 							'Authorization': localStorage.getItem('token_admin')
@@ -868,12 +908,13 @@
 					}).then((res) => {
 						if(res.data.code == 200) {
 							this.getData()
+							this.$refs.multipleCheck.clearSelection()
 							this.checkVisible = false
 							this.$message.success('审核成功')
 						}
-						this.check_doneDisabled = false
 					}).catch((res) => {
-						console.log('error')
+					}).finally(() => {
+						this.check_doneDisabled = false
 					})
 				}
 			},

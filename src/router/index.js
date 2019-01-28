@@ -59,7 +59,22 @@ export default new Router({
                 {
                     path: '/inboundmanage',
                     component: resolve => require(['../components/page/InBoundManage.vue'], resolve),
-                    meta: { title: '入库单管理' }
+                    meta: { title: '待审核' }
+                },
+                {
+                    path: '/inbounded',
+                    component: resolve => require(['../components/page/InBoundedManage.vue'], resolve),
+                    meta: { title: '待入库' }
+                },
+                {
+                    path: '/inbounding',
+                    component: resolve => require(['../components/page/InBoundingManage.vue'], resolve),
+                    meta: { title: '已入库' }
+                },
+                {
+                    path: '/inboundsettlement',
+                    component: resolve => require(['../components/page/InBoundsettleManage.vue'], resolve),
+                    meta: { title: '已结算' }
                 },
                 {
                     path: '/goodsmanage',
@@ -79,7 +94,17 @@ export default new Router({
                 {
                     path: '/outboundmanage',
                     component: resolve => require(['../components/page/OutBoundManage.vue'], resolve),
-                    meta: { title: '出库单管理' }
+                    meta: { title: '待审核' }
+                },
+                {
+                    path: '/outboundingmanage',
+                    component: resolve => require(['../components/page/OutBoundingManage.vue'], resolve),
+                    meta: { title: '正在处理' }
+                },
+                {
+                    path: '/outboundedmanage',
+                    component: resolve => require(['../components/page/OutBoundedManage.vue'], resolve),
+                    meta: { title: '已完成' }
                 },
                 {
                     path: '/batchoutboundmanage',
@@ -119,7 +144,17 @@ export default new Router({
                 {
                     path: '/WMSinmanage',
                     component: resolve => require(['../components/page/WMSInBoundManage.vue'], resolve),
-                    meta: { title: 'WMS入库管理', permission: true  }
+                    meta: { title: '待入库', permission: true  }
+                },
+                {
+                    path: '/WMSinedmanage',
+                    component: resolve => require(['../components/page/WMSInBoundedManage.vue'], resolve),
+                    meta: { title: '已入库', permission: true  }
+                },
+                {
+                    path: '/WMSinsettlement',
+                    component: resolve => require(['../components/page/WMSInBoundSettlementManage.vue'], resolve),
+                    meta: { title: '已结算', permission: true  }
                 },
                 {
                     path: '/WMSbatchinmanage',
@@ -155,6 +190,16 @@ export default new Router({
                     path: '/WMSgoodsmanage',
                     component: resolve => require(['../components/page/WMSGoodsManage.vue'], resolve),
                     meta: { title: 'WMS货物管理', permission: true }
+                },
+                {
+                    path: '/WMSbadgoodsmanage',
+                    component: resolve => require(['../components/page/WMSBadGoodsManage.vue'], resolve),
+                    meta: { title: 'WMS不良品管理', permission: true }
+                },
+                {
+                    path: '/WMSpdgoodsmanage',
+                    component: resolve => require(['../components/page/WMSGoodsPDManage.vue'], resolve),
+                    meta: { title: 'WMS盘点管理', permission: true }
                 },
                 {
                     path: '/WMSImportStock',

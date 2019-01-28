@@ -3,7 +3,7 @@
 		<div class="crumbs">
 			<el-breadcrumb separator="/">
 				<el-breadcrumb-item><i class="el-icon-tickets"></i> WMS入库管理</el-breadcrumb-item>
-				<el-breadcrumb-item>待入库</el-breadcrumb-item>
+				<el-breadcrumb-item>已结算</el-breadcrumb-item>
 			</el-breadcrumb>
 		</div>
 		<div class="container">
@@ -75,9 +75,9 @@
 								<el-dropdown-item>
 									<el-button @click="detailsShow(scope.$index, scope.row)" type="text">详情</el-button>
 								</el-dropdown-item>
-								<el-dropdown-item>
+								<!-- <el-dropdown-item>
 									<el-button @click="handleEdit(scope.$index, scope.row)" type="text">入库</el-button>
-								</el-dropdown-item>
+								</el-dropdown-item> -->
 								<el-dropdown-item>
 									<el-button @click="handleDelete(scope.$index, scope.row)" type="text">删除</el-button>
 								</el-dropdown-item>
@@ -88,8 +88,8 @@
 					</template>
 				</el-table-column>
 			</el-table>
-			<div class="pagination" v-if="paginationShow && totals != 0">
-				<el-pagination  @current-change="handleCurrentChange" :current-page.sync='cur_page' :page-size="20" layout="prev, pager, next" :total="totals">
+			<div class="pagination">
+				<el-pagination v-if="paginationShow" @current-change="handleCurrentChange" :current-page.sync='cur_page' :page-size="20" layout="prev, pager, next" :total="totals">
 				</el-pagination>
 			</div>
 		</div>
@@ -275,7 +275,7 @@
 				if(process.env.NODE_ENV === 'development') {
 					//					this.url = '/ms/table/list';
 				};				
-				this.$axios.get('/admin/store_ins?page=' + this.cur_page + '&batch_store_in_id=' + this.select_batch + '&user_id=' + this.select_cate + '&fnsku=' + this.search_fnsku + '&status=7' + '&logistics_number=' + this.search_logistics_number, {
+				this.$axios.get('/admin/store_ins?page=' + this.cur_page + '&batch_store_in_id=' + this.select_batch + '&user_id=' + this.select_cate + '&fnsku=' + this.search_fnsku + '&status=6' + '&logistics_number=' + this.search_logistics_number, {
 					headers: {
 						'Authorization': localStorage.getItem('token_admin')
 					},
@@ -299,7 +299,7 @@
 			filter_inbound() {
 				this.paginationShow = false
 				this.cur_page = 1
-				this.$axios.get('/admin/store_ins?page=' + this.cur_page + '&batch_store_in_id=' + this.select_batch + '&user_id=' + this.select_cate + '&fnsku=' + this.search_fnsku + '&status=7' + '&logistics_number=' + this.search_logistics_number, {
+				this.$axios.get('/admin/store_ins?page=' + this.cur_page + '&batch_store_in_id=' + this.select_batch + '&user_id=' + this.select_cate + '&fnsku=' + this.search_fnsku + '&status=6' + '&logistics_number=' + this.search_logistics_number, {
 					headers: {
 						'Authorization': localStorage.getItem('token_admin')
 					},
@@ -321,7 +321,7 @@
 				this.select_cate = ''
 				this.select_batch = ''
 				this.search_fnsku = ''
-				// this.statusSelect = ''
+				this.statusSelect = ''
 				this.search_logistics_number = ''
 				this.getData()
 			},
