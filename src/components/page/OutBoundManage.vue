@@ -901,6 +901,8 @@
 					}
 				}).catch((res) => {
 					this.submitDisable = false
+				}).finally(() => {
+					this.submitDisable = false
 				})
 			},
 			submitUpdate() {

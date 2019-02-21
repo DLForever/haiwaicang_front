@@ -831,7 +831,7 @@
 							let dayDiff = Math.floor(dateDiff / (24 * 3600 * 1000))
 							let leave1 = dateDiff%(24*3600*1000)
 							let hours = Math.floor(leave1/(3600*1000))
-							data.stock_time = dayDiff + 'd' + hours + 'h'
+							data.stock_time = dayDiff + '天' + hours + '小时'
 						})
 						this.checkData5 = res.data.data.product_store_ins
 						this.checkVisible = true

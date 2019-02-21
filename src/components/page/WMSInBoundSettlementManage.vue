@@ -417,7 +417,7 @@
 						}
 					}
 					console.log(this.user_page)
-					this.$axios.get("/admin/batch_store_ins/search_batch?query=" + query.trim()+"&page="+this.batch_page + '&user_id=' + this.select_cate, {
+					this.$axios.get("/admin/batch_store_ins?batch_number=" + query.trim()+"&page="+this.batch_page + '&user_id=' + this.select_cate, {
 						headers: {
 						'Authorization': localStorage.getItem('token_admin')
 					},

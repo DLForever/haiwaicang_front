@@ -44,14 +44,26 @@
 			</div>
 		</div>
 		 <!-- 详情提示框 -->
-        <el-dialog title="详情" :visible.sync="detailVisible" width="50%">
+        <el-dialog title="详情" :visible.sync="detailVisible" width="60%">
 			<el-table :data="form.cargo_ware_houses" border style="width: 100%">
 				<el-table-column prop="name" label="库位"></el-table-column>
 				<el-table-column prop="fnsku" label="产品名称"></el-table-column>
-				<el-table-column prop="sum" label="数量"></el-table-column>
+				<el-table-column prop="sum" label="数量" width="250">
+					<template slot-scope="scope">
+						<template v-if="scope.row.edit">
+							<el-input v-model="scope.row.sum" class="edit-input" size="small"/>
+							<el-button class="cancel-btn" size="small" icon="el-icon-refresh" type="warning" @click="cancelEdit(scope.row)">取消</el-button>
+						</template>
+						<span v-else>{{scope.row.sum}}</span>
+					</template>
+				</el-table-column>
 				<el-table-column prop="lock_sum" label="锁定数量"></el-table-column>
-				<!--<el-table-column prop="created_at" :formatter="formatter_created_at" label="创建时间"></el-table-column>
-				<el-table-column prop="updated_at" :formatter="formatter_updated_at" label="更新时间"></el-table-column>-->
+				<el-table-column label="操作">
+					<template slot-scope="scope">
+						<el-button v-if="scope.row.edit" :disabled="submitDisabled" type="success" size="small" icon="el-icon-circle-check-outline" @click="confirmEdit(scope.row)">确认</el-button>
+						<el-button v-else type="primary" size="small" icon="el-icon-edit" @click="scope.row.edit=!scope.row.edit">编辑</el-button>
+					</template>
+				</el-table-column>
 			</el-table>
 		</el-dialog>
 	</div>
@@ -73,7 +85,8 @@
 				},
 				search_fnsku: '',
 				paginationShow: true,
-				warename: ''
+				warename: '',
+				submitDisabled: false
 			}
 		},
 		created() {
@@ -113,6 +126,8 @@
 								data2.name = data.name
 								data.sum += data2.sum
 								data.lock_sum += data2.lock_sum
+								data2.edit = false
+								data2.originalSum = data2.sum
 							})
 						})
 						this.tableData = res.data.data
@@ -139,6 +154,8 @@
 								data2.name = data.name
 								data.sum += data2.sum
 								data.lock_sum += data2.lock_sum
+								data2.edit = false
+								data2.originalSum = data2.sum
 							})
 						})
 						this.tableData = res.data.data
@@ -169,6 +186,33 @@
 			},
 			clear_fnsku() {
 				this.search_fnsku = ''
+			},
+			cancelEdit(row) {
+				row.sum = row.originalSum
+				row.edit = false
+			},
+			confirmEdit(row) {
+				this.submitDisabled = true
+                let params = {
+                    cargo_ware_house_id: row.id,
+                    sum: row.sum
+                }
+                this.$axios.patch('/admin/warehouses/' + row.ware_house_id, params,{
+                     headers: {
+                        'Authorization': localStorage.getItem('token_admin')
+                    }
+                }).then((res) => {
+                    if(res.data.code == 200) {
+                        this.getData()
+                        this.$message.success("修改成功")
+                        row.originalSum = row.sum
+                        row.edit = false
+                    }
+                }).catch((res) => {
+
+                }).finally(() => {
+                    this.submitDisabled = false
+                })
 			}
 		},
 	}
@@ -182,4 +226,14 @@
     .fnsku_filter {
         float: right;
     }
+
+    .edit-input {
+	  	padding-right: 100px;
+	}
+
+	.cancel-btn {
+	  	position: absolute;
+	  	right: 15px;
+	  	top: 10px;
+	}
 </style>

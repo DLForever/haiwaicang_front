@@ -379,9 +379,9 @@
 				let user_id = this.form.user_id
 				if(!this.isDisabled) {
 					this.isDisabled = true
-					setTimeout(() => {
-						this.isDisabled = false
-					}, 3000)
+					// setTimeout(() => {
+					// 	this.isDisabled = false
+					// }, 3000)
 					this.$axios.post('/admin/batch_store_ins', {
 						apply_store_in_id: apply_store_in_id,
 						user_id: user_id,
@@ -398,6 +398,8 @@
 						}
 					}).catch((res) => {
 						this.$message.error(res)
+					}).finally(() => {
+						this.isDisabled = false
 					})
 				}	
 			},
