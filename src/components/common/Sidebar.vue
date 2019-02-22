@@ -100,16 +100,10 @@
 								title: '入库单管理',
 								subs:[{
 									index: 'inboundmanage',
-									title: '待审核'
-								},{
-									index: 'inbounding',
-									title: '待入库'
+									title: '待完成'
 								},{
 									index: 'inbounded',
-									title: '已入库'
-								},{
-									index: 'inboundsettlement',
-									title: '已结算'
+									title: '已完成'
 								}]
 							},
 						]
@@ -270,13 +264,10 @@
 								title: 'WMS入库管理',
 								subs: [{
 									index: 'WMSinmanage',
-									title: '待入库'
-								},{
-									index: 'WMSinedmanage',
-									title: '已入库'
+									title: '未完成'
 								},{
 									index: 'WMSinsettlement',
-									title: '已结算'
+									title: '已完成'
 								}]
 							},
 							//						{

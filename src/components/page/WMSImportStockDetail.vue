@@ -23,6 +23,11 @@
 				<el-table-column prop="warehouse_name" label="库位名称"></el-table-column>
 				<el-table-column prop="fnsku" label="fnsku"></el-table-column>
 				<el-table-column prop="sum" label="总数量"></el-table-column>
+				<el-table-column prop="status" label="状态">
+					<template slot-scope="scope">
+						<el-tag :type="scope.row.status | statusFilter">{{getStatusName(scope.row.status)}}</el-tag>
+					</template>
+				</el-table-column>
 				<!-- <el-table-column label="操作" width="100">
 					<template slot-scope="scope">
 						<el-dropdown>
@@ -86,6 +91,19 @@
 					return d
 				})
 			}
+		},
+		filters: {
+			//类型转换
+			statusFilter(status) {
+				const statusMap = {
+//					2: 'info',
+					1: 'success',
+					2: 'warning',
+					4: 'danger',
+					3: 'default',
+				}
+				return statusMap[status]
+			},
 		},
 		methods: {
 			handleCurrentChange(val) {
@@ -159,6 +177,19 @@
 					cargo_ware_houses: item.cargo_ware_houses,
 				}
 				this.detailVisible = true
+			},
+			getStatusName(status) {
+				if(status == 1) {
+					return "导入库存"
+				}else if (status ==2) {
+					return "库存更新"
+				}else if (status == 3) {
+					return "库存创建"
+				}else if (status == 4) {
+					return "库存删除"
+				}else {
+					return "其他"
+				}
 			},
 		},
 	}

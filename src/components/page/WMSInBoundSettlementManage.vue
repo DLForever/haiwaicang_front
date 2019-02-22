@@ -3,7 +3,7 @@
 		<div class="crumbs">
 			<el-breadcrumb separator="/">
 				<el-breadcrumb-item><i class="el-icon-tickets"></i> WMS入库管理</el-breadcrumb-item>
-				<el-breadcrumb-item>已结算</el-breadcrumb-item>
+				<el-breadcrumb-item>已完成</el-breadcrumb-item>
 			</el-breadcrumb>
 		</div>
 		<div class="container">
@@ -17,20 +17,22 @@
 						<infinite-loading :on-infinite="onInfinite" ref="infiniteLoading"></infinite-loading>
 					</el-select>
 					批次:
+					<el-input v-model="select_batch" placeholder="请输入批次号" class="handle-select mr10 batch_box"></el-input>
+					<!-- 批次:
 					<el-select v-model="select_batch" filterable remote placeholder="选择批次" :loading="loading2" class="handle-select mr10" @visible-change="batchVisible" :remote-method="remoteMethodBatch">
 						<el-option v-for="item in batchoptions" :key="item.id" :label="item.batch_number" :value="item.id"></el-option>
 						<infinite-loading :on-infinite="onInfinite_batch" ref="infiniteLoading2"></infinite-loading>
-					</el-select>
+					</el-select> -->
 					<!-- 状态:
 					<el-select v-model="statusSelect" placeholder="请选择" class="handle-select mr10">
 						<el-option v-for="item in statusOptions" :key="item.value" :label="item.label" :value="item.value"></el-option>
 					</el-select> -->
-					Fnsku:
+					<!-- Fnsku:
 					<el-input style="width:150px" placeholder="请输入Fnsku" v-model.trim="search_fnsku"></el-input>
 					追踪编码:
-					<el-input style="width:150px" placeholder="请输入追踪编码" v-model.trim="search_logistics_number"></el-input>
+					<el-input style="width:150px" placeholder="请输入追踪编码" v-model.trim="search_logistics_number"></el-input> -->
 					<el-button @click="clear_search" type="default">重置</el-button>
-	                <el-button @click="filter_inbound" type="primary">查询</el-button>
+	                <el-button @click="filter_BatchData" type="primary">查询</el-button>
                 </div>
 				<!--<el-button type="primary" icon="search" @click="allUser">所有用户</el-button>-->
 			</div>
@@ -38,55 +40,47 @@
 			<!--<el-table :data="data.slice((cur_page-1)*pagesize, cur_page*pagesize)" border style="width: 100%" model="form" ref="multipleTable" @selection-change="handleSelectionChange">-->
 			<el-table :data="data" border style="width: 100%" model="form" ref="multipleTable" @selection-change="handleSelectionChange">
 				<el-table-column type="selection" width="55"></el-table-column>
-				<el-table-column prop="logistics_number" label="追踪编码" width="200">
-				</el-table-column>
-				<el-table-column prop="batch_number" label="申请批次" width="100">
-				</el-table-column>
-				<el-table-column prop="order_number" label="订单编码" show-overflow-tooltip>
-				</el-table-column>
-				<el-table-column prop="total_plan_sum" label="计划总数量" width="150">
-				</el-table-column>
-				<el-table-column prop="total_arrive_sum" label="已收到数量" width="120">
-				</el-table-column>				
-				<el-table-column prop="user_remark" label="用户备注" show-overflow-tooltip>
-				</el-table-column>
-				<el-table-column prop="manager_remark" label="仓库备注" show-overflow-tooltip>
-				</el-table-column>
-				<el-table-column prop="remove_remark" label="用户删除备注" show-overflow-tooltip>
-				</el-table-column>
-				<el-table-column prop="created_at" :formatter="formatter_created_at" label="创建时间" width="150">
-				</el-table-column>
-				<el-table-column prop="updated_at" :formatter="formatter_updated_at" label="更新时间" width="150">
+				<el-table-column prop="batch_number" label="申请批次">
+					<template slot-scope="scope">
+						<span class="link-type" @click="showInbound(scope.$index, scope.row)">{{scope.row.batch_number}}</span>
+					</template>
 				</el-table-column>
 				<el-table-column prop="status" label="状态">
 					<template slot-scope="scope">
 						<el-tag :type="scope.row.status | statusFilter">{{getStatusName(scope.row.status)}}</el-tag>
 					</template>
 				</el-table-column>
-				<el-table-column label="操作" width="100">
+				<el-table-column prop="created_at" :formatter="formatter_created_at" label="创建时间">
+				</el-table-column>
+				<el-table-column prop="updated_at" :formatter="formatter_updated_at" label="更新时间">
+				</el-table-column>
+				<!-- <el-table-column label="操作" width="100">
 					<template slot-scope="scope">
-						<!--<el-button size="small" @click="handleEdit(scope.$index, scope.row)">编辑</el-button>-->
-						<!--<el-button size="small" type="danger" @click="handleDelete(scope.$index, scope.row)">删除</el-button>-->
+						<el-button size="small" @click="handleEdit(scope.$index, scope.row)">编辑</el-button>
+						<el-button size="small" type="danger" @click="handleDelete(scope.$index, scope.row)">删除</el-button>
 						<el-dropdown>
 							<el-button type="primary">
 								操作<i class="el-icon-arrow-down el-icon--right"></i>
 							</el-button>
 							<el-dropdown-menu slot="dropdown">
 								<el-dropdown-item>
+									<el-button @click="showInbound(scope.$index, scope.row)" type="text">查看入库单</el-button>
+								</el-dropdown-item>
+								<el-dropdown-item>
 									<el-button @click="detailsShow(scope.$index, scope.row)" type="text">详情</el-button>
 								</el-dropdown-item>
-								<!-- <el-dropdown-item>
+								<el-dropdown-item>
 									<el-button @click="handleEdit(scope.$index, scope.row)" type="text">入库</el-button>
-								</el-dropdown-item> -->
+								</el-dropdown-item>
 								<el-dropdown-item>
 									<el-button @click="handleDelete(scope.$index, scope.row)" type="text">删除</el-button>
 								</el-dropdown-item>
-								<!--<el-dropdown-item><el-button @click="editVisible = true" type="text">详情</el-button></el-dropdown-item>-->
-								<!--<el-button @click="editVisible = true">贴标</el-button>-->
+								<el-dropdown-item><el-button @click="editVisible = true" type="text">详情</el-button></el-dropdown-item>
+								<el-button @click="editVisible = true">贴标</el-button>
 							</el-dropdown-menu>
 						</el-dropdown>
 					</template>
-				</el-table-column>
+				</el-table-column> -->
 			</el-table>
 			<div class="pagination">
 				<el-pagination v-if="paginationShow" @current-change="handleCurrentChange" :current-page.sync='cur_page' :page-size="20" layout="prev, pager, next" :total="totals">
@@ -222,9 +216,9 @@
 			}
 		},
 		created() {
-			this.getData();
+			this.getBatchData();
 			this.getUser();
-			this.getWarehouse();
+			// this.getWarehouse();
 		},
 		watch: {
 			"$route": "getData",
@@ -254,7 +248,8 @@
 					1: 'warning',
 					4: 'success',
 					5: 'danger',
-					7: 'warning'
+					7: 'warning',
+					6: 'success'
 				}
 				return statusMap[status]
 			},
@@ -263,13 +258,47 @@
 			// 分页导航
 			handleCurrentChange(val) {
 				this.cur_page = val;
-				if(!this.select_cate || this.select_cate == -1) {
-					this.getData();
-				} else {
-					this.getUserDatas()
-				}				
+				this.getBatchData()
+				// if(!this.select_cate || this.select_cate == -1) {
+				// 	this.getData();
+				// } else {
+				// 	this.getUserDatas()
+				// }				
 			},
-			// 获取 easy-mock 的模拟数据
+			getBatchData() {
+				this.$axios.get('/admin/batch_store_ins?page=' + this.cur_page + '&user_id=' + this.select_cate + '&batch_number=' + this.select_batch + '&status=out', {
+					headers: {
+						'Authorization': localStorage.getItem('token_admin')
+					},
+				}).then((res) => {
+					if(res.data.code == 200) {
+						this.tableData = res.data.data;
+						this.totals = res.data.count
+						this.paginationShow = true
+					}
+					
+				}).catch((res) => {
+					console.log(res)
+				})
+			},
+			filter_BatchData() {
+				this.paginationShow = false
+				this.cur_page = 1
+				this.$axios.get('/admin/batch_store_ins?page=' + this.cur_page + '&user_id=' + this.select_cate + '&batch_number=' + this.select_batch + '&status=out', {
+					headers: {
+						'Authorization': localStorage.getItem('token_admin')
+					},
+				}).then((res) => {
+					if(res.data.code == 200) {
+						this.tableData = res.data.data;
+						this.totals = res.data.count
+						this.paginationShow = true
+					}
+					
+				}).catch((res) => {
+					console.log(res)
+				})
+			},
 			getData() {
 				// 开发环境使用 easy-mock 数据，正式环境使用 json 文件
 				if(process.env.NODE_ENV === 'development') {
@@ -323,7 +352,7 @@
 				this.search_fnsku = ''
 				this.statusSelect = ''
 				this.search_logistics_number = ''
-				this.getData()
+				this.getBatchData()
 			},
 			allUser() {	
 				this.paginationShow = false
@@ -659,13 +688,16 @@
 				})
 				this.delVisible = false;
 			},
+			showInbound(index, row) {
+                this.$router.push({name: 'WMSinedmanage', params: {batch_store_in_id: row.id}});
+            },
 			getStatusName(status) {
 				if(status == 1) {
 					return "待审核"
 				}else if (status ==2) {
 					return "被删除"
 				}else if (status == 3) {
-					return "删除"
+					return "未结算"
 				}else if (status == 4) {
 					return "已入库"
 				}else if(status == 5) {
@@ -673,7 +705,7 @@
 				}else if (status == 6) {
 					return "已结算"
 				}else if (status == 7) {
-					return "等待入库"
+					return "未完成"
 				} else {
 					return "其他"
 				}
@@ -746,4 +778,13 @@
 		margin-left: 10px;
 		vertical-align: bottom;
 	}
+
+	.link-type,
+    .link-type:focus {
+      color: #337ab7;
+      cursor: pointer;
+    }
+    .link-type:hover {
+        color: rgb(32, 160, 255);
+    }
 </style>

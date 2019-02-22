@@ -188,7 +188,8 @@
 					1: 'warning',
 					4: 'success',
 					5: 'danger',
-					7: 'warning'
+					7: 'warning',
+					6: 'success'
 				}
 				return statusMap[status]
 			},

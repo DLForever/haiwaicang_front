@@ -44,9 +44,17 @@
 			</div>
 		</div>
 		 <!-- 详情提示框 -->
-        <el-dialog title="详情" :visible.sync="detailVisible" width="60%">
-			<el-table :data="form.cargo_ware_houses" border style="width: 100%">
-				<el-table-column prop="name" label="库位"></el-table-column>
+        <el-dialog title="详情" :visible.sync="detailVisible" width="70%">
+        	<el-button :disabled="submitDisabled" v-if="isaddWare" type="success" size="small" icon="el-icon-circle-check-outline" @click="addWarehouse">确认</el-button>
+        	<el-button v-else type="primary" size="small" icon="el-icon-plus" @click="isaddWare=!isaddWare">增加</el-button>
+        	<el-button v-if="isaddWare" type="warning" icon="el-icon-refresh" @click="cancelAddWare">取消</el-button>
+        	<template v-if="isaddWare">
+        		<el-input placeholder="请输入Fnsku" style="width:150px" v-model="addWare.fnsku"></el-input>
+        		<el-input placeholder="请输入数量" style="width:150px" v-model="addWare.sum"></el-input>
+        	</template>
+        	<br><br>
+			<el-table :data="cargo_ware_houses" border style="width: 100%">
+				<el-table-column prop="ware_house_name" label="库位"></el-table-column>
 				<el-table-column prop="fnsku" label="产品名称"></el-table-column>
 				<el-table-column prop="sum" label="数量" width="250">
 					<template slot-scope="scope">
@@ -61,7 +69,8 @@
 				<el-table-column label="操作">
 					<template slot-scope="scope">
 						<el-button v-if="scope.row.edit" :disabled="submitDisabled" type="success" size="small" icon="el-icon-circle-check-outline" @click="confirmEdit(scope.row)">确认</el-button>
-						<el-button v-else type="primary" size="small" icon="el-icon-edit" @click="scope.row.edit=!scope.row.edit">编辑</el-button>
+						<el-button v-else type="primary" size="small" icon="el-icon-edit" :disabled="scope.row.noshow" @click="scope.row.edit=!scope.row.edit">编辑</el-button>
+						<el-button type="danger" size="small" icon="el-icon-delete" :disabled="scope.row.noshow" @click="deleteWare(scope.$index, scope.row)">删除</el-button>
 					</template>
 				</el-table-column>
 			</el-table>
@@ -80,13 +89,17 @@
 				tableData: [],
 				totals: 0,
 				detailVisible: false,
-				form: {
-					
+				addWare: {
+					fnsku: '',
+					sum: '',
+					warehouse: ''
 				},
 				search_fnsku: '',
 				paginationShow: true,
 				warename: '',
-				submitDisabled: false
+				submitDisabled: false,
+				cargo_ware_houses: [],
+				isaddWare: false,
 			}
 		},
 		created() {
@@ -128,6 +141,7 @@
 								data.lock_sum += data2.lock_sum
 								data2.edit = false
 								data2.originalSum = data2.sum
+								data2.noshow = false
 							})
 						})
 						this.tableData = res.data.data
@@ -156,6 +170,7 @@
 								data.lock_sum += data2.lock_sum
 								data2.edit = false
 								data2.originalSum = data2.sum
+								data2.noshow = false
 							})
 						})
 						this.tableData = res.data.data
@@ -174,11 +189,16 @@
 				this.getData()
 			},
 			detailsShow(index, row) {
-				this.idx = index;
-				const item = this.tableData[index];
-				this.form = {
-					cargo_ware_houses: item.cargo_ware_houses,
+				this.isaddWare = false
+				this.addWare = {
+					fnsku: '',
+					sum: '',
+					warehouse: ''
 				}
+				this.addWare.warehouse = row.name
+				this.idx = row.id;
+				const item = this.tableData[index];
+				this.cargo_ware_houses = row.cargo_ware_houses
 				this.detailVisible = true
 			},
 			clear_warename() {
@@ -212,6 +232,66 @@
 
                 }).finally(() => {
                     this.submitDisabled = false
+                })
+			},
+			addWarehouse() {
+				this.submitDisabled = true
+                let params = {
+                    id: this.idx,
+                    sum: this.addWare.sum,
+                    fnsku: this.addWare.fnsku
+                }
+                this.$axios.post('/admin/warehouses', params,{
+                     headers: {
+                        'Authorization': localStorage.getItem('token_admin')
+                    }
+                }).then((res) => {
+                    if(res.data.code == 200) {
+                    	this.getData()
+                    	this.isaddWare = false
+                    	this.cargo_ware_houses.push({ware_house_name: this.addWare.warehouse, fnsku: this.addWare.fnsku, sum: this.addWare.sum, lock_sum: '0', noshow: true})
+                        this.$message.success("创建成功")
+                    }
+                }).catch((res) => {
+
+                }).finally(() => {
+                    this.submitDisabled = false
+                })
+			},
+			cancelAddWare() {
+				this.isaddWare = false
+				this.addWare = {
+					fnsku: '',
+					sum: '',
+					warehouse: ''
+				}
+			},
+			deleteWare(index, row) {
+				this.$confirm('此操作将永久删除该信息, 是否继续?', '提示', {
+                    confirmButtonText: '确定',
+                    cancelButtonText: '取消',
+                    type: 'danger'
+                }).then(() => {
+                	console.log(row.id)
+                    let params = {
+                        cargo_ware_house_id: row.id
+                    }
+                    this.$axios.delete('/admin/warehouses/' + row.ware_house_id, {
+                         headers: {
+                            'Authorization': localStorage.getItem('token_admin')
+                        },
+                        params
+                    }).then((res) => {
+                        if(res.data.code == 200) {
+                            this.cargo_ware_houses.splice(index, 1);
+                            this.getData()
+                            this.$message.success("删除成功")
+                        }
+                    }).catch(() => {
+                        
+                    })
+                }).catch(() => {
+                    this.$message.info('已取消删除')
                 })
 			}
 		},

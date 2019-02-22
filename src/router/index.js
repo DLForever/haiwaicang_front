@@ -59,17 +59,18 @@ export default new Router({
                 {
                     path: '/inboundmanage',
                     component: resolve => require(['../components/page/InBoundManage.vue'], resolve),
-                    meta: { title: '待审核' }
+                    meta: { title: '待完成' }
                 },
                 {
                     path: '/inbounded',
                     component: resolve => require(['../components/page/InBoundedManage.vue'], resolve),
-                    meta: { title: '待入库' }
+                    meta: { title: '已完成' }
                 },
                 {
                     path: '/inbounding',
                     component: resolve => require(['../components/page/InBoundingManage.vue'], resolve),
-                    meta: { title: '已入库' }
+                    name: 'inbounding',
+                    meta: { title: '入库单详情' }
                 },
                 {
                     path: '/inboundsettlement',
@@ -144,17 +145,18 @@ export default new Router({
                 {
                     path: '/WMSinmanage',
                     component: resolve => require(['../components/page/WMSInBoundManage.vue'], resolve),
-                    meta: { title: '待入库', permission: true  }
+                    meta: { title: '未完成', permission: true  }
                 },
                 {
                     path: '/WMSinedmanage',
                     component: resolve => require(['../components/page/WMSInBoundedManage.vue'], resolve),
-                    meta: { title: '已入库', permission: true  }
+                    name: 'WMSinedmanage',
+                    meta: { title: '入库单详情', permission: true  }
                 },
                 {
                     path: '/WMSinsettlement',
                     component: resolve => require(['../components/page/WMSInBoundSettlementManage.vue'], resolve),
-                    meta: { title: '已结算', permission: true  }
+                    meta: { title: '已完成', permission: true  }
                 },
                 {
                     path: '/WMSbatchinmanage',

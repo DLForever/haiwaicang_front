@@ -3,7 +3,7 @@
 		<div class="crumbs">
 			<el-breadcrumb separator="/">
 				<el-breadcrumb-item><i class="el-icon-tickets"></i> WMS入库管理</el-breadcrumb-item>
-				<el-breadcrumb-item>已入库</el-breadcrumb-item>
+				<el-breadcrumb-item>入库单详情</el-breadcrumb-item>
 			</el-breadcrumb>
 		</div>
 		<div class="container">
@@ -16,11 +16,11 @@
 						<el-option v-for="item in options" :key="item.id" :label="item.name" :value="item.id"></el-option>
 						<infinite-loading :on-infinite="onInfinite" ref="infiniteLoading"></infinite-loading>
 					</el-select>
-					批次:
+					<!-- 批次:
 					<el-select v-model="select_batch" filterable remote placeholder="选择批次" :loading="loading2" class="handle-select mr10" @visible-change="batchVisible" :remote-method="remoteMethodBatch">
 						<el-option v-for="item in batchoptions" :key="item.id" :label="item.batch_number" :value="item.id"></el-option>
 						<infinite-loading :on-infinite="onInfinite_batch" ref="infiniteLoading2"></infinite-loading>
-					</el-select>
+					</el-select> -->
 					<!-- 状态:
 					<el-select v-model="statusSelect" placeholder="请选择" class="handle-select mr10">
 						<el-option v-for="item in statusOptions" :key="item.value" :label="item.label" :value="item.value"></el-option>
@@ -75,9 +75,11 @@
 								<el-dropdown-item>
 									<el-button @click="detailsShow(scope.$index, scope.row)" type="text">详情</el-button>
 								</el-dropdown-item>
-								<!-- <el-dropdown-item>
-									<el-button @click="handleEdit(scope.$index, scope.row)" type="text">入库</el-button>
-								</el-dropdown-item> -->
+								<template v-if="scope.row.status == 7">
+									<el-dropdown-item>
+										<el-button @click="handleEdit(scope.$index, scope.row)" type="text">入库</el-button>
+									</el-dropdown-item>
+								</template>
 								<el-dropdown-item>
 									<el-button @click="handleDelete(scope.$index, scope.row)" type="text">删除</el-button>
 								</el-dropdown-item>
@@ -275,21 +277,13 @@
 				if(process.env.NODE_ENV === 'development') {
 					//					this.url = '/ms/table/list';
 				};				
-				this.$axios.get('/admin/store_ins?page=' + this.cur_page + '&batch_store_in_id=' + this.select_batch + '&user_id=' + this.select_cate + '&fnsku=' + this.search_fnsku + '&status=4' + '&logistics_number=' + this.search_logistics_number, {
+				this.$axios.get('/admin/store_ins?page=' + this.cur_page + '&batch_store_in_id=' + this.$route.params.batch_store_in_id + '&user_id=' + this.select_cate + '&fnsku=' + this.search_fnsku + '&status=' + '&logistics_number=' + this.search_logistics_number, {
 					headers: {
 						'Authorization': localStorage.getItem('token_admin')
 					},
-					//					page: this.cur_page
 				}).then((res) => {
-					//					res.data.data.forEach((data) => {
-					//						data.product_store_ins.forEach((data2) => {
-					//							data2.warehouse = []
-					//						})
-					//					})
 					if(res.data.code == 200) {
 						this.tableData = res.data.data;
-					//					let test = res.data.data[1].product_store_ins
-					//					this.totals = this.tableData.length
 						this.totals = res.data.count
 						this.paginationShow = true
 					}
@@ -299,11 +293,10 @@
 			filter_inbound() {
 				this.paginationShow = false
 				this.cur_page = 1
-				this.$axios.get('/admin/store_ins?page=' + this.cur_page + '&batch_store_in_id=' + this.select_batch + '&user_id=' + this.select_cate + '&fnsku=' + this.search_fnsku + '&status=4' + '&logistics_number=' + this.search_logistics_number, {
+				this.$axios.get('/admin/store_ins?page=' + this.cur_page + '&batch_store_in_id=' + this.$route.params.batch_store_in_id + '&user_id=' + this.select_cate + '&fnsku=' + this.search_fnsku + '&status=' + '&logistics_number=' + this.search_logistics_number, {
 					headers: {
 						'Authorization': localStorage.getItem('token_admin')
 					},
-					//                  page: this.cur_page
 				}).then((res) => {
 					if(res.data.code == 200) {
 						this.tableData = res.data.data;

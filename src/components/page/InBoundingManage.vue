@@ -3,31 +3,28 @@
 		<div class="crumbs">
 			<el-breadcrumb separator="/">
 				<el-breadcrumb-item><i class="el-icon-tickets"></i> 入库管理</el-breadcrumb-item>
-				<el-breadcrumb-item>待入库</el-breadcrumb-item>
+				<el-breadcrumb-item>入库单详情</el-breadcrumb-item>
 			</el-breadcrumb>
 		</div>
 		<div class="container">
 			<div class="handle-box">
 				<div class="inbound_filter">
-					批次:
+					物流单号:
+					<el-input v-model="search_logistics_number" placeholder="请输入物流单号" class="handle-select mr10 batch_box"></el-input>
+					FNSKU:
+					<el-input v-model="search_fnsku" placeholder="请输入FNSKU" class="handle-select mr10 batch_box"></el-input>
+					<!-- 批次:
 					<el-select v-model="select_batch" placeholder="选择批次" class="handle-select mr10 batch_box">
 						<el-option v-for="item in batchoptions" :key="item.id" :label="item.batch_number" :value="item.id"></el-option>
 						<infinite-loading :on-infinite="onInfinite_batch" ref="infiniteLoading2"></infinite-loading>
 					</el-select>
-					<!-- 状态:
+					状态:
 					<el-select v-model="statusSelect" placeholder="请选择" class="handle-select mr10">
 						<el-option v-for="item in statusOptions" :key="item.value" :label="item.label" :value="item.value"></el-option>
 					</el-select> -->
                     <el-button @click="clear_filter" type="default">重置</el-button>
                     <el-button @click="filter_inbound" type="primary">查询</el-button>
                 </div>
-				<!--<el-button type="primary" icon="delete" class="handle-del mr10" @click="delAll">批量删除</el-button>
-				<el-select v-model="select_cate" placeholder="筛选省份" class="handle-select mr10">
-					<el-option key="1" label="广东省" value="广东省"></el-option>
-					<el-option key="2" label="湖南省" value="湖南省"></el-option>
-				</el-select>-->
-				<!--<el-input v-model="select_word" placeholder="筛选关键词" class="handle-input mr10"></el-input>-->
-				<!--<el-button type="primary" icon="search" @click="search">搜索</el-button>-->
 			</div>
 			<br><br>
 			<!--<el-table :data="data.slice((cur_page-1)*pagesize, cur_page*pagesize)" border style="width: 100%" ref="multipleTable" @selection-change="handleSelectionChange">-->
@@ -84,10 +81,12 @@
 
 		<!-- 详情弹出框 -->
 		<el-dialog title="详情" :visible.sync="detailVisible" width="50%">
-			<!-- <div class="check_button">
-				<el-button type="primary" @click="check">通过审核</el-button>
-			</div>
-			<br> -->
+			<template v-if="need_check">
+				<div class="check_button">
+					<el-button type="primary" @click="check">通过审核</el-button>
+				</div>
+				<br>
+			</template>
 			<el-table :data="ware_details" border style="width: 100%">
 				<el-table-column prop="fnsku" label="fnsku"></el-table-column>
 				<el-table-column prop="plan_sum" label="计划数量"></el-table-column>
@@ -114,7 +113,7 @@
 <script>
 	import VueInfiniteLoading from "vue-infinite-loading"
 	export default {
-		//      name: 'inbounds_manage',
+		// name: 'inbounds_manage',
 		data() {
 			return {
 				url: './static/vuetable.json',
@@ -151,33 +150,21 @@
 				},
 				statusOptions: [{value: 1, label: '待审核'}, {value: 7, label: '待入库'}, {value: 4, label: '已入库'}, {value: 6, label: '已结算'}, {value: 5, label: '待删除'},],
 				statusSelect: '',
+				search_logistics_number: '',
+				need_check: false
 			}
 		},
 		created() {
 			this.getData()
 			this.getBatch()
-			this.getNotify()
 		},
-		watch: {
-			"$route": "getData"
-		},
+		// watch: {
+		// 	"$route": "getData"
+		// },
 		computed: {
 			data() {
 				return this.tableData.filter((d) => {
-					//					return d
-					//                  let is_del = false;
-					//                  for (let i = 0; i < this.del_list.length; i++) {
-					//                      if (d.name === this.del_list[i].name) {
-					//                          is_del = true;
-					//                          break;
-					//                      }
-					//                  }
-					let is_del = false;
-					if(!is_del) {
-						if(d.logistics_number.indexOf(this.select_word) > -1) {
-							return d;
-						}
-					}
+					return d
 				})
 			}
 		},
@@ -201,24 +188,18 @@
 			handleCurrentChange(val) {
 				this.cur_page = val;
 				this.getData()
-				// if(!this.select_batch || this.select_batch == -1) {
-				// 	this.getData()
-				// } else {
-				// 	this.dataFilterBatch()
-				// }
-				
 			},
 			// 获取 easy-mock 的模拟数据
 			getData() {
-				// 开发环境使用 easy-mock 数据，正式环境使用 json 文件
 				if(process.env.NODE_ENV === 'development') {
-					//                  this.url = '/ms/table/list';
 				};
-				this.$axios.get('/store_ins?page=' + this.cur_page + '&batch_store_in_id=' + this.select_batch + '&fnsku=' + this.search_fnsku + '&status=7', {
+				// if (!this.$route.params.batch_store_in_id) {
+    //                 this.$route.params.batch_store_in_id = ''
+    //             }
+				this.$axios.get('/store_ins?page=' + this.cur_page + '&batch_store_in_id=' + this.$route.params.batch_store_in_id + '&fnsku=' + this.search_fnsku + '&logistics_number=' + this.search_logistics_number, {
 					headers: {
 						'Authorization': localStorage.getItem('token')
 					},
-					//                  page: this.cur_page
 				}).then((res) => {
 					if(res.data.code == 200) {
 						this.tableData = res.data.data;
@@ -233,7 +214,7 @@
 			filter_inbound() {
 				this.paginationShow = false
 				this.cur_page = 1
-				this.$axios.get('/store_ins?page=' + this.cur_page + '&batch_store_in_id=' + this.select_batch + '&fnsku=' + this.search_fnsku + '&status=7', {
+				this.$axios.get('/store_ins?page=' + this.cur_page + '&batch_store_in_id=' + this.$route.params.batch_store_in_id + '&fnsku=' + this.search_fnsku + '&logistics_number=' + this.search_logistics_number, {
 					headers: {
 						'Authorization': localStorage.getItem('token')
 					},
@@ -252,9 +233,8 @@
 			clear_filter() {
 				this.paginationShow = false
 				this.cur_page = 1
-				this.select_batch = ''
+				this.search_logistics_number = ''
 				this.search_fnsku = ''
-				this.statusSelect = ''
 				this.getData()
 			},
 			getBatch(callback = undefined) {
@@ -333,6 +313,7 @@
 				return row.tag === value;
 			},
 			detailsShow2(index, row) {
+				
 				this.detail_id = row.id
 				this.idx = index;
 				const item = this.tableData[index];
@@ -342,6 +323,10 @@
 				this.detailVisible = true;
 			},
 			detailsShow(index, row) {
+				this.need_check = false
+				if (row.status == '1') {
+					this.need_check = true
+				}
 				this.detail_id = row.id
 				this.$axios.get('/store_ins/' + row.id, {
 					headers: {
