@@ -93,6 +93,11 @@ export default new Router({
                     meta: { title: '发货订单管理' }
                 },
                 {
+                    path: '/addoutbound',
+                    component: resolve => require(['../components/page/addOutBound.vue'], resolve),
+                    meta: { title: '创建出库单' }
+                },
+                {
                     path: '/outboundmanage',
                     component: resolve => require(['../components/page/OutBoundManage.vue'], resolve),
                     meta: { title: '待审核' }

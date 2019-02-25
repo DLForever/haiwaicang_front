@@ -9,7 +9,7 @@
 		<div class="container">
 			用户:
 			<el-select :clearable="true" v-model="select_cate" filterable remote placeholder="选择用户" class="handle-select mr10" :loading="loading" @visible-change="selectVisble" :remote-method="remoteMethod">
-				<el-option v-for="item in options" :key="item.id" :label="item.name" :value="item.id"></el-option>
+				<el-option v-for="item in options" :key="item.id" :label="item.usercode" :value="item.id"></el-option>
 				<infinite-loading :on-infinite="onInfinite" ref="infiniteLoading"></infinite-loading>
 			</el-select>
 			&nbsp&nbsp&nbsp&nbsp
@@ -438,6 +438,18 @@
 						},
 					}).then((res) => {
 						if(res.data.code == 200) {
+							res.data.data.forEach((data) => {
+								let tempcode =  String(data.id%1000)
+								let tempindex = parseInt(data.id/1000)
+								if(tempcode.length ==1) {
+									tempcode = '00' + tempcode
+								}else if(tempcode.length ==2) {
+									tempcode = '0' + tempcode
+								}else{
+
+								}
+								data.usercode = this.code[tempindex] + tempcode
+							})
 							this.loading = false
 							if(reload) {
 								this.options = this.options2.concat(res.data.data)

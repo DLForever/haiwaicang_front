@@ -28,6 +28,8 @@
 						<el-tag :type="scope.row.status | statusFilter">{{getStatusName(scope.row.status)}}</el-tag>
 					</template>
 				</el-table-column>
+				<el-table-column prop="created_at" label="创建时间" :formatter="formatter_created_at" show-overflow-tooltip>
+				</el-table-column>
 				<!-- <el-table-column label="操作" width="100">
 					<template slot-scope="scope">
 						<el-dropdown>
@@ -177,6 +179,9 @@
 					cargo_ware_houses: item.cargo_ware_houses,
 				}
 				this.detailVisible = true
+			},
+			formatter_created_at(row, column) {
+				return row.created_at.substr(0, 19);
 			},
 			getStatusName(status) {
 				if(status == 1) {

@@ -3,126 +3,74 @@
 		<div class="crumbs">
 			<el-breadcrumb separator="/">
 				<el-breadcrumb-item><i class="el-icon-date"></i> 出库单管理</el-breadcrumb-item>
-				<el-breadcrumb-item>待审核</el-breadcrumb-item>
+				<el-breadcrumb-item>创建出库单</el-breadcrumb-item>
 			</el-breadcrumb>
 		</div>
 		<div class="container">
-			<!-- <el-tabs v-model="message">
-				<el-tab-pane label="新建产品" name="first"> -->
 			<div class="handle-box">
-				<!-- <el-button type="primary" @click="showOutBound">创建出库单</el-button> -->
-				<div class="fnsku_filter">
-					Fnsku:
-                    <el-input style="width:150px" placeholder="请输入Fnsku" v-model.trim="search_fnsku"></el-input>
-                    <!-- 状态:
-					<el-select v-model="statusSelect" placeholder="请选择" class="handle-select mr10">
-						<el-option v-for="item in statusOptions" :key="item.value" :label="item.label" :value="item.value"></el-option>
-					</el-select> -->
-                    <el-button @click="clear_search" type="default">重置</el-button>
-                    <el-button @click="filter_inbound" type="primary">查询</el-button>
-                </div>
-                <br><br>
 			</div>
-				
-			<el-table :data="data" border style="width: 100%" ref="multipleTable" @selection-change="handleSelectionChange">
-				<el-table-column type="selection" width="55"></el-table-column>
-				<!--<el-table-column prop="created_at" label="创建时间" :formatter="formatter_created_at" width="150">
-				</el-table-column>
-				<el-table-column prop="updated_at" label="更新时间" :formatter="formatter_updated_at" width="150">
-				</el-table-column>				-->
-				<el-table-column prop="barcode" label="出库单单号">
-				</el-table-column>
-				<el-table-column prop="total" label="数量">
-				</el-table-column>
-				<el-table-column prop="user_remark" label="用户备注" show-overflow-tooltip>
-				</el-table-column>
-				<el-table-column prop="manager_remark" label="仓库备注" show-overflow-tooltip>
-				</el-table-column>
-				<el-table-column prop="remove_remark" label="用户删除备注" show-overflow-tooltip>
-				</el-table-column>
-				<el-table-column prop="created_at" label="创建时间" :formatter="formatter_created_at" width="150">
-				</el-table-column>
-				<el-table-column prop="is_mix" label="是否混装" width="150"></el-table-column>
-				<el-table-column prop="status" label="状态" width="120">
+			<el-table :data="form" border style="width: 100%" ref="multipleTable">
+				<el-table-column prop="total" label="原fnsku">
 					<template slot-scope="scope">
-						<el-tag :type="scope.row.status | statusFilter">{{getStatusName(scope.row.status)}}</el-tag>
+						<el-select v-model="scope.row.product_id" filterable remote placeholder="选择产品" :loading="loading" @visible-change="selectVisble" :remote-method="remoteMethod">
+							<el-option v-for="item in options" :key="item.id" :label="item.fnsku" :value="item.id" ></el-option>
+							<span v-for="(q, index6) in form" v-if="index6===0">
+								<infinite-loading :on-infinite="onInfinite_product" ref="infiniteLoading"></infinite-loading>
+							</span>
+						</el-select>
 					</template>
 				</el-table-column>
-				<!--<el-table-column prop="status" label="状态" width="120">
+				<el-table-column prop="new_fnsku" label="新的fnsku">
 					<template slot-scope="scope">
-						<el-tag :type="scope.row.status | statusFilter">{{getStatusName(scope.row.status)}}</el-tag>
+						<el-input v-model.trim="scope.row.new_fnsku" placeholder="新的fnsku"></el-input>
 					</template>
-				</el-table-column>-->
-				<el-table-column label="操作" width="100">
+				</el-table-column>
+				<el-table-column prop="sku" label="sku">
 					<template slot-scope="scope">
-						<el-dropdown>
-							<el-button type="primary">
-								操作<i class="el-icon-arrow-down el-icon--right"></i>
-							</el-button>
-							<el-dropdown-menu slot="dropdown">
-								<el-dropdown-item>
-									<el-button @click="detailsShow(scope.$index, scope.row)" type="text">&nbsp&nbsp&nbsp详情&nbsp</el-button>
-								</el-dropdown-item>
-								<el-dropdown-item>
-									<el-button @click="updateOutbound(scope.$index, scope.row)" type="text">&nbsp&nbsp&nbsp更新&nbsp</el-button>
-								</el-dropdown-item>
-								<el-dropdown-item>
-									<el-button size="small" @click="handleEdit(scope.$index, scope.row)" type="text">&nbsp外箱标</el-button>
-								</el-dropdown-item>
-								<el-dropdown-item>
-									<el-button @click="showImgs(scope.$index, scope.row)" type="text">查看附件</el-button>
-								</el-dropdown-item>
-								<el-dropdown-item>
-									<el-button @click="handleDelete(scope.$index, scope.row)" type="text">&nbsp&nbsp&nbsp删除&nbsp</el-button>
-								</el-dropdown-item>
-							</el-dropdown-menu>
-						</el-dropdown>
+						<el-input v-model.trim="scope.row.sku" placeholder="sku" ></el-input>
 					</template>
+				</el-table-column>
+				<el-table-column prop="plan_sum" label="数量" width="150">
+					<template slot-scope="scope">
+						<el-input v-model.trim="scope.row.plan_sum" placeholder="计划数量"></el-input>
+					</template>
+				</el-table-column>
+				<el-table-column label="新标" width="200">
+					<template slot-scope="scope">
+						<my-uploader v-if="my_uploaderVisible" @current-change="handleCurrentChange" :onChange="changeLabel.bind(null,scope.$index)"></my-uploader>
+					</template>
+					
 				</el-table-column>
 			</el-table>
-			<div class="pagination">
-				<el-pagination v-if="paginationShow" @current-change="handleCurrentChange" :current-page='cur_page'  :page-size="pagesize" layout="prev, pager, next" :total="totals">
-				</el-pagination>
-			</div>
-		<!-- </el-tab-pane>
-		<el-tab-pane label="批量上传" name="second">
-					<template v-if="message === 'second'">
-						<el-form ref="form" :model="form" label-width="85px">
-							<el-form-item label="批量上传">
-								<el-upload class="upload-demo" drag action="" :file-list="fileList2" :on-remove="handleRemove2" :auto-upload="false" :on-change="changeFile2" :limit="5" multiple>
-									<i class="el-icon-upload"></i>
-									<div class="el-upload__text">将文件拖到此处，或<em>点击上传</em></div>
-									<div class="el-upload__tip" slot="tip">只能上传xls文件</div>
-								</el-upload>
-								<a type="primary" href="">模板下载</a>
-							</el-form-item>
-						</el-form>
-					</template>
-				</el-tab-pane>
-	</el-tabs> -->
-			<!-- 添加出库弹出框 -->
+			<el-form :rules="rules" label-width="115px">
+				<br>
+				<div class="newOrder">
+					<el-button @click="createOrder">添加出库单</el-button>
+					<el-button @click="back" :disabled="isDisableBu" type="danger">撤销</el-button>
+				</div>
+				<br>
+				<el-form-item label="是否混装" required>
+					<el-radio v-model="radio" label="true" border>是</el-radio>
+					<el-radio v-model="radio" label="false" border>否</el-radio>
+				</el-form-item>
+				<el-form-item label="备注">
+					<el-input v-model="remark"></el-input>
+				</el-form-item>
+				<div class="confirm">
+					<el-button type="default" @click="closeOutbound">取消</el-button>
+					<el-button type="primary" @click="onSubmit" :disabled="submitDisable">新建</el-button>
+				</div>
+			</el-form>
+			<!-- 创建出库单 -->
 			<el-dialog title="创建出库单" :visible.sync="outboundVisible" width="70%" @close="closeOutbound">
 				<el-table :data="form" border style="width: 100%" ref="multipleTable">
 					<el-table-column prop="total" label="原fnsku" width="260">
 						<template slot-scope="scope">
-							<!-- <table>
-								<tbody>
-									<tr>
-										<td>
-											<el-select v-model="scope.row.product_id" filterable remote placeholder="选择产品" class="handle-select mr10" :loading="loading" @visible-change="selectVisble" :remote-method="remoteMethod">
-												<el-option v-for="item in options" :key="item.id" :label="item.fnsku" :value="item.id" ></el-option>
-												<infinite-loading :on-infinite="onInfinite_product" ref="infiniteLoading"></infinite-loading>
-											</el-select>
-										</td>
-									</tr>
-								</tbody>
-							</table> -->
 							<el-select v-model="scope.row.product_id" filterable remote placeholder="选择产品" class="handle-select mr10" :loading="loading" @visible-change="selectVisble" :remote-method="remoteMethod">
 								<el-option v-for="item in options" :key="item.id" :label="item.fnsku" :value="item.id" ></el-option>
 								<span v-for="(q, index6) in form" v-if="index6===0">
 									<infinite-loading :on-infinite="onInfinite_product" ref="infiniteLoading"></infinite-loading>
 								</span>
-								<!-- <infinite-loading :on-infinite="onInfinite_product" ref="infiniteLoading"></infinite-loading> -->
 							</el-select>
 						</template>
 					</el-table-column>
@@ -149,33 +97,6 @@
 					</el-table-column>
 				</el-table>
 				<el-form :rules="rules" label-width="115px">
-					<!-- <el-form-item>
-						<table class="table text-center">
-							<tbody v-for="(p,index) in form">
-								<tr>
-									<td>
-										<el-select v-model="p.product_id" placeholder="选择产品" class="handle-select mr10">
-											<el-option v-for="item in options" :key="item.id" :label="item.fnsku" :value="item.id"></el-option>
-											<infinite-loading :on-infinite="onInfinite" ref="infiniteLoading"></infinite-loading>
-										</el-select>
-									</td>
-									
-									<td>
-											<el-input v-model.trim="p.new_fnsku" placeholder="新的fnsku"></el-input>
-									</td>
-									<td>
-											<el-input v-model.trim="p.sku" placeholder="sku"></el-input>
-									</td>
-									<td>
-											<el-input v-model.trim="p.plan_sum" placeholder="计划数量"></el-input>
-									</td>
-									<td  @click="getIndex(index)">
-										<my-uploader v-if="my_uploaderVisible" :onChange="changeLabel.bind(null,index)"></my-uploader>			
-									</td>
-								</tr>
-							</tbody>
-						</table>
-					</el-form-item> -->
 					<br>
 					<div class="newOrder">
 						<el-button @click="createOrder">添加出库单</el-button>
@@ -186,34 +107,19 @@
 						<el-radio v-model="radio" label="true" border>是</el-radio>
 						<el-radio v-model="radio" label="false" border>否</el-radio>
 					</el-form-item>
-					<!-- <el-form-item label="是否混装">
-						<el-radio-group v-model="radio">
-							<el-radio-button label="true">是</el-radio-button>
-							<el-radio-button label="false">否</el-radio-button>
-						</el-radio-group>
-					</el-form-item> -->
 					<el-form-item label="备注">
 						<el-input v-model="remark"></el-input>
 					</el-form-item>
-					<!-- <el-form-item> -->
 					<div class="confirm">
 						<el-button type="default" @click="closeOutbound">取消</el-button>
 						<el-button type="primary" @click="onSubmit" :disabled="submitDisable">新建</el-button>
 					</div>
-					<!-- </el-form-item> -->
 				</el-form>
 			</el-dialog>
 
 			<!-- 更新出库弹出框 -->
 			<el-dialog title="更新出库单" :visible.sync="updateVisible" width="60%" @close="closeUpdate">
 				<el-table :data="updateform" border style="width: 100%" ref="multipleTable">
-					<!-- <el-table-column prop="total" label="原fnsku">
-						<template slot-scope="scope">
-							<el-select v-model="scope.row.product_id" placeholder="选择产品" class="handle-select mr10">
-								<el-option v-for="item in options" :key="item.id" :label="item.fnsku" :value="item.id"></el-option>
-							</el-select>
-						</template>
-					</el-table-column> -->
 					<el-table-column prop="total" label="原fnsku" width="260">
 						<template slot-scope="scope">
 							<el-select v-model="scope.row.product_id" filterable remote placeholder="选择产品" class="handle-select mr10" :loading="loading" @visible-change="selectVisble" :remote-method="remoteMethod">
@@ -221,7 +127,6 @@
 								<span v-for="(q, index6) in form" v-if="index6===0">
 									<infinite-loading :on-infinite="onInfinite_product" ref="infiniteLoading"></infinite-loading>
 								</span>
-								<!-- <infinite-loading :on-infinite="onInfinite_product" ref="infiniteLoading"></infinite-loading> -->
 							</el-select>
 						</template>
 					</el-table-column>
@@ -248,31 +153,6 @@
 						</template>
 					</el-table-column>
 				</el-table>
-				<!-- <el-form :rules="rules" label-width="115px">
-					<el-form-item label="出库单" required>
-						<table class="table text-center">
-							<tbody v-for="(p,index) in updateform">
-								<tr>
-									<td>
-										<el-select v-model="p.product_id" placeholder="选择产品" class="handle-select mr10">
-											<el-option v-for="item in options" :key="item.id" :label="item.fnsku" :value="item.id"></el-option>
-											<infinite-loading :on-infinite="onInfinite" ref="infiniteLoading"></infinite-loading>
-										</el-select>
-									</td>
-									<td>
-										<el-input v-model.trim="p.new_fnsku" placeholder="新的fnsku"></el-input>
-									</td>
-									<td>
-										<el-input v-model.trim="p.plan_sum" placeholder="计划数量"></el-input>
-									</td>
-									<td @click="getIndex(index)">
-										<my-uploader v-if="p.picturefileList != ''" :onChange="updateLabel.bind(null,index)" :defaultImg="$axios.defaults.baseURL+p.picturefileList"></my-uploader>
-										<my-uploader v-else :onChange="updateLabel.bind(null,index)"></my-uploader>			
-									</td>
-								</tr>
-							</tbody>
-						</table>
-					</el-form-item> -->
 					<br>
 				<el-form>
 					<div class="newOrder">
@@ -284,12 +164,6 @@
 						<el-radio v-model="updateRadio" label="true" border>是</el-radio>
 						<el-radio v-model="updateRadio" label="false" border>否</el-radio>
 					</el-form-item>
-					<!-- <el-form-item label="是否混装">
-						<el-radio-group v-model="updateRadio">
-							<el-radio-button label="true">是</el-radio-button>
-							<el-radio-button label="false">否</el-radio-button>
-						</el-radio-group>
-					</el-form-item> -->
 					<el-form-item label="备注">
 						<el-input v-model="remark"></el-input>
 					</el-form-item>
@@ -405,23 +279,7 @@
                         <a v-else :href="$axios.defaults.baseURL+scope.row.url.url" target="_blank">{{scope.row.url.url.split('/').pop()}}</a>
                     </template>
 	                </el-table-column>
-	                <!-- <el-table-column label="操作" width="100">
-	                    <template slot-scope="scope">
-	                        <el-button type="danger" @click="handleDel(scope.$index, scope.row)">删除</el-button>
-	                    </template>
-	                </el-table-column> -->
 	            </el-table>
-				<!-- <el-carousel :interval="4000" type="card" height="200px" v-if="img_show">
-					<el-carousel-item v-for="item in form.pictures">
-						<img :src="$axios.defaults.baseURL+item.url.url" />
-					</el-carousel-item>
-				</el-carousel>
-				<div v-if="pdf_show" v-for="item in form.pictures">
-					<a target="_blank" :href="$axios.defaults.baseURL + ':3000' +item.url.url">{{'查看' + item.id + '.pdf'}}</a>
-				</div> -->
-				<!-- <span slot="footer" class="dialog-footer">
-                <el-button @click="showImg = false">取 消</el-button>
-                <el-button type="primary" @click="showImg = false">确 定</el-button> -->
             </span>
 			</el-dialog>
 		</div>
@@ -896,6 +754,7 @@
 						this.getDatas()
 						this.outboundVisible = false
 						this.submitDisable = false
+						this.$router.push('outboundmanage');
 						this.getMessageCount()
 					}else {
 						this.submitDisable = false

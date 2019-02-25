@@ -821,7 +821,7 @@
 							data.check_sum2 = ''
 						})
 						res.data.data.product_store_ins.forEach((data) => {
-							let temptime = data.created_at.substr(0, 19)
+							let temptime = data.done_time.substr(0, 19)
 							console.log(temptime)
 							let temptime2 = temptime.replace(/T/g, " ")
 							let temptime3 = new Date(temptime2.replace(/-/g, "/"))

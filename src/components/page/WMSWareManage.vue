@@ -54,23 +54,36 @@
         	</template>
         	<br><br>
 			<el-table :data="cargo_ware_houses" border style="width: 100%">
-				<el-table-column prop="ware_house_name" label="库位"></el-table-column>
+				<el-table-column prop="ware_house_name" label="库位">
+					<template slot-scope="scope">
+						<template v-if="scope.row.remove">
+							<el-input v-model="scope.row.ware_house_name" class="edit-input" size="small"/>
+							<el-button class="cancel-btn" size="small" icon="el-icon-refresh" type="warning" @click="cancelEdit(scope.row)">取消</el-button>
+						</template>
+						<span v-else>{{scope.row.ware_house_name}}</span>
+					</template>
+				</el-table-column>
 				<el-table-column prop="fnsku" label="产品名称"></el-table-column>
 				<el-table-column prop="sum" label="数量" width="250">
 					<template slot-scope="scope">
 						<template v-if="scope.row.edit">
 							<el-input v-model="scope.row.sum" class="edit-input" size="small"/>
-							<el-button class="cancel-btn" size="small" icon="el-icon-refresh" type="warning" @click="cancelEdit(scope.row)">取消</el-button>
 						</template>
 						<span v-else>{{scope.row.sum}}</span>
 					</template>
 				</el-table-column>
 				<el-table-column prop="lock_sum" label="锁定数量"></el-table-column>
-				<el-table-column label="操作">
+				<el-table-column label="操作" width="300">
 					<template slot-scope="scope">
-						<el-button v-if="scope.row.edit" :disabled="submitDisabled" type="success" size="small" icon="el-icon-circle-check-outline" @click="confirmEdit(scope.row)">确认</el-button>
-						<el-button v-else type="primary" size="small" icon="el-icon-edit" :disabled="scope.row.noshow" @click="scope.row.edit=!scope.row.edit">编辑</el-button>
-						<el-button type="danger" size="small" icon="el-icon-delete" :disabled="scope.row.noshow" @click="deleteWare(scope.$index, scope.row)">删除</el-button>
+						<template v-if="!scope.row.remove">
+							<el-button v-if="scope.row.edit" :disabled="submitDisabled" type="success" size="small" icon="el-icon-circle-check-outline" @click="confirmEdit(scope.row)">确认</el-button>
+							<el-button v-else type="primary" size="small" icon="el-icon-edit" :disabled="scope.row.noshow" @click="scope.row.edit=!scope.row.edit">编辑</el-button>
+							<el-button v-if="!scope.row.edit" type="danger" size="small" icon="el-icon-delete" :disabled="scope.row.noshow" @click="deleteWare(scope.$index, scope.row)">删除</el-button>
+						</template>
+						<template v-if="!scope.row.edit">
+							<el-button v-if="scope.row.remove" type="success" size="small" icon="el-icon-sort" :disabled="scope.row.noshow" @click="confirmRemove(scope.$index,scope.row)">确认</el-button>
+							<el-button v-else type="info" size="small" icon="el-icon-sort" :disabled="scope.row.noshow" @click="scope.row.remove=!scope.row.remove">移库</el-button>
+						</template>
 					</template>
 				</el-table-column>
 			</el-table>
@@ -142,6 +155,8 @@
 								data2.edit = false
 								data2.originalSum = data2.sum
 								data2.noshow = false
+								data2.remove = false
+								data2.originalWare = data2.ware_house_name
 							})
 						})
 						this.tableData = res.data.data
@@ -171,6 +186,8 @@
 								data2.edit = false
 								data2.originalSum = data2.sum
 								data2.noshow = false
+								data2.remove = false
+								data2.originalWare = data2.ware_house_name
 							})
 						})
 						this.tableData = res.data.data
@@ -272,7 +289,6 @@
                     cancelButtonText: '取消',
                     type: 'danger'
                 }).then(() => {
-                	console.log(row.id)
                     let params = {
                         cargo_ware_house_id: row.id
                     }
@@ -292,6 +308,35 @@
                     })
                 }).catch(() => {
                     this.$message.info('已取消删除')
+                })
+			},
+			cancelRemove(row) {
+				row.sum = row.originalSum
+				row.ware_house_name = row.originalWare
+				row.remove = false
+			},
+			confirmRemove(index, row) {
+				this.submitDisabled = true
+                let params = {
+                    cwh_id: row.id,
+                    warehouse: row.ware_house_name
+                }
+                this.$axios.post('/admin/warehouses/' + row.ware_house_id + '/move', params,{
+                     headers: {
+                        'Authorization': localStorage.getItem('token_admin')
+                    }
+                }).then((res) => {
+                    if(res.data.code == 200) {
+                        this.getData()
+                        this.$message.success("移库成功")
+                        this.cargo_ware_houses.splice(index, 1)
+                        // row.originalWare = row.ware_house_name
+                        // row.remove = false
+                    }
+                }).catch((res) => {
+
+                }).finally(() => {
+                    this.submitDisabled = false
                 })
 			}
 		},

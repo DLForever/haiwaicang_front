@@ -125,6 +125,9 @@
 								index: '14',
 								title: '出库单管理',
 								subs: [{
+									index: 'addoutbound',
+									title: '创建出库单'
+								},{
 									index: 'outboundmanage',
 									title: '待审核'
 								},{
