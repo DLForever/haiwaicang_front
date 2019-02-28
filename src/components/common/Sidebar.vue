@@ -151,7 +151,10 @@
 						subs: [{
 							index: 'goodsmanage',
 							title: '库存管理'
-						}, ]
+						}, {
+							index: 'defectgoodsmanage',
+							title: '不良品管理'
+						}]
 					},
 					//                  {
 					//                      icon: 'el-icon-printer',

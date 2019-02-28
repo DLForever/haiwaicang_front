@@ -44,7 +44,7 @@
 			</div>
 		</div>
 		 <!-- 详情提示框 -->
-        <el-dialog title="详情" :visible.sync="detailVisible" width="70%">
+        <el-dialog title="详情" :visible.sync="detailVisible" width="80%">
         	<el-button :disabled="submitDisabled" v-if="isaddWare" type="success" size="small" icon="el-icon-circle-check-outline" @click="addWarehouse">确认</el-button>
         	<el-button v-else type="primary" size="small" icon="el-icon-plus" @click="isaddWare=!isaddWare">增加</el-button>
         	<el-button v-if="isaddWare" type="warning" icon="el-icon-refresh" @click="cancelAddWare">取消</el-button>
@@ -54,11 +54,12 @@
         	</template>
         	<br><br>
 			<el-table :data="cargo_ware_houses" border style="width: 100%">
+				<el-table-column prop="usercode" label="客户编码"></el-table-column>
 				<el-table-column prop="ware_house_name" label="库位">
 					<template slot-scope="scope">
 						<template v-if="scope.row.remove">
 							<el-input v-model="scope.row.ware_house_name" class="edit-input" size="small"/>
-							<el-button class="cancel-btn" size="small" icon="el-icon-refresh" type="warning" @click="cancelEdit(scope.row)">取消</el-button>
+							<el-button class="cancel-btn" size="small" icon="el-icon-refresh" type="warning" @click="cancelRemove(scope.row)">取消</el-button>
 						</template>
 						<span v-else>{{scope.row.ware_house_name}}</span>
 					</template>
@@ -68,6 +69,7 @@
 					<template slot-scope="scope">
 						<template v-if="scope.row.edit">
 							<el-input v-model="scope.row.sum" class="edit-input" size="small"/>
+							<el-button class="cancel-btn" size="small" icon="el-icon-refresh" type="warning" @click="cancelEdit(scope.row)">取消</el-button>
 						</template>
 						<span v-else>{{scope.row.sum}}</span>
 					</template>
@@ -81,7 +83,7 @@
 							<el-button v-if="!scope.row.edit" type="danger" size="small" icon="el-icon-delete" :disabled="scope.row.noshow" @click="deleteWare(scope.$index, scope.row)">删除</el-button>
 						</template>
 						<template v-if="!scope.row.edit">
-							<el-button v-if="scope.row.remove" type="success" size="small" icon="el-icon-sort" :disabled="scope.row.noshow" @click="confirmRemove(scope.$index,scope.row)">确认</el-button>
+							<el-button v-if="scope.row.remove" type="success" size="small" icon="el-icon-circle-check-outline" :disabled="scope.row.noshow" @click="confirmRemove(scope.$index,scope.row)">确认</el-button>
 							<el-button v-else type="info" size="small" icon="el-icon-sort" :disabled="scope.row.noshow" @click="scope.row.remove=!scope.row.remove">移库</el-button>
 						</template>
 					</template>
@@ -113,6 +115,7 @@
 				submitDisabled: false,
 				cargo_ware_houses: [],
 				isaddWare: false,
+				code: ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z"],
 			}
 		},
 		created() {
@@ -215,6 +218,18 @@
 				this.addWare.warehouse = row.name
 				this.idx = row.id;
 				const item = this.tableData[index];
+				row.cargo_ware_houses.forEach((data) => {
+					let tempcode =  String(data.user_id%1000)
+					let tempindex = parseInt(data.user_id/1000)
+					if(tempcode.length ==1) {
+						tempcode = '00' + tempcode
+					}else if(tempcode.length ==2) {
+						tempcode = '0' + tempcode
+					}else{
+
+					}
+					data.usercode = this.code[tempindex] + tempcode
+				})
 				this.cargo_ware_houses = row.cargo_ware_houses
 				this.detailVisible = true
 			},

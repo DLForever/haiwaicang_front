@@ -83,6 +83,11 @@ export default new Router({
                     meta: { title: '库存管理' }
                 },
                 {
+                    path: '/defectgoodsmanage',
+                    component: resolve => require(['../components/page/DefectGoodsManage.vue'], resolve),
+                    meta: { title: '不良品管理' }
+                },
+                {
                     path: '/ordermanage',
                     component: resolve => require(['../components/page/OrderManage.vue'], resolve),
                     meta: { title: '换标订单管理' }

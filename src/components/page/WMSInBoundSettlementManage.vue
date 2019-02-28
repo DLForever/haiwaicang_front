@@ -693,11 +693,11 @@
             },
 			getStatusName(status) {
 				if(status == 1) {
-					return "待审核"
+					return "未使用"
 				}else if (status ==2) {
 					return "被删除"
 				}else if (status == 3) {
-					return "未结算"
+					return "删除"
 				}else if (status == 4) {
 					return "已入库"
 				}else if(status == 5) {
@@ -705,8 +705,10 @@
 				}else if (status == 6) {
 					return "已结算"
 				}else if (status == 7) {
-					return "未完成"
-				} else {
+					return "待入库"
+				}else if (status == 8) {
+					return "待审核"
+				}  else {
 					return "其他"
 				}
 			},

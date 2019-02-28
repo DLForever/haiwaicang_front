@@ -514,7 +514,7 @@
 			},
 			detailsShow(index, row) {
 				this.idx = index
-				this.$axios.get('/admin/transfer_records?cargo_id=' + row.product_id, {
+				this.$axios.get('/admin/transfer_records?cargo_id=' + row.id, {
 					headers: {
 						'Authorization': localStorage.getItem('token_admin')
 					},
