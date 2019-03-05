@@ -187,13 +187,19 @@
 			<el-table :data="checkData2" border style="width: 100%">
 				<el-table-column prop="fnsku" label="fnsku"></el-table-column>
 				<el-table-column prop="dst_fnsku" label="新fnsku"></el-table-column>
-				<el-table-column prop="sum" label="数量"></el-table-column>
+				<el-table-column prop="sum2" label="数量"></el-table-column>
 			</el-table>
 			<br>
 			<el-table v-if="this.checkData4.length != 0" :data="checkData4" border style="width: 100%" ref="multipleCheck" @selection-change="store_insSelectionChange">
 				<el-table-column type="selection" width="55"></el-table-column>
+				<el-table-column label="序号" width="50">
+					<template slot-scope="scope">
+						<span>{{scope.$index + 1}}</span>
+					</template>
+				</el-table-column>
 				<el-table-column prop="logistics_number" label="物流单号"></el-table-column>
 				<el-table-column prop="batch_number" label="任务批次"></el-table-column>
+				<el-table-column prop="cate_sum" label="种类数量"></el-table-column>
 				<el-table-column prop="total_plan_sum" label="计划数量"></el-table-column>
 				<el-table-column prop="total_arrive_sum" label="到达数量"></el-table-column>
 				<el-table-column prop="created_at" label="创建时间" :formatter="formatter_created_at"></el-table-column>
@@ -417,6 +423,7 @@
 				statusOptions: [{value: 12, label: '待装箱'}, {value: 4, label: '待结算'}, {value: 8, label: '待删除'}, {value: 5, label: '已结算'}],
 				statusSelect: '',
 				query: undefined,
+				aft_obj: []
 			}
 		},
 		created() {
@@ -814,18 +821,45 @@
 				}).then((res) => {
 					if(res.data.code == 200) {
 						this.checkData = [res.data.data]
+						res.data.data.label_changes.forEach((data) => {
+							data.sum2 = data.sum
+						})
 						this.checkData2 = res.data.data.label_changes
+						this.Dis_Num_Rep(res.data.data.label_changes, this.aft_obj)
 						this.checkData3 = res.data.data.order_boxes
+						res.data.data.store_ins.forEach((data) => {
+							if(data.product_store_ins === undefined) {
+								return -1
+							} else {
+								data.cate_sum = data.product_store_ins.length
+							}
+						})
 						this.checkData4 = res.data.data.store_ins
 						res.data.data.product_store_ins.forEach((data) => {
-							data.check_sum2 = ''
+							this.aft_obj.some((data2) => {
+								// console.log(data.arrive_sum)
+								// console.log(data2.sum)
+								if (data.fnsku == data2.fnsku) {
+									if (data.arrive_sum <= data2.sum && data2.sum != 0) {
+										data.check_sum2 = data.arrive_sum
+										data2.sum = data2.sum - data.arrive_sum
+									}else if (data.arrive_sum > data2.sum && data2.sum != 0) {
+										data.check_sum2 = data2.sum
+										data2.sum = 0
+										return true
+									}else {
+										// console.log('else')
+										data.check_sum2 = ''
+									}
+								}
+							})
 						})
+						// console.log(this.aft_obj)
+						// console.log(res.data.data.product_store_ins)
 						res.data.data.product_store_ins.forEach((data) => {
 							let temptime = data.done_time.substr(0, 19)
-							console.log(temptime)
 							let temptime2 = temptime.replace(/T/g, " ")
 							let temptime3 = new Date(temptime2.replace(/-/g, "/"))
-							console.log(temptime3)
 							let dateEnd = new Date()
 							let dateDiff = dateEnd.getTime() - temptime3.getTime()
 							let dayDiff = Math.floor(dateDiff / (24 * 3600 * 1000))
@@ -837,8 +871,25 @@
 						this.checkVisible = true
 					}
 				}).catch((res) => {
-					console.log('error')
+					console.log(res)
 				})
+			},
+			Dis_Num_Rep(ori_obj, aft_obj) {
+				if (ori_obj === 'undefined' && ori_obj === '' && ori_obj === null) {
+					return -1
+				}
+				ori_obj.forEach(el=>{
+				  	const result = aft_obj.findIndex(ol=>{return el.fnsku === ol.fnsku})
+				  	if(result!== -1){
+				      	aft_obj[result].sum = Number(aft_obj[result].sum) + Number(el.sum)
+				      	// aft_obj[result].sum2 = Number(aft_obj[result].sum) + Number(el.sum)
+				  	}else{
+				      	el.sum = Number(el.sum)
+				      	// el.sum2 = Number(el.sum)
+				      	aft_obj.push(el)
+				  	} 
+				})
+				return aft_obj
 			},
 			check_done() {
 				let store_in_ids = []
