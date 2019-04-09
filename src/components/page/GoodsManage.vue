@@ -24,6 +24,8 @@
 				</el-table-column>
 				<el-table-column prop="name" label="名称" width="250">
 				</el-table-column>
+				<el-table-column prop="erp_number" label="erp编码" width="150">
+				</el-table-column>
 				<el-table-column prop="stock_sum" label="库存" width="150">
 				</el-table-column>
 				<el-table-column prop="shopname" label="店铺" width="150">
@@ -302,6 +304,7 @@
 						res.data.data.forEach((data) => {
 							data.shopname = data.product.shopname
 							data.name = data.product.name
+							data.erp_number = data.product.erp_number
 						})
 						this.tableData = res.data.data
 						this.totals = res.data.count
@@ -323,6 +326,7 @@
 						res.data.data.forEach((data) => {
 							data.shopname = data.product.shopname
 							data.name = data.product.name
+							data.erp_number = data.product.erp_number
 						})
 						this.tableData = res.data.data
 						this.totals = res.data.count

@@ -69,6 +69,9 @@
 								<el-dropdown-item>
 									<el-button @click="printStock(scope.$index, scope.row)" type="text">打印出库单&nbsp&nbsp&nbsp</el-button>
 								</el-dropdown-item>
+								<el-dropdown-item>
+									<el-button @click="handleBack(scope.row)" type="text">返回上一状态</el-button>
+								</el-dropdown-item>
 								<!-- <el-dropdown-item>
 									<el-button @click="package(scope.$index, scope.row)" type="text">&nbsp&nbsp&nbsp打&nbsp包&nbsp&nbsp&nbsp</el-button>
 								</el-dropdown-item>
@@ -444,6 +447,28 @@
 			},
 		},
 		methods: {
+			handleBack(row) {
+				this.$confirm('确定返回上一状态吗？', '提示', {
+					confirmButtonText: '确定',
+					cancelButtonText: '取消',
+					type: 'warning',
+				}).then(() => {
+					this.$axios.post('/admin/outbound_orders/' + row.id + '/back', '' , {
+						headers: {
+							'Authorization': localStorage.getItem('token_admin')
+						},
+					}).then((res) => {
+						if(res.data.code == 200) {
+							this.getData()
+							this.$message.success('更改成功！')
+						}
+					}).catch((res) => {
+						console.log(res)
+					})
+				}).catch(() => {
+					this.$message.info('已取消返回状态')
+				})
+			},
 			print() {
 				if(this.status == 1) {
 					this.$message.error("请先生成拣货单")

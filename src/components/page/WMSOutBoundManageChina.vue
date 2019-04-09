@@ -70,6 +70,9 @@
 									<el-button @click="package(scope.$index, scope.row)" type="text">&nbsp&nbsp&nbsp打&nbsp包&nbsp&nbsp&nbsp</el-button>
 								</el-dropdown-item>
 								<el-dropdown-item>
+									<el-button @click="package(scope.$index, scope.row, 'extra')" type="text">额外打包</el-button>
+								</el-dropdown-item>
+								<el-dropdown-item>
 									<el-button @click="check(scope.$index, scope.row)" type="text">&nbsp&nbsp&nbsp结&nbsp算&nbsp&nbsp&nbsp</el-button>
 								</el-dropdown-item>
 								<!-- <el-dropdown-item>
@@ -294,11 +297,18 @@
 					<el-button @click="back" :disabled="isDisableBu" type="danger">撤销</el-button>
 				</div>
 				<br>
-				<el-form-item label="备注">
-					<el-input ></el-input>
-				</el-form-item>
+				<template v-if="!package_extra">
+					<el-form-item label="备注">
+						<el-input v-model="package_ramark" ></el-input>
+					</el-form-item>
+				</template>
 				<el-form-item>
-					<el-button type="primary" @click="package_done">打包</el-button>
+					<template v-if="!package_extra">
+						<el-button type="primary" @click="package_done">打包</el-button>
+					</template>
+					<template v-if="package_extra">
+						<el-button type="primary" @click="package_done">额外打包</el-button>
+					</template>
 				</el-form-item>
 			</el-form>
 		</el-dialog>
@@ -423,7 +433,8 @@
 				statusOptions: [{value: 12, label: '待装箱'}, {value: 4, label: '待结算'}, {value: 8, label: '待删除'}, {value: 5, label: '已结算'}],
 				statusSelect: '',
 				query: undefined,
-				aft_obj: []
+				aft_obj: [],
+				package_extra: false,
 			}
 		},
 		created() {
@@ -735,7 +746,10 @@
 				})
 			},
 			//打包
-			package(index, row) {
+			package(index, row, sign) {
+				if (sign == 'extra') {
+					this.package_extra = true
+				}
 				this.idx = index
 				const item = this.tableData[index]
 				this.$axios.get('/admin/outbound_orders/' + row.id, {
@@ -782,19 +796,35 @@
 					fnsku: fnsku,
 					remark: this.package_ramark
 				}
-				this.$axios.post('/admin/outbound_orders/' + this.package_id + '/done_package', params, {
-					headers: {
-						'Authorization': localStorage.getItem('token_admin')
-					},
-				}).then((res) => {
-					if(res.data.code ==200) {
-						this.$message.success("打包成功")
-						this.getData()
-						this.packageVisible = false
-					}
-				}).catch((res) => {
-					console.log('error')
-				})
+				if (!this.package_extra) {
+					this.$axios.post('/admin/outbound_orders/' + this.package_id + '/done_package', params, {
+						headers: {
+							'Authorization': localStorage.getItem('token_admin')
+						},
+					}).then((res) => {
+						if(res.data.code ==200) {
+							this.$message.success("打包成功")
+							this.getData()
+							this.packageVisible = false
+						}
+					}).catch((res) => {
+						console.log('error')
+					})
+				} else {
+					this.$axios.post('/admin/outbound_orders/' + this.package_id + '/add_package', params, {
+						headers: {
+							'Authorization': localStorage.getItem('token_admin')
+						},
+					}).then((res) => {
+						if(res.data.code ==200) {
+							this.$message.success("额外打包成功")
+							this.getData()
+							this.packageVisible = false
+						}
+					}).catch((res) => {
+						console.log('error')
+					})
+				}
 			},
 			cancel_Package() {
 				this.package_fnskus = []
@@ -808,6 +838,7 @@
 						sum: ''
 					}],
 				}],
+				this.package_extra = false
 				this.packageVisible = false
 			},
 			check(index, row) {

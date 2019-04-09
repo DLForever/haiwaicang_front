@@ -122,12 +122,17 @@
 //								title: '发货订单管理'
 //							},
 							{
+								index: 'addoutbound',
+								title: '创建出库单'
+							},
+							{
+								index: 'batchoutboundmanage',
+								title: '批量出库'
+							},
+							{
 								index: '14',
 								title: '出库单管理',
 								subs: [{
-									index: 'addoutbound',
-									title: '创建出库单'
-								},{
 									index: 'outboundmanage',
 									title: '待审核'
 								},{
@@ -137,10 +142,6 @@
 									index: 'outboundedmanage',
 									title: '已完成'
 								}]
-							},
-							{
-								index: 'batchoutboundmanage',
-								title: '批量出库'
 							},
 						]
 					},
