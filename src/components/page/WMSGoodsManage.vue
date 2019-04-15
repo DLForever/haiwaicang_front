@@ -445,7 +445,7 @@
 				// }
 				this.cur_page = 1
 				this.paginationShow = false
-				this.$axios.get("/admin/cargos/search_by_fnsku?page=" + this.user_page + '&query=' + this.search_fnsku.trim() + '&user_id=' + this.select_cate , {
+				this.$axios.get("/admin/cargos/search_by_fnsku?page=" + this.cur_page + '&query=' + this.search_fnsku.trim() + '&user_id=' + this.select_cate , {
 					headers: {
 						'Authorization': localStorage.getItem('token_admin')
 					},
