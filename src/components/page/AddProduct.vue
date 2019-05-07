@@ -82,7 +82,7 @@
 				</el-tab-pane>
 				<el-tab-pane label="批量上传" name="second">
 					<template v-if="message === 'second'">
-						<el-form ref="form" :model="form" label-width="85px">
+						<el-form label-width="85px">
 							<el-form-item label="批量上传">
 								<el-upload class="upload-demo" drag action="" :on-exceed="exceed" :file-list="batchList" :on-remove="handleRemoveBatch" :auto-upload="false" :on-change="changeBatch" :before-upload="beforeAvatarUpload" :limit="1">
 									<i class="el-icon-upload"></i>
@@ -245,7 +245,9 @@
 							}
 							this.submitDisabled = false
 						}).catch((res) => {
-							console.log('err')
+							console.log(res)
+						}).finally(() => {
+							this.submitDisabled = false
 						})
 					} else {
 						this.$message.error("请填写完整信息")
