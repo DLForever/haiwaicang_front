@@ -61,6 +61,9 @@
 								<el-dropdown-item>
 									<el-button @click="grounding(scope.$index, scope.row)" type="text">上架</el-button>
 								</el-dropdown-item>
+								<el-dropdown-item>
+									<el-button @click="handleEdit(scope.$index, scope.row)" type="text">编辑</el-button>
+								</el-dropdown-item>
 							</el-dropdown-menu>
 						</el-dropdown>
 					</template>
@@ -155,6 +158,21 @@
                 <el-button type="primary" @click="onSubmit" :disabled="submitDisable">确 定</el-button>
             </span>
 		</el-dialog>
+		<!-- 未上架提示框 -->
+        <el-dialog title="编辑" :visible.sync="editSumVisible" width="50%">
+        	<el-form ref="form" label-width="100px">
+        		<el-form-item label="未上架数量" required>
+        			<el-input-number :min="0" v-model="noGroundSum"></el-input-number>
+        		</el-form-item>
+<!--         		<el-form-item label="备注" required>
+        			<el-input v-model.trim="remark"></el-input>
+        		</el-form-item> -->
+        	</el-form>
+        	<span slot="footer" class="dialog-footer">
+                <el-button @click="editSumVisible = false">取 消</el-button>
+                <el-button type="primary" @click="onSubmitSum" :disabled="submitDisable">确 定</el-button>
+            </span>
+		</el-dialog>
 	</div>
 </template>
 
@@ -222,7 +240,9 @@
 				transferMax: 0,
 				submitDisable: false,
 				transferId: undefined,
-				cargo_warehouse_id: undefined
+				cargo_warehouse_id: undefined,
+				editSumVisible: false,
+				noGroundSum: 0
 			}
 		},
 		created() {
@@ -534,7 +554,6 @@
 				}
 				this.detailVisible = true
 			},
-
 			search() {
 				this.is_search = true
 			},
@@ -618,7 +637,33 @@
 				}).finally(() => {
 					this.submitDisable = false
 				})
-			}
+			},
+			handleEdit(index, row) {
+				this.form.id = row.id
+				this.noGroundSum = row.arrive_sum
+				this.editSumVisible = true
+			},
+			onSubmitSum() {
+				this.submitDisable = true
+				let params = {
+					arrive_sum: this.noGroundSum,
+				}
+				this.$axios.post('/admin/cargos/' + this.form.id + '/set_arrive_sum', params, {
+					headers: {
+						'Authorization': localStorage.getItem('token_admin')
+					},
+				}).then((res) => {
+					if(res.data.code == 200) {
+						this.$message.success('更新成功')
+						this.editSumVisible = false
+						this.getData()
+					}
+				}).catch((res) => {
+
+				}).finally(() => {
+					this.submitDisable = false
+				})
+			},
 		},
 		components: {
 			"infinite-loading": VueInfiniteLoading,

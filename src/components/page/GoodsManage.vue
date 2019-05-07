@@ -8,6 +8,9 @@
 		</div>
 		<div class="container">
 			<div class="handle-box">
+				<el-button type="primary" >
+					<a style="color:#fff;" :href="$axios.defaults.baseURL + '/cargos/export_url' + '?token=' + export_token">导出库存</a>
+				</el-button>
 				<div class="fnsku_filter">
 					Fnsku:
                     <el-input style="width:150px" placeholder="请输入Fnsku" v-model.trim="search_fnsku"></el-input>
@@ -59,6 +62,9 @@
 								<el-dropdown-item>
 									<el-button @click="handleDetial(scope.$index, scope.row)" type="text">详情</el-button>
 								</el-dropdown-item>
+								<el-dropdown-item>
+                                    <el-button @click="handleDelete(scope.row)" type="text">删除</el-button>
+                                </el-dropdown-item>
 								<!-- <el-dropdown-item>
 									<el-button @click="handleSendEdit(scope.$index, scope.row)" type="text">转良品</el-button>
 								</el-dropdown-item> -->
@@ -243,7 +249,8 @@
 				paginationShow: true,
 				shopname: '',
 				detailVisible: false,
-				defect_cargos: []
+				defect_cargos: [],
+				export_token: undefined
 			}
 		},
 		created() {
@@ -291,6 +298,7 @@
 			},
 			// 获取 easy-mock 的模拟数据
 			getData() {
+				this.export_token = localStorage.getItem('token')
 				// 开发环境使用 easy-mock 数据，正式环境使用 json 文件
 				if(process.env.NODE_ENV === 'development') {
 					//					this.url = '/ms/table/list';
@@ -598,7 +606,26 @@
 				}).catch(() => {
 
 				})
-			}
+			},
+			handleDelete(row) {
+                this.$confirm('此操作将永久删除该产品, 是否继续?', '提示', {
+                    confirmButtonText: '确定',
+                    cancelButtonText: '取消',
+                    type: 'danger'
+                }).then(() => {
+                    this.$axios.delete('/purchase_pays/' + row.id
+                    ).then((res) => {
+                        if(res.data.code == 200) {
+                            this.getData()
+                            this.$message.success("删除成功")
+                        }
+                    }).catch(() => {
+                        
+                    })
+                }).catch(() => {
+                    this.$message.info('已取消删除')
+                })
+            },
 		}
 	}
 </script>

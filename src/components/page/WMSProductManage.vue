@@ -69,6 +69,9 @@
                                 <el-dropdown-item>
                                     <el-button @click="handleEdit(scope.$index, scope.row)" type="text">&nbsp&nbsp&nbsp&nbsp编&nbsp&nbsp辑</el-button>
                                 </el-dropdown-item>
+                                <!-- <el-dropdown-item>
+                                    <el-button @click="handleDelete(scope.row)" type="text">&nbsp&nbsp&nbsp&nbsp删&nbsp&nbsp除</el-button>
+                                </el-dropdown-item> -->
                             </el-dropdown-menu>
                         </el-dropdown>
                     </template>
@@ -409,10 +412,10 @@
                 }
                 this.editVisible = true;
             },
-            handleDelete(index, row) {
-                this.idx = index;
-                this.delVisible = true;
-            },
+            // handleDelete(index, row) {
+            //     this.idx = index;
+            //     this.delVisible = true;
+            // },
             delAll() {
                 const length = this.multipleSelection.length;
                 let str = '';
@@ -647,6 +650,28 @@
                 this.picture_id = row.id
                 this.idx = index;
                 this.confirmDElPacVis = true;
+            },
+            handleDelete(row) {
+                this.$confirm('此操作将永久删除该产品, 是否继续?', '提示', {
+                    confirmButtonText: '确定',
+                    cancelButtonText: '取消',
+                    type: 'danger'
+                }).then(() => {
+                    this.$axios.delete('/admin/products/' + row.id,
+                        {
+                            headers: {'Authorization': localStorage.getItem('token_admin')}
+                        }
+                    ).then((res) => {
+                        if(res.data.code == 200) {
+                            this.getData()
+                            this.$message.success("删除成功")
+                        }
+                    }).catch(() => {
+                        
+                    })
+                }).catch(() => {
+                    this.$message.info('已取消删除')
+                })
             },
         },
         components: {
