@@ -21,14 +21,14 @@
 						<el-option v-for="item in batchoptions" :key="item.id" :label="item.batch_number" :value="item.id"></el-option>
 						<infinite-loading :on-infinite="onInfinite_batch" ref="infiniteLoading2"></infinite-loading>
 					</el-select> -->
-					<!-- 状态:
-					<el-select v-model="statusSelect" placeholder="请选择" class="handle-select mr10">
-						<el-option v-for="item in statusOptions" :key="item.value" :label="item.label" :value="item.value"></el-option>
-					</el-select> -->
 					Fnsku:
 					<el-input style="width:150px" placeholder="请输入Fnsku" v-model.trim="search_fnsku"></el-input>
 					追踪编码:
 					<el-input style="width:150px" placeholder="请输入追踪编码" v-model.trim="search_logistics_number"></el-input>
+					状态:
+					<el-select v-model="statusSelect" placeholder="请选择" class="handle-select mr10">
+						<el-option v-for="item in statusOptions" :key="item.value" :label="item.label" :value="item.value"></el-option>
+					</el-select>
 					<el-button @click="clear_search" type="default">重置</el-button>
 	                <el-button @click="filter_inbound" type="primary">查询</el-button>
                 </div>
@@ -218,7 +218,8 @@
 				inputValue: '',
 				search_fnsku: '',
 				submitDisable: false,
-				statusOptions: [{value: 7, label: '待入库'}, {value: 5, label: '待删除'}, {value: 4, label: '已入库'}, {value: 6, label: '已结算'}],
+				statusOptions: [{value: '', label: '全部'}, {value: 7, label: '待入库'}, {value: 4, label: '已入库'}, {value: 5, label: '待删除'}],
+				statusOptions2: [{value: '', label: '全部'}, {value: 4, label: '已入库'}, {value: 6, label: '已结算'}, {value: 5, label: '待删除'}],
 				statusSelect: '',
 				search_logistics_number: ''
 			}
@@ -276,8 +277,13 @@
 				// 开发环境使用 easy-mock 数据，正式环境使用 json 文件
 				if(process.env.NODE_ENV === 'development') {
 					//					this.url = '/ms/table/list';
-				};				
-				this.$axios.get('/admin/store_ins?page=' + this.cur_page + '&batch_store_in_id=' + this.$route.params.batch_store_in_id + '&user_id=' + this.select_cate + '&fnsku=' + this.search_fnsku + '&status=' + '&logistics_number=' + this.search_logistics_number, {
+				};
+				if (this.$route.params.status == 'incomplete') {
+					this.statusOptions = this.statusOptions
+				} else {
+					this.statusOptions = this.statusOptions2
+				}
+				this.$axios.get('/admin/store_ins?page=' + this.cur_page + '&batch_store_in_id=' + this.$route.params.batch_store_in_id + '&user_id=' + this.select_cate + '&fnsku=' + this.search_fnsku + '&status=' + this.statusSelect + '&logistics_number=' + this.search_logistics_number, {
 					headers: {
 						'Authorization': localStorage.getItem('token_admin')
 					},
@@ -293,7 +299,7 @@
 			filter_inbound() {
 				this.paginationShow = false
 				this.cur_page = 1
-				this.$axios.get('/admin/store_ins?page=' + this.cur_page + '&batch_store_in_id=' + this.$route.params.batch_store_in_id + '&user_id=' + this.select_cate + '&fnsku=' + this.search_fnsku + '&status=' + '&logistics_number=' + this.search_logistics_number, {
+				this.$axios.get('/admin/store_ins?page=' + this.cur_page + '&batch_store_in_id=' + this.$route.params.batch_store_in_id + '&user_id=' + this.select_cate + '&fnsku=' + this.search_fnsku + '&status=' + this.statusSelect + '&logistics_number=' + this.search_logistics_number, {
 					headers: {
 						'Authorization': localStorage.getItem('token_admin')
 					},

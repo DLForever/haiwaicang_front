@@ -26,7 +26,7 @@
 				</el-table-column> -->
 				<el-table-column prop="batch_number" label="批次">
 					<template slot-scope="scope">
-						<span class="link-type" @click="showInbound(scope.$index, scope.row)">{{scope.row.batch_number}}</span>
+						<span class="link-type" @click="showInbound(scope.$index, scope.row, 'incomplete')">{{scope.row.batch_number}}</span>
 					</template>
 				</el-table-column>
 				<el-table-column prop="status" label="状态" width="120">
@@ -404,8 +404,8 @@
 					}
 				})
 			},
-			showInbound(index, row) {
-                this.$router.push({name: 'inbounding', params: {batch_store_in_id: row.id}});
+			showInbound(index, row, status) {
+                this.$router.push({name: 'inbounding', params: {batch_store_in_id: row.id, status: status}});
             },
 			getStatusName(status) {
 				if(status == 1) {

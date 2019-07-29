@@ -17,11 +17,11 @@
 					<el-select v-model="select_batch" placeholder="选择批次" class="handle-select mr10 batch_box">
 						<el-option v-for="item in batchoptions" :key="item.id" :label="item.batch_number" :value="item.id"></el-option>
 						<infinite-loading :on-infinite="onInfinite_batch" ref="infiniteLoading2"></infinite-loading>
-					</el-select>
+					</el-select> -->
 					状态:
 					<el-select v-model="statusSelect" placeholder="请选择" class="handle-select mr10">
 						<el-option v-for="item in statusOptions" :key="item.value" :label="item.label" :value="item.value"></el-option>
-					</el-select> -->
+					</el-select>
                     <el-button @click="clear_filter" type="default">重置</el-button>
                     <el-button @click="filter_inbound" type="primary">查询</el-button>
                 </div>
@@ -148,7 +148,8 @@
 						trigger: 'blur'
 					}],
 				},
-				statusOptions: [{value: 1, label: '待审核'}, {value: 7, label: '待入库'}, {value: 4, label: '已入库'}, {value: 6, label: '已结算'}, {value: 5, label: '待删除'},],
+				statusOptions: [{value: '', label: '全部'}, {value: 7, label: '待入库'}, {value: 4, label: '已入库'}, {value: 5, label: '待删除'},],
+				statusOptions2: [{value: '', label: '全部'}, {value: 4, label: '已入库'}, {value: 6, label: '已结算'}, {value: 5, label: '待删除'},],
 				statusSelect: '',
 				search_logistics_number: '',
 				need_check: false
@@ -196,7 +197,12 @@
 				// if (!this.$route.params.batch_store_in_id) {
     //                 this.$route.params.batch_store_in_id = ''
     //             }
-				this.$axios.get('/store_ins?page=' + this.cur_page + '&batch_store_in_id=' + this.$route.params.batch_store_in_id + '&fnsku=' + this.search_fnsku + '&logistics_number=' + this.search_logistics_number, {
+				if (this.$route.params.status == 'incomplete') {
+					this.statusOptions = this.statusOptions
+				} else {
+					this.statusOptions = this.statusOptions2
+				}
+				this.$axios.get('/store_ins?page=' + this.cur_page + '&batch_store_in_id=' + this.$route.params.batch_store_in_id + '&fnsku=' + this.search_fnsku + '&logistics_number=' + this.search_logistics_number + '&status=' + this.statusSelect, {
 					headers: {
 						'Authorization': localStorage.getItem('token')
 					},
@@ -214,7 +220,7 @@
 			filter_inbound() {
 				this.paginationShow = false
 				this.cur_page = 1
-				this.$axios.get('/store_ins?page=' + this.cur_page + '&batch_store_in_id=' + this.$route.params.batch_store_in_id + '&fnsku=' + this.search_fnsku + '&logistics_number=' + this.search_logistics_number, {
+				this.$axios.get('/store_ins?page=' + this.cur_page + '&batch_store_in_id=' + this.$route.params.batch_store_in_id + '&fnsku=' + this.search_fnsku + '&logistics_number=' + this.search_logistics_number + '&status=' + this.statusSelect, {
 					headers: {
 						'Authorization': localStorage.getItem('token')
 					},
@@ -235,6 +241,7 @@
 				this.cur_page = 1
 				this.search_logistics_number = ''
 				this.search_fnsku = ''
+				this.statusSelect = ''
 				this.getData()
 			},
 			getBatch(callback = undefined) {

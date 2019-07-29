@@ -44,7 +44,8 @@ router.beforeEach((to, from, next) => {
 })
 
 var defaultHost = window.location.protocol + "//" + window.location.hostname
-var defaultHost = 'http://47.74.177.128'
+// var defaultHost = 'http://47.74.177.128'
+// var defaultHost = 'https://warehouse.superspeedus.com'
 axios.defaults.baseURL = defaultHost
 
 // axios.interceptors.response.use((config) => {
