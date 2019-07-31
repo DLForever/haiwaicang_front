@@ -924,6 +924,7 @@
 				})
 				if(noPic) {
 					this.$message.error("请上传新标")
+					this.updateDisabled = false
 					return
 				}
 				formData.append('is_mix', this.updateRadio)
