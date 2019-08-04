@@ -405,7 +405,7 @@
 				})
 			},
 			showInbound(index, row, status) {
-                this.$router.push({name: 'inbounding', params: {batch_store_in_id: row.id, status: status}});
+                this.$router.push({name: 'inbounding', params: {batch_store_in_id: row.id, status: status, type: '待完成'}});
             },
 			getStatusName(status) {
 				if(status == 1) {

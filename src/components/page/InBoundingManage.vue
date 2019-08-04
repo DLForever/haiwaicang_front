@@ -8,6 +8,9 @@
 		</div>
 		<div class="container">
 			<div class="handle-box">
+				<template v-if="$route.params.type == '待完成'">
+					<el-button type="primary" @click="checkBatch">批量审核</el-button>
+				</template>
 				<div class="inbound_filter">
 					物流单号:
 					<el-input v-model="search_logistics_number" placeholder="请输入物流单号" class="handle-select mr10 batch_box"></el-input>
@@ -440,6 +443,39 @@
 					}
 				})
 			},
+			checkBatch() {
+                if(this.multipleSelection.length == 0) {
+                    this.$message.error('请选择至少一个任务')
+                    return
+                }
+                this.$confirm('确认审核通过?', '提示', {
+                    confirmButtonText: '确定',
+                    cancelButtonText: '取消',
+                    type: 'danger'
+                }).then(() => {
+                    let id = []
+                    this.multipleSelection.forEach((data) => {
+                        id.push(data.id)
+                    })
+                    let params = {
+                        ids: id,
+                    }
+                    this.$axios.post('/store_ins/batch_check', params,{
+                     headers: {
+                        'Authorization': localStorage.getItem('token')
+                    }
+                    }).then((res) => {
+                        if(res.data.code == 200) {
+                            this.$message.success('审核成功!')
+                            this.getData()
+                        }
+                    }).catch((res) => {
+
+                    })
+                }).catch(() => {
+                    this.$message.info('已取消审核')
+                })
+            },
 			getStatusName(status) {
 				if(status == 1) {
 					return "待审核"
