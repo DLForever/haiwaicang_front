@@ -261,7 +261,7 @@
 						<tbody v-for="(p,index) in form">
 							<tr>
 							<td>
-								<el-select placeholder="选择箱子" v-model="p.boxes_id"  class="handle-select mr10" value-key="id">
+								<el-select placeholder="选择箱子" v-model="p.boxes_id"  width="130" value-key="id">
 									<el-option v-for="item in box_options" :label="item.name" :value="item.id"></el-option>
 									<infinite-loading :on-infinite="onInfinite_box" ref="infiniteLoading"></infinite-loading>
 								</el-select>
@@ -276,7 +276,7 @@
 							</tr>
 							<tr v-for="(q,index) in p['form_branch']">
 								<td>
-									<el-select v-model="q.fnsku" placeholder="选择产品" class="handle-select mr10">
+									<el-select v-model="q.fnsku" placeholder="选择产品" width="130">
 										<el-option v-for="item in package_fnskus" :label="item" :value="item"></el-option>
 									</el-select>
 								</td>
@@ -336,6 +336,35 @@
                 <el-button @click="delVisible = false">取 消</el-button>
                 <el-button type="danger" @click="deleteRow">删 除</el-button>
             </span>
+		</el-dialog>
+
+		<!-- 收费预览提示框 -->
+		<el-dialog title="收费预览" :visible.sync="previewVisible" width="65%">
+			<el-table :data="preview_details" border style="width: 100%">
+				<!--<el-table-column prop="ware_house_id" label="库位"></el-table-column>-->
+				<el-table-column prop="box_price" label="箱子数量"></el-table-column>
+				<el-table-column prop="box_sum" label="箱子价格" ></el-table-column>
+				<el-table-column prop="change_box_price" label="换箱费用" ></el-table-column>
+				<el-table-column prop="label_change_sum" label="换标数量" ></el-table-column>
+				<el-table-column prop="label_change_price" label="换标费用" ></el-table-column>
+				<el-table-column prop="store_in_sum" label="入库数量" ></el-table-column>
+				<el-table-column prop="store_in_price" label="入库费用" ></el-table-column>
+				<el-table-column prop="store_price" label="仓储费用" ></el-table-column>
+			</el-table>
+			<template v-if="preview_details_store_ins.length != 0">
+				<br>
+				详情:
+				<el-table :data="preview_details_store_ins" border style="width: 100%">
+					<el-table-column prop="cube" label="计算仓储的立方值"></el-table-column>
+					<el-table-column prop="day" label="计算仓储的天数" ></el-table-column>
+					<el-table-column prop="sum" label="数量" ></el-table-column>
+					<el-table-column prop="store_price" label="仓储费用" ></el-table-column>
+				</el-table>
+			</template>
+			<span slot="footer" class="dialog-footer">
+				<el-button type="danger" @click="deleteCheck">删 除 预 览</el-button>
+				<el-button type="primary" @click="confirmCheck">确 认 审 核</el-button>
+			</span>
 		</el-dialog>
 	</div>
 </template>
@@ -435,6 +464,10 @@
 				query: undefined,
 				aft_obj: [],
 				package_extra: false,
+				preview_details: [],
+				previewVisible: false,
+				preview_details_store_ins: [],
+				check_settlement_id: ''
 			}
 		},
 		created() {
@@ -852,54 +885,57 @@
 				}).then((res) => {
 					if(res.data.code == 200) {
 						this.checkData = [res.data.data]
-						res.data.data.label_changes.forEach((data) => {
-							data.sum2 = data.sum
-						})
-						this.checkData2 = res.data.data.label_changes
-						this.Dis_Num_Rep(res.data.data.label_changes, this.aft_obj)
-						this.checkData3 = res.data.data.order_boxes
-						res.data.data.store_ins.forEach((data) => {
-							if(data.product_store_ins === undefined) {
-								return -1
-							} else {
-								data.cate_sum = data.product_store_ins.length
-							}
-						})
-						this.checkData4 = res.data.data.store_ins
-						res.data.data.product_store_ins.forEach((data) => {
-							this.aft_obj.some((data2) => {
-								// console.log(data.arrive_sum)
-								// console.log(data2.sum)
-								if (data.fnsku == data2.fnsku) {
-									if (data.arrive_sum <= data2.sum && data2.sum != 0) {
-										data.check_sum2 = data.arrive_sum
-										data2.sum = data2.sum - data.arrive_sum
-									}else if (data.arrive_sum > data2.sum && data2.sum != 0) {
-										data.check_sum2 = data2.sum
-										data2.sum = 0
-										return true
-									}else {
-										// console.log('else')
-										data.check_sum2 = ''
-									}
+						// 如果没有点结算
+						if(res.data.data.label_changes != undefined) {
+							res.data.data.label_changes.forEach((data) => {
+								data.sum2 = data.sum
+							})
+							this.checkData2 = res.data.data.label_changes
+							this.Dis_Num_Rep(res.data.data.label_changes, this.aft_obj)
+							this.checkData3 = res.data.data.order_boxes
+							res.data.data.store_ins.forEach((data) => {
+								if(data.product_store_ins === undefined) {
+									return -1
+								} else {
+									data.cate_sum = data.product_store_ins.length
 								}
 							})
-						})
-						// console.log(this.aft_obj)
-						// console.log(res.data.data.product_store_ins)
-						res.data.data.product_store_ins.forEach((data) => {
-							let temptime = data.done_time.substr(0, 19)
-							let temptime2 = temptime.replace(/T/g, " ")
-							let temptime3 = new Date(temptime2.replace(/-/g, "/"))
-							let dateEnd = new Date()
-							let dateDiff = dateEnd.getTime() - temptime3.getTime()
-							let dayDiff = Math.floor(dateDiff / (24 * 3600 * 1000))
-							let leave1 = dateDiff%(24*3600*1000)
-							let hours = Math.floor(leave1/(3600*1000))
-							data.stock_time = dayDiff + '天' + hours + '小时'
-						})
-						this.checkData5 = res.data.data.product_store_ins
-						this.checkVisible = true
+							this.checkData4 = res.data.data.store_ins
+							res.data.data.product_store_ins.forEach((data) => {
+								this.aft_obj.some((data2) => {
+									if (data.fnsku == data2.fnsku) {
+										if ((data.arrive_sum - data.check_sum) <= data2.sum && data2.sum != 0) {
+											data.check_sum2 = data.arrive_sum - data.check_sum
+											data2.sum = data2.sum - data.arrive_sum -data.check_sum
+										}else if ((data.arrive_sum - data.check_sum) > data2.sum && data2.sum != 0) {
+											data.check_sum2 = data2.sum
+											data2.sum = 0
+											return true
+										}else {
+											data.check_sum2 = ''
+										}
+									}
+								})
+							})
+							res.data.data.product_store_ins.forEach((data) => {
+								let temptime = data.done_time.substr(0, 19)
+								let temptime2 = temptime.replace(/T/g, " ")
+								let temptime3 = new Date(temptime2.replace(/-/g, "/"))
+								let dateEnd = new Date()
+								let dateDiff = dateEnd.getTime() - temptime3.getTime()
+								let dayDiff = Math.floor(dateDiff / (24 * 3600 * 1000))
+								let leave1 = dateDiff%(24*3600*1000)
+								let hours = Math.floor(leave1/(3600*1000))
+								data.stock_time = dayDiff + '天' + hours + '小时'
+							})
+							this.checkData5 = res.data.data.product_store_ins
+							this.checkVisible = true
+						} else if(res.data.data.settlement_store_ins != undefined){
+							this.preview_details = [res.data.data]
+							this.preview_details_store_ins = res.data.data.settlement_store_ins
+							this.check_settlement_id = res.data.data.id
+							this.previewVisible = true
+						}
 					}
 				}).catch((res) => {
 					console.log(res)
@@ -928,7 +964,8 @@
 				let sum = []
 				let checkData5_count = 0
 				this.checkData5.forEach((data) => {
-					if(data.check_sum2.trim() != '') {
+					// console.log(data.check_sum2.trim())
+					if((data.check_sum2 + '').trim() != '') {
 						sum.push(data.check_sum2)
 						product_store_in_ids.push(data.id)
 						checkData5_count = 1
@@ -958,7 +995,11 @@
 								this.getData()
 								this.$refs.multipleCheck.clearSelection()
 								this.checkVisible = false
-								this.$message.success('审核成功')
+								this.preview_details = [res.data.data]
+								this.preview_details_store_ins = res.data.data.settlement_store_ins
+								this.check_settlement_id = res.data.data.id
+								this.previewVisible = true
+								// this.$message.success('审核成功')
 							}
 						}).catch((res) => {
 							console.log('error')
@@ -989,10 +1030,12 @@
 						},
 					}).then((res) => {
 						if(res.data.code == 200) {
-							this.getData()
 							this.$refs.multipleCheck.clearSelection()
 							this.checkVisible = false
-							this.$message.success('审核成功')
+							this.preview_details = [res.data.data]
+							this.previewVisible = true
+							this.getData()
+							// this.$message.success('审核成功')
 						}
 					}).catch((res) => {
 					}).finally(() => {
@@ -1211,6 +1254,52 @@
 			closeDetails() {
 				this.ware_houseTable = []
 				this.ware_houseTable2 = []
+			},
+			confirmCheck() {
+				this.$confirm('审核后不可修改, 是否继续?', '提示', {
+                    confirmButtonText: '确定',
+                    cancelButtonText: '取消',
+                    type: 'danger'
+                }).then(() => {
+                	this.$axios.patch('/admin/settlement_records/' + this.check_settlement_id, '', {
+						headers: {
+							'Authorization': localStorage.getItem('token_admin')
+						},
+					}).then((res) => {
+						if(res.data.code == 200) {
+							this.getData()
+							this.previewVisible = false
+							this.$message.success('审核成功！')
+						}
+					}).catch((res) => {
+						console.log('error')
+					})
+                }).catch(() => {
+                    this.$message.info('已取消审核')
+                })
+			},
+			deleteCheck() {
+				this.$confirm('此操作将永久删除该预览, 是否继续?', '提示', {
+                    confirmButtonText: '确定',
+                    cancelButtonText: '取消',
+                    type: 'danger'
+                }).then(() => {
+                    this.$axios.delete('/admin/settlement_records/' + this.check_settlement_id, {
+						headers: {
+							'Authorization': localStorage.getItem('token_admin')
+						},
+					}).then((res) => {
+						if(res.data.code == 200) {
+							this.getData()
+							this.previewVisible = false
+							this.$message.success('删除预览成功！')
+						}
+					}).catch((res) => {
+						console.log('error')
+					})
+                }).catch(() => {
+                    this.$message.info('已取消删除')
+                })
 			},
 			getStatusName(status) {
 				if(status == 1) {

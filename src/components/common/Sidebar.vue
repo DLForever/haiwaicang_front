@@ -327,6 +327,20 @@
 						},
 						]
 					},
+					{
+						icon: 'el-icon-printer',
+						index: '12',
+						title: '出入库统计',
+						subs: [{
+							index: 'WMSInBoundStatistics',
+							title: '入库统计管理'
+						},
+						{
+							index: 'WMSOutBoundStatistics',
+							title: '出库统计管理',
+						},
+						]
+					},
 				]
 			}
 		},

@@ -2,15 +2,14 @@
 	<div>
 		<div class="crumbs">
 			<el-breadcrumb separator="/">
-				<el-breadcrumb-item><i class="el-icon-date"></i> 库存导入记录</el-breadcrumb-item>
-				<el-breadcrumb-item>导入记录</el-breadcrumb-item>
+				<el-breadcrumb-item><i class="el-icon-date"></i> 出入库统计</el-breadcrumb-item>
+				<el-breadcrumb-item>入库统计</el-breadcrumb-item>
 			</el-breadcrumb>
 		</div>
 		<div class="container">
 			<div class="handle-box">
 				<div class="fnsku_filter">
-					库位:
-                    <el-input style="width:150px" placeholder="请输入库位" v-model.trim="warehouse"></el-input>
+					<el-date-picker v-model="date_filter" type="daterange" range-separator="至" start-placeholder="开始日期" end-placeholder="结束日期" :picker-options="pickerOptions2" unlink-panels value-format="yyyy-MM-dd"></el-date-picker>
 					fnsku:
                     <el-input style="width:150px" placeholder="请输入fnsku" v-model.trim="search_fnsku"></el-input>
                     <el-button @click="clear_filter" type="default">重置</el-button>
@@ -18,17 +17,21 @@
                 </div>
 			</div>
 			<br><br>
-			<el-table :data="data" border style="width: 100%" model="form" ref="multipleTable" @selection-change="handleSelectionChange">
-				<el-table-column type="selection" width="55"></el-table-column>
-				<el-table-column prop="warehouse_name" label="库位名称"></el-table-column>
+			<el-table :data="data" show-summary :summary-method="getSummaries" border style="width: 100%" model="form" ref="multipleTable" @selection-change="handleSelectionChange">
+				<el-table-column type="index" width="55"></el-table-column>
+				<el-table-column prop="store_in.batch_number" label="批次号"></el-table-column>
+				<el-table-column prop="store_in.logistics_number" label="物流单号"></el-table-column>
 				<el-table-column prop="fnsku" label="fnsku"></el-table-column>
-				<el-table-column prop="sum" label="总数量"></el-table-column>
-				<el-table-column prop="status" label="状态">
+				<el-table-column prop="plan_sum" label="计划数量"></el-table-column>
+				<el-table-column prop="arrive_sum" label="到达数量"></el-table-column>
+				<!-- <el-table-column prop="status" label="状态">
 					<template slot-scope="scope">
 						<el-tag :type="scope.row.status | statusFilter">{{getStatusName(scope.row.status)}}</el-tag>
 					</template>
-				</el-table-column>
+				</el-table-column> -->
 				<el-table-column prop="created_at" label="创建时间" :formatter="formatter_created_at" show-overflow-tooltip>
+				</el-table-column>
+				<el-table-column prop="created_at" label="入库时间" :formatter="formatter_done_at" show-overflow-tooltip>
 				</el-table-column>
 				<!-- <el-table-column label="操作" width="100">
 					<template slot-scope="scope">
@@ -45,20 +48,20 @@
 					</template>
 				</el-table-column> -->
 			</el-table>
-			<div class="pagination">
+			<!-- <div class="pagination">
 				<el-pagination v-if="paginationShow" @current-change="handleCurrentChange" :page-size="pagesize" layout="prev, pager, next" :total="totals">
 				</el-pagination>
-			</div>
+			</div> -->
 		</div>
-		 <!-- 详情提示框 -->
-        <!-- <el-dialog title="详情" :visible.sync="detailVisible" width="50%">
+		<!-- 详情提示框 -->
+		<el-dialog title="详情" :visible.sync="detailVisible" width="50%">
 			<el-table :data="form.cargo_ware_houses" border style="width: 100%">
 				<el-table-column prop="name" label="库位"></el-table-column>
 				<el-table-column prop="fnsku" label="产品名称"></el-table-column>
 				<el-table-column prop="sum" label="数量"></el-table-column>
 				<el-table-column prop="lock_sum" label="锁定数量"></el-table-column>
 			</el-table>
-		</el-dialog> -->
+		</el-dialog>
 	</div>
 </template>
 
@@ -77,12 +80,39 @@
 					
 				},
 				search_fnsku: '',
-				warehouse: '',
 				paginationShow: true,
+				pickerOptions2: {
+				shortcuts: [{
+				  text: '最近一周',
+				  onClick(picker) {
+				    const end = new Date();
+				    const start = new Date();
+				    start.setTime(start.getTime() - 3600 * 1000 * 24 * 7);
+				    picker.$emit('pick', [start, end]);
+				  }
+				}, {
+				  text: '最近一个月',
+				  onClick(picker) {
+				    const end = new Date();
+				    const start = new Date();
+				    start.setTime(start.getTime() - 3600 * 1000 * 24 * 30);
+				    picker.$emit('pick', [start, end]);
+				  }
+				}, {
+				  text: '最近三个月',
+				  onClick(picker) {
+				    const end = new Date();
+				    const start = new Date();
+				    start.setTime(start.getTime() - 3600 * 1000 * 24 * 90);
+				    picker.$emit('pick', [start, end]);
+				  }
+				}]
+				},
+				date_filter: []
 			}
 		},
 		created() {
-			this.getData()
+			// this.getData()
 		},
 		watch: {
 			"$route": "getData"
@@ -116,7 +146,13 @@
 				this.multipleSelection = val
 			},
 			getData() {
-				this.$axios.get('/admin/cargo_records?page=' + this.cur_page + '&warehouse=' + this.warehouse + '&fnsku=' + this.search_fnsku, {
+				let date_begin_temp = this.date_filter[0]
+                let date_end_temp = this.date_filter[1]
+                if(this.date_filter.length == 0) {
+                    date_begin_temp = ''
+                    date_end_temp = ''
+                }
+				this.$axios.get('/admin/store_ins/statistics?page=' + this.cur_page + '&fnsku=' + this.search_fnsku + '&date_begin=' + date_begin_temp +'&date_end=' + date_end_temp, {
 					headers: {
 						'Authorization': localStorage.getItem('token_admin')
 					},
@@ -142,7 +178,13 @@
 			filter_ware() {
 				this.paginationShow = false
 				this.cur_page = 1
-				this.$axios.get('/admin/cargo_records?page=' + this.cur_page + '&warehouse=' + this.warehouse + '&fnsku=' + this.search_fnsku, {
+				let date_begin_temp = this.date_filter[0]
+                let date_end_temp = this.date_filter[1]
+                if(this.date_filter.length == 0) {
+                    date_begin_temp = ''
+                    date_end_temp = ''
+                }
+				this.$axios.get('/admin/store_ins/statistics?page=' + this.cur_page + '&fnsku=' + this.search_fnsku + '&date_begin=' + date_begin_temp +'&date_end=' + date_end_temp, {
 					headers: {
 						'Authorization': localStorage.getItem('token_admin')
 					},
@@ -169,8 +211,8 @@
 				this.paginationShow = false
 				this.cur_page = 1
 				this.search_fnsku = ''
-				this.warehouse = ''
-				this.getData()
+				this.date_filter = []
+				// this.getData()
 			},
 			detailsShow(index, row) {
 				this.idx = index;
@@ -182,6 +224,53 @@
 			},
 			formatter_created_at(row, column) {
 				return row.created_at.substr(0, 19);
+			},
+			formatter_done_at(row, column) {
+				if(row.done_time != null) {
+					return row.done_time.substr(0, 19);
+				}
+			},
+			getSummaries(param) {
+				const { columns, data } = param;
+				const sums = [];
+				columns.forEach((column, index) => {
+					if (index === 0) {
+					sums[index] = '总计';
+					return;
+					}
+					if (index === 4 || index === 5) {
+						const values = data.map(item => Number(item[column.property]));
+						if (!values.every(value => isNaN(value))) {
+							sums[index] = values.reduce((prev, curr) => {
+								const value = Number(curr);
+								if (!isNaN(value)) {
+									return prev + curr;
+								} else {
+									return prev;
+								}
+							}, 0);
+							sums[index] += ' 个';
+							} else {
+								sums[index] = 'N/A';
+							}
+					}
+				// const values = data.map(item => Number(item[column.property]));
+				// if (!values.every(value => isNaN(value))) {
+				// 	sums[index] = values.reduce((prev, curr) => {
+				// 		const value = Number(curr);
+				// 		if (!isNaN(value)) {
+				// 			return prev + curr;
+				// 		} else {
+				// 			return prev;
+				// 		}
+				// 	}, 0);
+				// 	sums[index] += ' 元';
+				// 	} else {
+				// 		sums[index] = 'N/A';
+				// 	}
+				});
+
+				return sums;
 			},
 			getStatusName(status) {
 				if(status == 1) {

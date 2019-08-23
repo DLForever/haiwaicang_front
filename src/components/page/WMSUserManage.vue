@@ -37,6 +37,9 @@
 								<el-dropdown-item>
 									<el-button @click="editRemark(scope.$index, scope.row)" type="text">编辑</el-button>
 								</el-dropdown-item>
+								<el-dropdown-item>
+									<el-button @click="editSettle(scope.$index, scope.row)" type="text">结算标准</el-button>
+								</el-dropdown-item>
 							</el-dropdown-menu>
 						</el-dropdown>
 					</template>
@@ -58,6 +61,37 @@
         	<span slot="footer" class="dialog-footer">
                 <el-button @click="detailVisible = false">取 消</el-button>
                 <el-button type="primary" @click="onSubmit" :disabled="submitDisable">确 定</el-button>
+            </span>
+		</el-dialog>
+
+		<!-- 编辑提示框 -->
+        <el-dialog title="收费标准" :visible.sync="chargeStandardsVisible" width="50%">
+        	<el-form ref="form" label-width="150px">
+        		<el-form-item label="入库费" required>
+        			<el-input-number v-model="store_in_fee" :min="0" :step="2"></el-input-number>
+        		</el-form-item>
+        		<el-form-item label="换标费" required>
+        			<el-input-number v-model="change_label_fee" :min="0" :step="2"></el-input-number>
+        		</el-form-item>
+        		<el-form-item label="箱子费" required>
+        			<el-input-number v-model="box_fee" :min="0" :step="2"></el-input-number>
+        		</el-form-item>
+        		<el-form-item label="换箱费" required>
+        			<el-input-number v-model="change_box_fee" :min="0" :step="2"></el-input-number>
+        		</el-form-item>
+        		<el-form-item label="计算仓储费的天数" required>
+        			<el-input-number v-model="day" :min="0" :step="2"></el-input-number>
+        		</el-form-item>
+        		<el-form-item label="计算仓储费的立方值" required>
+        			<el-input-number v-model="cube" :min="0" :step="2"></el-input-number>
+        		</el-form-item>
+        		<el-form-item label="计算仓储费的价格" required>
+        			<el-input-number v-model="store_fee" :min="0" :step="2"></el-input-number>
+        		</el-form-item>
+        	</el-form>
+        	<span slot="footer" class="dialog-footer">
+                <el-button @click="chargeStandardsVisible = false">取 消</el-button>
+                <el-button type="primary" @click="onSubmitChargeStandards" :disabled="submitDisable">确 定</el-button>
             </span>
 		</el-dialog>
 	</div>
@@ -82,7 +116,26 @@
 				paginationShow: true,
 				sex: undefined,
 				submitDisable: false,
-				code: ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z"]
+				code: ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z"],
+				charge_standards: {
+					store_in_fee: 0,
+					change_label_fee: 0,
+					box_fee: 0,
+					change_box_fee: 0,
+					day: 0,
+					cube: 0,
+					store_fee: 0,
+				},
+				store_in_fee: 0,
+				change_label_fee: 0,
+				box_fee: 0,
+				change_box_fee: 0,
+				day: 0,
+				cube: 0,
+				store_fee: 0,
+				chargeStandardsVisible: false,
+				user_id: '',
+				charge_id: ''
 			}
 		},
 		created() {
@@ -195,7 +248,68 @@
 				}).catch((res) => {
 					console.log('error')
 				})
-			}
+			},
+			editSettle(index, row) {
+				this.user_id = row.id
+				this.charge_id = ''
+				this.$axios.get('/admin/charge_standards/' + row.id, {
+					headers: {
+						'Authorization': localStorage.getItem('token_admin')
+					},
+				}).then((res) => {
+					if(res.data.code == 200 & res.data.data.length != 0) {
+						let dataList = res.data.data[0]
+						this.charge_id = dataList.id
+						this.store_in_fee = dataList.store_in_fee
+						this.change_label_fee = dataList.change_label_fee
+						this.box_fee = dataList.box_fee
+						this.change_box_fee = dataList.change_box_fee
+						this.day = dataList.day
+						this.cube = dataList.cube
+						this.store_fee = dataList.store_fee
+						this.chargeStandardsVisible = true
+					}else {
+						this.charge_id = 0
+						this.store_in_fee = 0
+						this.change_label_fee = 0
+						this.box_fee = 0
+						this.change_box_fee = 0
+						this.day = 0
+						this.cube = 0
+						this.store_fee = 0
+						this.chargeStandardsVisible = true
+					}
+				}).catch((res) => {
+				})
+			},
+			onSubmitChargeStandards() {
+				let params = {
+					id: this.charge_id,
+					user_id: this.user_id,
+					store_in_fee: this.store_in_fee,
+					change_label_fee: this.change_label_fee,
+					box_fee: this.box_fee,
+					change_box_fee: this.change_box_fee,
+					day: this.day,
+					cube: this.cube,
+					store_fee: this.store_fee,
+				}
+				this.$axios.post('/admin/charge_standards', params, {
+					headers: {
+						'Authorization': localStorage.getItem('token_admin')
+					},
+				}).then((res) => {
+					if(res.data.code == 200) {
+						this.$message.success('创建成功')
+						this.chargeStandardsVisible = false
+						this.getData()
+					}
+				}).catch((res) => {
+					console.log('error')
+				}).finally(() => {
+					this.submitDisable = false
+				})
+			},
 		},
 	}
 </script>

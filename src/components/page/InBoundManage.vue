@@ -407,7 +407,7 @@
 			showInbound(index, row, status) {
                 this.$router.push({name: 'inbounding', params: {batch_store_in_id: row.id, status: status, type: '待完成'}});
             },
-			getStatusName(status) {
+			getStatusName2(status) {
 				if(status == 1) {
 					return "待审核"
 				}else if (status == 2) {
@@ -424,6 +424,27 @@
 					return "未完成"
 				}else if (status == 8) {
 					return "等待入库"
+				} else {
+					return "其他"
+				}
+			},
+			getStatusName(status) {
+				if(status == 1) {
+					return "未使用"
+				}else if (status == 2) {
+					return "被删除"
+				}else if (status == 3) {
+					return "删除"
+				}else if (status == 4) {
+					return "已入库"
+				}else if (status == 5) {
+					return "删除待审核"
+				} else if(status == 6) {
+					return "已结算"
+				}else if (status == 7) {
+					return "待入库"
+				}else if (status == 8) {
+					return "待审核"
 				} else {
 					return "其他"
 				}

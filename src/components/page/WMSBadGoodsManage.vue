@@ -214,7 +214,8 @@
 				outSum: 0,
 				outId: undefined,
 				submitDisable: false,
-				outId2: undefined
+				outId2: undefined,
+				search_usercode: ''
 			}
 		},
 		created() {

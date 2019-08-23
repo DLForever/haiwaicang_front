@@ -224,6 +224,16 @@ export default new Router({
                     meta: { title: 'WMS导入详情', permission: true }
                 },
                 {
+                    path: '/WMSInBoundStatistics',
+                    component: resolve => require(['../components/page/WMSInBoundStatistics.vue'], resolve),
+                    meta: { title: 'WMS入库统计详情', permission: true }
+                },
+                {
+                    path: '/WMSOutBoundStatistics',
+                    component: resolve => require(['../components/page/WMSOutBoundStatistics.vue'], resolve),
+                    meta: { title: 'WMS出库统计详情', permission: true }
+                },
+                {
                     // 权限页面
                     path: '/permission',
                     component: resolve => require(['../components/page/Permission.vue'], resolve),

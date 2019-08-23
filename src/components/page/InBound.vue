@@ -336,9 +336,15 @@
 				// formData.append('remark', this.remark)
 				this.$axios.post('/store_ins/batch', formData, config).then((res) => {
 					if(res.data.code == 200) {
-						this.$message.success("提交成功")
+						// this.$message.success("提交成功")
 						this.fileList = []
 						this.uploadDisabled = false
+						this.$message({
+							message: res.data.data,
+							type: 'success',
+							showClose: true,
+							duration: 6000
+						})
 						this.$router.push('/inboundmanage')
 						// this.remark = ''
 					}
