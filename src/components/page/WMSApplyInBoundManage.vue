@@ -3,14 +3,14 @@
 		<div class="crumbs">
 			<el-breadcrumb separator="/">
 				<el-breadcrumb-item><i class="el-icon-tickets"></i> WMS入库管理</el-breadcrumb-item>
-				<el-breadcrumb-item>入库管理</el-breadcrumb-item>
+				<el-breadcrumb-item>入库申请</el-breadcrumb-item>
 			</el-breadcrumb>
 		</div>
 		<div class="container">
 			<div class="handle-box">
 				<!--<el-button type="primary" icon="delete" class="handle-del mr10" @click="delAll">批量删除</el-button>-->
 				<el-select v-model="select_cate" filterable remote placeholder="选择用户" :loading="loading" class="handle-select mr10" @visible-change="selectVisble" @change="getUserDatasFirst" :remote-method="remoteMethod">
-					<el-option v-for="item in options" :key="item.id" :label="item.name" :value="item.id"></el-option>
+					<el-option v-for="item in options" :key="item.id" :label="item.usercode" :value="item.id"></el-option>
 					<infinite-loading :on-infinite="onInfinite" ref="infiniteLoading"></infinite-loading>
 				</el-select>
 				
@@ -68,8 +68,14 @@
 			
 		
 		<!-- 创建批次弹出框 -->
-		<el-dialog title="编辑" :visible.sync="editVisible" width="30%">
-			<span>确定创建批次吗？</span>
+		<el-dialog title="创建批次" :visible.sync="editVisible" width="30%">
+			<!-- <span>确定创建批次吗？</span> -->
+			<el-form label-width="115px">
+				<el-form-item label="是否入库即出" required>
+					<el-radio v-model="is_quick" label="true" border>是</el-radio>
+					<el-radio v-model="is_quick" label="false" border>否</el-radio>
+				</el-form-item>
+			</el-form>
 			<span slot="footer" class="dialog-footer">
                 <el-button @click="editVisible = false">取 消</el-button>
                 <el-button type="danger" @click="refuseEdit('form')">拒 绝</el-button>
@@ -82,6 +88,12 @@
 			<el-table :data="batch_list" border style="width: 100%">
 				<!--<el-table-column prop="ware_house_id" label="库位"></el-table-column>-->
 				<el-table-column prop="batch_number" label="批次编号" width="150"></el-table-column>
+				<el-table-column prop="is_quick" label="是否入库即出">
+					<template slot-scope="scope">
+						<el-tag v-if="scope.row.is_quick == false" type="default">否</el-tag>
+						<el-tag v-else-if="scope.row.is_quick == true" type="warning">是</el-tag>
+					</template>
+				</el-table-column>
 				<el-table-column prop="created_at" :formatter="formatter_created_at" label="创建时间">
 				</el-table-column>
 				<el-table-column prop="updated_at" :formatter="formatter_updated_at" label="更新时间">
@@ -150,6 +162,8 @@
 				idx: -1,
 				inputVisible: true,
 				inputValue: '',
+				code: ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z"],
+				is_quick: undefined
 			}
 		},
 		created() {
@@ -255,6 +269,18 @@
 					},
 					}).then((res) => {
 						if(res.data.code == 200){
+							res.data.data.forEach((data) => {
+								let tempcode =  String(data.id%1000)
+								let tempindex = parseInt(data.id/1000)
+								if(tempcode.length ==1) {
+									tempcode = '00' + tempcode
+								}else if(tempcode.length ==2) {
+									tempcode = '0' + tempcode
+								}else{
+
+								}
+								data.usercode = this.code[tempindex] + tempcode
+							})
 							this.loading = false
 //							this.options = res.data.data							
 							if(reload){
@@ -348,6 +374,7 @@
 				return row.tag === value;
 			},
 			handleEdit(index, row) {
+				this.is_quick = undefined
 				this.idx = index;
 				const item = this.tableData[index];
 				this.form = {
@@ -375,6 +402,10 @@
 				// setTimeout(() => {
 				// 	this.isDisabled = false
 				// }, 3000)
+				if(this.is_quick == undefined) {
+					this.$message.error("请选择是否入库即出")
+					return
+				}
 				let apply_store_in_id = this.form.apply_store_in_id
 				let user_id = this.form.user_id
 				if(!this.isDisabled) {
@@ -385,6 +416,7 @@
 					this.$axios.post('/admin/batch_store_ins', {
 						apply_store_in_id: apply_store_in_id,
 						user_id: user_id,
+						is_quick: this.is_quick
 					}, {
 						headers: {
 							'Authorization': localStorage.getItem('token_admin')

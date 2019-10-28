@@ -57,6 +57,12 @@
 			<el-table :data="batch_list" border style="width: 100%">
 				<!--<el-table-column prop="ware_house_id" label="库位"></el-table-column>-->
 				<el-table-column prop="batch_number" label="批次编号" width="150"></el-table-column>
+				<el-table-column prop="is_quick" label="是否入库即出">
+					<template slot-scope="scope">
+						<el-tag v-if="scope.row.is_quick == false" type="default">否</el-tag>
+						<el-tag v-else-if="scope.row.is_quick == true" type="warning">是</el-tag>
+					</template>
+				</el-table-column>
 				<el-table-column prop="created_at" :formatter="formatter_created_at" label="创建时间">
 				</el-table-column>
 				<el-table-column prop="updated_at" :formatter="formatter_updated_at" label="更新时间">

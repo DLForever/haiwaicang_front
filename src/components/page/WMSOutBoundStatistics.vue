@@ -176,11 +176,11 @@
 				this.paginationShow = false
 				this.cur_page = 1
 				let date_begin_temp = this.date_filter[0]
-                let date_end_temp = this.date_filter[1]
+				let date_end_temp = this.date_filter[1]
 				if(this.date_filter.length == 0) {
-                    date_begin_temp = ''
-                    date_end_temp = ''
-                }
+					date_begin_temp = ''
+					date_end_temp = ''
+				}
 				this.$axios.get('/admin/outbound_orders/statistics?page=' + this.cur_page + '&fnsku=' + this.search_fnsku + '&date_begin=' + date_begin_temp +'&date_end=' + date_end_temp, {
 					headers: {
 						'Authorization': localStorage.getItem('token_admin')
@@ -262,7 +262,6 @@
 				// 		sums[index] = 'N/A';
 				// 	}
 				});
-
 				return sums;
 			},
 			getStatusName(status) {

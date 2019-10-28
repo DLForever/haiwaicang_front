@@ -658,7 +658,7 @@
 				}
 			},
 			getDatas() {
-				this.$axios.get('/outbound_orders?page=' + this.cur_page + '&fnsku=' + this.search_fnsku + '&status=' + this.statusSelect + '&process=true', {
+				this.$axios.get('/outbound_orders?page=' + this.cur_page + '&fnsku=' + this.search_fnsku + '&status=' + this.statusSelect + '&process=true&is_quick=0', {
 					headers: {
 						'Authorization': localStorage.getItem('token')
 					}
@@ -683,7 +683,7 @@
 			filter_inbound() {
 				this.paginationShow = false
 				this.cur_page = 1
-				this.$axios.get('/outbound_orders?page=' + this.cur_page + '&fnsku=' + this.search_fnsku + '&status=' + this.statusSelect + '&process=true', {
+				this.$axios.get('/outbound_orders?page=' + this.cur_page + '&fnsku=' + this.search_fnsku + '&status=' + this.statusSelect + '&process=true&is_quick=0', {
 					headers: {
 						'Authorization': localStorage.getItem('token')
 					}
@@ -962,12 +962,15 @@
 						'Authorization': localStorage.getItem('token')
 					},
 				}).then((res) => {
-					res.data.data.order_boxes.forEach((data) => {
-						data.box_size = data.box.length + '*' + data.box.width + '*' + data.box.height
-					})
-					this.order_box_cargos = res.data.data.order_boxes
+					if(res.data.code == 200) {
+						res.data.data.order_boxes.forEach((data) => {
+							data.box_size = data.box.length + '*' + data.box.width + '*' + data.box.height
+						})
+						this.order_box_cargos = res.data.data.order_boxes
+						this.editVisible = true;
+					}
 				})
-				this.editVisible = true;
+				
 			},
 			updateOutbound(index, row) {
 				this.update_id = row.id

@@ -3,7 +3,7 @@
 		<div class="crumbs">
 			<el-breadcrumb separator="/">
 				<el-breadcrumb-item><i class="el-icon-tickets"></i> WMS入库批次管理</el-breadcrumb-item>
-				<el-breadcrumb-item>入库单详情</el-breadcrumb-item>
+				<el-breadcrumb-item>已完成</el-breadcrumb-item>
 			</el-breadcrumb>
 		</div>
 		<div class="container">
@@ -16,21 +16,23 @@
 						<el-option v-for="item in options" :key="item.id" :label="item.usercode" :value="item.id"></el-option>
 						<infinite-loading :on-infinite="onInfinite" ref="infiniteLoading"></infinite-loading>
 					</el-select>
+					批次:
+					<el-input v-model="select_batch" placeholder="请输入批次号" class="handle-select mr10 batch_box"></el-input>
 					<!-- 批次:
 					<el-select v-model="select_batch" filterable remote placeholder="选择批次" :loading="loading2" class="handle-select mr10" @visible-change="batchVisible" :remote-method="remoteMethodBatch">
 						<el-option v-for="item in batchoptions" :key="item.id" :label="item.batch_number" :value="item.id"></el-option>
 						<infinite-loading :on-infinite="onInfinite_batch" ref="infiniteLoading2"></infinite-loading>
 					</el-select> -->
-					Fnsku:
-					<el-input style="width:150px" placeholder="请输入Fnsku" v-model.trim="search_fnsku"></el-input>
-					追踪编码:
-					<el-input style="width:150px" placeholder="请输入追踪编码" v-model.trim="search_logistics_number"></el-input>
-					状态:
+					<!-- 状态:
 					<el-select v-model="statusSelect" placeholder="请选择" class="handle-select mr10">
 						<el-option v-for="item in statusOptions" :key="item.value" :label="item.label" :value="item.value"></el-option>
-					</el-select>
+					</el-select> -->
+					<!-- Fnsku:
+					<el-input style="width:150px" placeholder="请输入Fnsku" v-model.trim="search_fnsku"></el-input>
+					追踪编码:
+					<el-input style="width:150px" placeholder="请输入追踪编码" v-model.trim="search_logistics_number"></el-input> -->
 					<el-button @click="clear_search" type="default">重置</el-button>
-	                <el-button @click="filter_inbound" type="primary">查询</el-button>
+	                <el-button @click="filter_BatchData" type="primary">查询</el-button>
                 </div>
 				<!--<el-button type="primary" icon="search" @click="allUser">所有用户</el-button>-->
 			</div>
@@ -38,35 +40,34 @@
 			<!--<el-table :data="data.slice((cur_page-1)*pagesize, cur_page*pagesize)" border style="width: 100%" model="form" ref="multipleTable" @selection-change="handleSelectionChange">-->
 			<el-table :data="data" border style="width: 100%" model="form" ref="multipleTable" @selection-change="handleSelectionChange">
 				<el-table-column type="selection" width="55"></el-table-column>
-				<el-table-column prop="logistics_number" label="追踪编码" width="200">
+				<el-table-column prop="batch_number" label="申请批次">
+					<template slot-scope="scope">
+						<span class="link-type" @click="showInbound(scope.$index, scope.row, 'complete')">{{scope.row.batch_number}}</span>
+					</template>
 				</el-table-column>
-				<el-table-column prop="batch_number" label="申请批次" width="100">
+				<el-table-column prop="total" label="批次总数量" width="120">
 				</el-table-column>
-				<el-table-column prop="order_number" label="订单编码" show-overflow-tooltip>
+				<el-table-column prop="waiting_sum" label="待入库数量" width="120">
 				</el-table-column>
-				<el-table-column prop="total_plan_sum" label="计划总数量" width="150">
+				<el-table-column prop="done_sum" label="已入库数量" width="120">
 				</el-table-column>
-				<el-table-column prop="total_arrive_sum" label="已收到数量" width="120">
-				</el-table-column>				
-				<el-table-column prop="user_remark" label="用户备注" show-overflow-tooltip>
+				<el-table-column prop="done_diff_sum" label="入库差异" width="120">
 				</el-table-column>
-				<el-table-column prop="manager_remark" label="仓库备注" show-overflow-tooltip>
-				</el-table-column>
-				<el-table-column prop="remove_remark" label="用户删除备注" show-overflow-tooltip>
-				</el-table-column>
-				<el-table-column prop="created_at" :formatter="formatter_created_at" label="创建时间" width="150">
-				</el-table-column>
-				<el-table-column prop="updated_at" :formatter="formatter_updated_at" label="更新时间" width="150">
+				<el-table-column prop="miss_sum" label="未接收数量" width="120">
 				</el-table-column>
 				<el-table-column prop="status" label="状态">
 					<template slot-scope="scope">
 						<el-tag :type="scope.row.status | statusFilter">{{getStatusName(scope.row.status)}}</el-tag>
 					</template>
 				</el-table-column>
+				<el-table-column prop="created_at" :formatter="formatter_created_at" label="创建时间" width="140">
+				</el-table-column>
+				<el-table-column prop="updated_at" :formatter="formatter_updated_at" label="更新时间" width="140">
+				</el-table-column>
 				<el-table-column label="操作" width="100">
 					<template slot-scope="scope">
-						<!--<el-button size="small" @click="handleEdit(scope.$index, scope.row)">编辑</el-button>-->
-						<!--<el-button size="small" type="danger" @click="handleDelete(scope.$index, scope.row)">删除</el-button>-->
+						<!-- <el-button size="small" @click="handleEdit(scope.$index, scope.row)">编辑</el-button>
+						<el-button size="small" type="danger" @click="handleDelete(scope.$index, scope.row)">删除</el-button> -->
 						<el-dropdown>
 							<el-button type="primary">
 								操作<i class="el-icon-arrow-down el-icon--right"></i>
@@ -75,23 +76,30 @@
 								<el-dropdown-item>
 									<el-button @click="detailsShow(scope.$index, scope.row)" type="text">详情</el-button>
 								</el-dropdown-item>
-								<template v-if="scope.row.status == 7">
-									<el-dropdown-item>
-										<el-button @click="handleEdit(scope.$index, scope.row)" type="text">入库</el-button>
-									</el-dropdown-item>
-								</template>
+								<el-dropdown-item>
+									<el-button @click="floatingDiff(scope.row)" type="text">补全差异</el-button>
+								</el-dropdown-item>
+								<el-dropdown-item>
+									<el-button @click="settlement(scope.row)" type="text">结算</el-button>
+								</el-dropdown-item>
+								<!-- <el-dropdown-item>
+									<el-button @click="showInbound(scope.$index, scope.row)" type="text">查看入库单</el-button>
+								</el-dropdown-item>
+								<el-dropdown-item>
+									<el-button @click="handleEdit(scope.$index, scope.row)" type="text">入库</el-button>
+								</el-dropdown-item>
 								<el-dropdown-item>
 									<el-button @click="handleDelete(scope.$index, scope.row)" type="text">删除</el-button>
 								</el-dropdown-item>
-								<!--<el-dropdown-item><el-button @click="editVisible = true" type="text">详情</el-button></el-dropdown-item>-->
-								<!--<el-button @click="editVisible = true">贴标</el-button>-->
+								<el-dropdown-item><el-button @click="editVisible = true" type="text">详情</el-button></el-dropdown-item>
+								<el-button @click="editVisible = true">贴标</el-button> -->
 							</el-dropdown-menu>
 						</el-dropdown>
 					</template>
 				</el-table-column>
 			</el-table>
 			<div class="pagination">
-				<el-pagination v-if="paginationShow && totals != 0" @current-change="handleCurrentChange" :current-page.sync='cur_page' :page-size="20" layout="prev, pager, next" :total="totals">
+				<el-pagination v-if="paginationShow" @current-change="handleCurrentChange" :current-page.sync='cur_page' :page-size="20" layout="prev, pager, next" :total="totals">
 				</el-pagination>
 			</div>
 		</div>
@@ -139,11 +147,33 @@
 		<el-dialog title="详情" :visible.sync="detailVisible" width="65%">
 			<el-table :data="ware_details" border style="width: 100%">
 				<!--<el-table-column prop="ware_house_id" label="库位"></el-table-column>-->
-				<el-table-column prop="fnsku" label="产品名称"></el-table-column>
-				<el-table-column prop="plan_sum" label="计划入库数量" ></el-table-column>
-				<el-table-column prop="arrive_sum" label="实际入库数量" ></el-table-column>
+				<el-table-column prop="fnsku" label="fnsku"></el-table-column>
+				<el-table-column prop="total" label="总数量" ></el-table-column>
+				<el-table-column prop="waiting_sum" label="待入库数量" ></el-table-column>
+				<el-table-column prop="done_sum" label="已入库数量" width="120">
+				</el-table-column>
+				<el-table-column prop="done_diff_sum" label="入库差异" width="120">
+				</el-table-column>
+				<el-table-column prop="putaway_sum" label="已上架数量" width="120">
+				</el-table-column>
+				<el-table-column prop="miss_sum" label="未接收数量" width="120">
+				</el-table-column>
+				<el-table-column prop="defect_sum" label="次品数量" width="120">
+				</el-table-column>
+				<el-table-column prop="diff_sum" label="差异" width="120">
+				</el-table-column>
 			</el-table>
 			<br />
+			<el-table :data="store_ins_details" border style="width: 100%">
+				<!--<el-table-column prop="ware_house_id" label="库位"></el-table-column>-->
+				<el-table-column prop="batch_number" label="批次号"></el-table-column>
+				<el-table-column prop="logistics_number" label="追踪编码" ></el-table-column>
+				<el-table-column prop="order_number" label="订单编码" ></el-table-column>
+				<el-table-column prop="total_plan_sum" label="总计划数量" width="120">
+				</el-table-column>
+				<el-table-column prop="total_arrive_sum" label="总到达数量" width="120">
+				</el-table-column>
+			</el-table>
 		</el-dialog>
 
 		<!-- 删除提示框 -->
@@ -153,6 +183,76 @@
                 <el-button @click="delVisible = false">取 消</el-button>
                 <el-button type="primary" @click="deleteRow">确 定</el-button>
             </span>
+		</el-dialog>
+
+		<!-- 结算提示框 -->
+		<el-dialog title="结算" :visible.sync="settlementVisible" width="65%">
+			<el-table :data="store_ins_options" border style="width: 100%" ref="multipleCheck" @selection-change="store_insSelectionChange">
+				<el-table-column type="selection" width="55"></el-table-column>
+				<el-table-column label="序号" width="50">
+					<template slot-scope="scope">
+						<span>{{scope.$index + 1}}</span>
+					</template>
+				</el-table-column>
+				<el-table-column prop="batch_number" label="批次号"></el-table-column>
+				<el-table-column prop="logistics_number" label="追踪编码"></el-table-column>
+				<el-table-column prop="order_number" label="订单编码"></el-table-column>
+				<el-table-column prop="total_plan_sum" label="总计划数量"></el-table-column>
+				<el-table-column prop="total_arrive_sum" label="总到达数量"></el-table-column>
+			</el-table>
+			<br>
+			<el-table :data="pricetable" border style="width: 100%">
+				<el-table-column label="价格">
+					<template slot-scope="scope">
+						<el-input-number :min="0" :precision="2" :step="10" v-model="scope.row.price"></el-input-number>
+					</template>
+				</el-table-column>
+				<el-table-column label="备注">
+					<template scope="scope">
+						<el-input placeholder="请输入备注" v-model.trim="scope.row.price_remark">
+						</el-input>
+					</template>
+				</el-table-column>
+			</el-table>
+			<br>
+			<el-form ref="form" :model="form" label-width="60px">
+				<div class="newPrice">
+					<el-button @click="createPrice">添加价格</el-button>
+					<el-button @click="back" :disabled="isDisableBu" type="danger">撤销</el-button>
+				</div>
+				<br>
+				<el-form-item label="备注">
+					<el-input v-model="form.remark"></el-input>
+				</el-form-item>
+			</el-form>
+			<span slot="footer" class="dialog-footer">
+				<el-button @click="settlementVisible = false">取 消</el-button>
+				<el-button type="primary" @click="saveSettlement('form')" :disabled="submitDisable">确 定</el-button>
+			</span>
+		</el-dialog>
+
+		<!-- 收费预览提示框 -->
+		<el-dialog title="收费预览" :visible.sync="previewVisible" width="65%">
+			<el-table :data="preview_details" border style="width: 100%">
+				<el-table-column prop="store_in_price" label="入库费用" ></el-table-column>
+				<el-table-column prop="store_price" label="仓储费用" ></el-table-column>
+			</el-table>
+			<!-- <template v-if="preview_details_store_ins.length != 0"> -->
+				<br>
+				详情:
+				<el-table :data="preview_details_store_ins" border style="width: 100%">
+					<el-table-column prop="logistics_number" label="物流单号"></el-table-column>
+					<el-table-column prop="order_number" label="订单号" ></el-table-column>
+					<el-table-column prop="batch_number" label="批次号" ></el-table-column>
+					<el-table-column prop="total_plan_sum" label="计划数量" ></el-table-column>
+					<el-table-column prop="total_arrive_sum" label="到达数量" ></el-table-column>
+					<el-table-column prop="user_remark" label="用户备注" ></el-table-column>
+				</el-table>
+			<!-- </template> -->
+			<span slot="footer" class="dialog-footer">
+				<el-button type="danger" @click="deleteCheck">删 除 预 览</el-button>
+				<el-button type="primary" @click="confirmCheck">确 认 审 核</el-button>
+			</span>
 		</el-dialog>
 	</div>
 </template>
@@ -198,7 +298,7 @@
 				user_total: 0,
 				product_store_ins_change: [],
 				form: {
-					order: 'rr',
+					order: '',
 					total_fnsku: '',
 					amounts_way: '',
 					amounts_get: '',
@@ -218,17 +318,34 @@
 				inputValue: '',
 				search_fnsku: '',
 				submitDisable: false,
-				statusOptions: [{value: '', label: '全部'}, {value: 7, label: '待入库'}, {value: 4, label: '已入库'}, {value: 5, label: '待删除'}],
-				statusOptions2: [{value: '', label: '全部'}, {value: 4, label: '已入库'}, {value: 6, label: '已结算'}, {value: 5, label: '待删除'}],
+				statusOptions: [{value: 7, label: '待入库'}, {value: 5, label: '待删除'}, {value: 4, label: '已入库'}, {value: 6, label: '已结算'}],
 				statusSelect: '',
 				search_logistics_number: '',
 				code: ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z"],
+				store_ins_mul: [],
+				store_ins_options: [],
+				settlementVisible: false,
+				pricetable: [],
+				pricetable: [{
+					price: 0,
+					remark: ''
+				}],
+				pricetabletemp: {
+					price: 0,
+					remark: ''
+				},
+				batch_id: '',
+				check_settlement_id: '',
+				previewVisible: false,
+				preview_details: [],
+				preview_details_store_ins: [],
+				store_ins_details: []
 			}
 		},
 		created() {
-			this.getData();
+			this.getBatchData();
 			this.getUser();
-			this.getWarehouse();
+			// this.getWarehouse();
 		},
 		watch: {
 			"$route": "getData",
@@ -244,11 +361,18 @@
 			},
 			batchDisableds(){
 				if(this.select_cate != "") {
-				return this.batchDisabled = false
-			}else {
-				return this.batchDisabled = true
-			}
-			}
+					return this.batchDisabled = false
+				}else {
+					return this.batchDisabled = true
+				}
+			},
+			isDisableBu() {
+				if(this.pricetable.length <= 1) {
+					return this.isdisable = true
+				} else {
+					return this.isdisable = false
+				}
+			},
 		},
 		filters: {
 			//类型转换
@@ -258,7 +382,8 @@
 					1: 'warning',
 					4: 'success',
 					5: 'danger',
-					7: 'warning'
+					7: 'warning',
+					6: 'success'
 				}
 				return statusMap[status]
 			},
@@ -267,30 +392,105 @@
 			// 分页导航
 			handleCurrentChange(val) {
 				this.cur_page = val;
-				if(!this.select_cate || this.select_cate == -1) {
-					this.getData();
-				} else {
-					this.getUserDatas()
-				}				
+				this.getBatchData()
+				// if(!this.select_cate || this.select_cate == -1) {
+				// 	this.getData();
+				// } else {
+				// 	this.getUserDatas()
+				// }				
 			},
-			// 获取 easy-mock 的模拟数据
-			getData() {
-				// 开发环境使用 easy-mock 数据，正式环境使用 json 文件
-				if(process.env.NODE_ENV === 'development') {
-					//					this.url = '/ms/table/list';
-				};
-				if (this.$route.params.status == 'incomplete') {
-					this.statusOptions = this.statusOptions
-				} else {
-					this.statusOptions = this.statusOptions2
-				}
-				this.$axios.get('/admin/store_ins?page=' + this.cur_page + '&batch_store_in_id=' + this.$route.params.batch_store_in_id + '&user_id=' + this.select_cate + '&fnsku=' + this.search_fnsku + '&status=' + this.statusSelect + '&logistics_number=' + this.search_logistics_number, {
+			getBatchData() {
+				this.$axios.get('/admin/batch_store_ins?page=' + this.cur_page + '&user_id=' + this.select_cate + '&batch_number=' + this.select_batch + '&status=out&is_quick=1', {
 					headers: {
 						'Authorization': localStorage.getItem('token_admin')
 					},
 				}).then((res) => {
 					if(res.data.code == 200) {
+						res.data.data.forEach((data) => {
+							data.total = 0
+							data.waiting_sum = 0
+							data.done_sum = 0
+							data.putaway_sum = 0
+							data.defect_sum = 0
+							data.miss_sum = 0
+							data.done_diff_sum = 0
+							data.batch_store_in_infos.forEach((data2) => {
+								data.total += data2.total
+								data.waiting_sum += data2.waiting_sum
+								data.done_sum += data2.done_sum
+								data.putaway_sum += data2.putaway_sum
+								data.defect_sum += data2.defect_sum
+								data.miss_sum += data2.miss_sum
+								data.done_diff_sum += data2.done_diff_sum
+							})
+							data.diff_sum = data.done_sum - data.putaway_sum - data.defect_sum
+						})
 						this.tableData = res.data.data;
+						this.totals = res.data.count
+						this.paginationShow = true
+					}
+					
+				}).catch((res) => {
+					console.log(res)
+				})
+			},
+			filter_BatchData() {
+				this.paginationShow = false
+				this.cur_page = 1
+				this.$axios.get('/admin/batch_store_ins?page=' + this.cur_page + '&user_id=' + this.select_cate + '&batch_number=' + this.select_batch + '&status=out&is_quick=1', {
+					headers: {
+						'Authorization': localStorage.getItem('token_admin')
+					},
+				}).then((res) => {
+					if(res.data.code == 200) {
+						res.data.data.forEach((data) => {
+							data.total = 0
+							data.waiting_sum = 0
+							data.done_sum = 0
+							data.putaway_sum = 0
+							data.defect_sum = 0
+							data.miss_sum = 0
+							data.done_diff_sum = 0
+							data.batch_store_in_infos.forEach((data2) => {
+								data.total += data2.total
+								data.waiting_sum += data2.waiting_sum
+								data.done_sum += data2.done_sum
+								data.putaway_sum += data2.putaway_sum
+								data.defect_sum += data2.defect_sum
+								data.miss_sum += data2.miss_sum
+								data.done_diff_sum += data2.done_diff_sum
+							})
+							data.diff_sum = data.done_sum - data.putaway_sum - data.defect_sum
+						})
+						this.tableData = res.data.data;
+						this.totals = res.data.count
+						this.paginationShow = true
+					}
+					
+				}).catch((res) => {
+					console.log(res)
+				})
+			},
+			getData() {
+				// 开发环境使用 easy-mock 数据，正式环境使用 json 文件
+				if(process.env.NODE_ENV === 'development') {
+					//					this.url = '/ms/table/list';
+				};				
+				this.$axios.get('/admin/store_ins?page=' + this.cur_page + '&batch_store_in_id=' + this.select_batch + '&user_id=' + this.select_cate + '&fnsku=' + this.search_fnsku + '&status=6' + '&logistics_number=' + this.search_logistics_number, {
+					headers: {
+						'Authorization': localStorage.getItem('token_admin')
+					},
+					//					page: this.cur_page
+				}).then((res) => {
+					//					res.data.data.forEach((data) => {
+					//						data.product_store_ins.forEach((data2) => {
+					//							data2.warehouse = []
+					//						})
+					//					})
+					if(res.data.code == 200) {
+						this.tableData = res.data.data;
+					//					let test = res.data.data[1].product_store_ins
+					//					this.totals = this.tableData.length
 						this.totals = res.data.count
 						this.paginationShow = true
 					}
@@ -300,10 +500,11 @@
 			filter_inbound() {
 				this.paginationShow = false
 				this.cur_page = 1
-				this.$axios.get('/admin/store_ins?page=' + this.cur_page + '&batch_store_in_id=' + this.$route.params.batch_store_in_id + '&user_id=' + this.select_cate + '&fnsku=' + this.search_fnsku + '&status=' + this.statusSelect + '&logistics_number=' + this.search_logistics_number, {
+				this.$axios.get('/admin/store_ins?page=' + this.cur_page + '&batch_store_in_id=' + this.select_batch + '&user_id=' + this.select_cate + '&fnsku=' + this.search_fnsku + '&status=6' + '&logistics_number=' + this.search_logistics_number, {
 					headers: {
 						'Authorization': localStorage.getItem('token_admin')
 					},
+					//                  page: this.cur_page
 				}).then((res) => {
 					if(res.data.code == 200) {
 						this.tableData = res.data.data;
@@ -323,7 +524,7 @@
 				this.search_fnsku = ''
 				this.statusSelect = ''
 				this.search_logistics_number = ''
-				this.getData()
+				this.getBatchData()
 			},
 			allUser() {	
 				this.paginationShow = false
@@ -671,9 +872,12 @@
 				})
 				this.delVisible = false;
 			},
+			showInbound(index, row, status) {
+				this.$router.push({name: 'WMSinedmanage', params: {batch_store_in_id: row.id, status: status}});
+			},
 			getStatusName(status) {
 				if(status == 1) {
-					return "待审核"
+					return "未使用"
 				}else if (status ==2) {
 					return "被删除"
 				}else if (status == 3) {
@@ -685,28 +889,190 @@
 				}else if (status == 6) {
 					return "已结算"
 				}else if (status == 7) {
-					return "等待入库"
-				} else {
+					return "待入库"
+				}else if (status == 8) {
+					return "待审核"
+				}  else {
 					return "其他"
 				}
 			},
 			detailsShow(index, row) {
-				this.$axios.get('/admin/store_ins/' + row.id, {
+				row.batch_store_in_infos.forEach((data) => {
+					data.diff_sum = data.done_sum - data.putaway_sum - data.defect_sum
+				})
+				this.ware_details = row.batch_store_in_infos
+				this.$axios.get('/admin/store_ins?status=4&batch_number=' + row.batch_number, {
 					headers: {
 						'Authorization': localStorage.getItem('token_admin')
 					},
 				}).then((res) => {
 					if(res.data.code = 200) {
-						res.data.data.product_store_ins.forEach((data) => {
-							this.ware_details = res.data.data.product_store_ins
-						})
+						this.store_ins_details = res.data.data
 						this.detailVisible = true
 					}
 				}).catch((res) => {
 					console.log('error')
 				})
 			},
-			
+			floatingDiff(row) {
+				this.$confirm('确定补全差异吗？', '提示', {
+					confirmButtonText: '确定',
+					cancelButtonText: '取消',
+					type: 'warning',
+				}).then(() => {
+					this.$axios.get('/admin/batch_store_ins/' + row.id + '/done', {
+						headers: {
+							'Authorization': localStorage.getItem('token_admin')
+						},
+					}).then((res) => {
+						if(res.data.code == 200) {
+							this.getBatchData()
+							this.$message.success('处理成功！')
+						}
+					}).catch((res) => {
+						console.log(res)
+					})
+				}).catch(() => {
+					this.$message.info('已取消')
+				})
+			},
+			store_insSelectionChange(val) {
+				this.store_ins_mul = val
+			},
+			settlement(row) {
+				this.$axios.get('/admin/settlement_records?check=false&batch_store_in_id=' + row.id, {
+					headers: {
+						'Authorization': localStorage.getItem('token_admin')
+					},
+				}).then((res) => {
+					if(res.data.code = 200) {
+						if(res.data.data.length == 0) {
+							this.settlement_turn(row)
+						}else {
+							this.preview_details = res.data.data
+							this.preview_details_store_ins = res.data.data[0].store_ins
+							this.check_settlement_id = res.data.data[0].id
+							this.previewVisible = true
+						}
+					}
+				}).catch((res) => {
+					console.log(res)
+				})
+			},
+			settlement_turn(row) {
+				this.remark = ''
+				this.batch_id = row.id
+				this.pricetable = [{
+					price: 0,
+					remark: ''
+				}]
+				this.$axios.get('/admin/store_ins?status=4&batch_number=' + row.batch_number, {
+					headers: {
+						'Authorization': localStorage.getItem('token_admin')
+					},
+				}).then((res) => {
+					if(res.data.code = 200) {
+						this.store_ins_options = res.data.data
+						this.settlementVisible = true
+					}
+				}).catch((res) => {
+					console.log('error')
+				})
+			},
+			createPrice() {
+				this.pricetable.push(this.pricetabletemp)
+				this.pricetabletemp = {
+					price: 0,
+					remark: ''
+				}
+			},
+			back() {
+				this.pricetable.pop(this.pricetabletemp)
+			},
+			saveSettlement() {
+				this.submitDisable = true
+				let store_in_ids = []
+				let price = []
+				let price_remark = []
+				this.pricetable.forEach((data) => {
+					price.push(data.price)
+					price_remark.push(data.price_remark)
+				})
+				this.store_ins_mul.forEach((data) => {
+					store_in_ids.push(data.id)
+				})
+				let params = {
+					store_in_ids: store_in_ids,
+					price: price,
+					price_remark: price_remark,
+					remark: this.remark
+				}
+				this.$axios.post('/admin/batch_store_ins/' + this.batch_id + '/settlement', params, {
+					headers: {
+						'Authorization': localStorage.getItem('token_admin')
+					},
+				}).then((res) => {
+					if(res.data.code == 200) {
+						this.settlementVisible = false;
+						this.getBatchData()
+						this.preview_details = [res.data.data]
+						this.preview_details_store_ins = res.data.data.store_ins
+						this.check_settlement_id = res.data.data.id
+						this.previewVisible = true
+						// this.$message.success('结算完成')
+					}
+				}).catch((res) => {
+					console.log('error')
+				}).finally(() => {
+					this.submitDisable = false
+				})
+			},
+			confirmCheck() {
+				this.$confirm('审核后不可修改, 是否继续?', '提示', {
+					confirmButtonText: '确定',
+					cancelButtonText: '取消',
+					type: 'danger'
+				}).then(() => {
+					this.$axios.patch('/admin/settlement_records/' + this.check_settlement_id, '', {
+						headers: {
+							'Authorization': localStorage.getItem('token_admin')
+						},
+					}).then((res) => {
+						if(res.data.code == 200) {
+							this.getBatchData()
+							this.previewVisible = false
+							this.$message.success('审核成功！')
+						}
+					}).catch((res) => {
+						console.log('error')
+					})
+				}).catch(() => {
+					this.$message.info('已取消审核')
+				})
+			},
+			deleteCheck() {
+				this.$confirm('此操作将永久删除该预览, 是否继续?', '提示', {
+					confirmButtonText: '确定',
+					cancelButtonText: '取消',
+					type: 'danger'
+				}).then(() => {
+					this.$axios.delete('/admin/settlement_records/' + this.check_settlement_id, {
+						headers: {
+							'Authorization': localStorage.getItem('token_admin')
+						},
+					}).then((res) => {
+						if(res.data.code == 200) {
+							this.getBatchData()
+							this.previewVisible = false
+							this.$message.success('删除预览成功！')
+						}
+					}).catch((res) => {
+						console.log('error')
+					})
+				}).catch(() => {
+					this.$message.info('已取消删除')
+				})
+			},
 		},
 		components: {
 			"infinite-loading": VueInfiniteLoading
@@ -757,5 +1123,17 @@
 		width: 90px;
 		margin-left: 10px;
 		vertical-align: bottom;
+	}
+
+	.link-type,
+    .link-type:focus {
+      color: #337ab7;
+      cursor: pointer;
+    }
+    .link-type:hover {
+        color: rgb(32, 160, 255);
+    }
+    .newPrice {
+		text-align: center;
 	}
 </style>

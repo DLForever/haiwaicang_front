@@ -111,10 +111,12 @@
 					<el-button @click="back" :disabled="isDisableBu" type="danger">撤销</el-button>
 				</div>
 				<br>
+				<el-form-item label="批次">
+					<el-input v-model="batch_number"></el-input>
+				</el-form-item>
 				<el-form-item label="不良品">
 					<el-input-number :min="0" v-model="bad_number"></el-input-number>
 				</el-form-item>
-				
 				<el-form-item label="备注">
 					<el-input v-model="form.remark"></el-input>
 				</el-form-item>
@@ -312,7 +314,8 @@
 				cargo_records_source: [],
 				label_changes_source: [],
 				product_store_ins_source: [],
-				transfer_records_source: []
+				transfer_records_source: [],
+				batch_number: ''
 			}
 		},
 		created() {
@@ -437,7 +440,6 @@
 			},
 			// 上架
 			saveEdit(form) {
-				console.log(this.waretable)
 				let sum = []
 				let ware_house_ids = []
 				this.waretable.forEach((data) => {
@@ -447,7 +449,8 @@
 				let params = {
 					sum: sum,
 					ware_house_ids: ware_house_ids,
-					defect: this.bad_number
+					defect: this.bad_number,
+					batch_number: this.batch_number
 				}
 				this.$axios.post('/admin/cargos/' + this.form.id + '/putaway', params, {
 					headers: {
@@ -460,6 +463,7 @@
 						this.$message.success('入库完成')
 						this.bround_sum = ''
 						this.ware_house_ids = []
+						this.batch_number = ''
 					}
 				}).catch((res) => {
 					console.log('error')

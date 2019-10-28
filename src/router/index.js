@@ -67,10 +67,56 @@ export default new Router({
                     meta: { title: '已完成' }
                 },
                 {
+                    path: '/inboundmanagequick',
+                    component: resolve => require(['../components/page/InBoundManageQuick.vue'], resolve),
+                    meta: { title: '待完成(入库即出)' }
+                },
+                {
+                    path: '/inboundedquick',
+                    component: resolve => require(['../components/page/InBoundedManageQuick.vue'], resolve),
+                    meta: { title: '已完成(入库即出)' }
+                },
+                {
                     path: '/inbounding',
                     component: resolve => require(['../components/page/InBoundingManage.vue'], resolve),
                     name: 'inbounding',
                     meta: { title: '入库单详情' }
+                },
+                {
+                    path: '/inbounding1',
+                    component: resolve => require(['../components/page/InBoundingManage1.vue'], resolve),
+                    name: 'inbounding',
+                    meta: { title: '未完成' }
+                },
+                {
+                    path: '/inbounding2',
+                    component: resolve => require(['../components/page/InBoundingManage2.vue'], resolve),
+                    name: 'inbounding',
+                    meta: { title: '已完成' }
+                },
+                {
+                    path: '/inbounding3',
+                    component: resolve => require(['../components/page/InBoundingManage3.vue'], resolve),
+                    name: 'inbounding',
+                    meta: { title: '未接收' }
+                },
+                {
+                    path: '/inboundingquick1',
+                    component: resolve => require(['../components/page/InBoundingManageQuick1.vue'], resolve),
+                    name: 'inbounding',
+                    meta: { title: '未完成(入库即出)' }
+                },
+                {
+                    path: '/inboundingquick2',
+                    component: resolve => require(['../components/page/InBoundingManageQuick2.vue'], resolve),
+                    name: 'inbounding',
+                    meta: { title: '已完成(入库即出)' }
+                },
+                {
+                    path: '/inboundingquick3',
+                    component: resolve => require(['../components/page/InBoundingManageQuick3.vue'], resolve),
+                    name: 'inbounding',
+                    meta: { title: '未接收(入库即出)' }
                 },
                 {
                     path: '/inboundsettlement',
@@ -103,6 +149,11 @@ export default new Router({
                     meta: { title: '创建出库单' }
                 },
                 {
+                    path: '/addoutboundquick',
+                    component: resolve => require(['../components/page/addOutBoundQuick.vue'], resolve),
+                    meta: { title: '创建出库单(入库即出)' }
+                },
+                {
                     path: '/outboundmanage',
                     component: resolve => require(['../components/page/OutBoundManage.vue'], resolve),
                     meta: { title: '待审核' }
@@ -118,6 +169,21 @@ export default new Router({
                     meta: { title: '已完成' }
                 },
                 {
+                    path: '/outboundmanagequick',
+                    component: resolve => require(['../components/page/OutBoundManageQuick.vue'], resolve),
+                    meta: { title: '待审核(入库即出)' }
+                },
+                {
+                    path: '/outboundingmanagequick',
+                    component: resolve => require(['../components/page/OutBoundingManageQuick.vue'], resolve),
+                    meta: { title: '正在处理(入库即出)' }
+                },
+                {
+                    path: '/outboundedmanagequick',
+                    component: resolve => require(['../components/page/OutBoundedManageQuick.vue'], resolve),
+                    meta: { title: '已完成(入库即出)' }
+                },
+                {
                     path: '/batchoutboundmanage',
                     component: resolve => require(['../components/page/batchoutbound.vue'], resolve),
                     meta: { title: '批量出库' }
@@ -126,6 +192,11 @@ export default new Router({
                     path: '/fbamanage',
                     component: resolve => require(['../components/page/FBAManage.vue'], resolve),
                     meta: { title: 'FBA管理' }
+                },
+                {
+                    path: '/Settlementmanage',
+                    component: resolve => require(['../components/page/Settlementmanage.vue'], resolve),
+                    meta: { title: '结算详情'}
                 },
                 {
                     path: '/WMSaddware',
@@ -155,7 +226,12 @@ export default new Router({
                 {
                     path: '/WMSinmanage',
                     component: resolve => require(['../components/page/WMSInBoundManage.vue'], resolve),
-                    meta: { title: '未完成', permission: true  }
+                    meta: { title: '未完成(批次)', permission: true  }
+                },
+                {
+                    path: '/WMSinmanagequick',
+                    component: resolve => require(['../components/page/WMSInBoundManageQuick.vue'], resolve),
+                    meta: { title: '未完成(入库即出批次)', permission: true  }
                 },
                 {
                     path: '/WMSinedmanage',
@@ -164,9 +240,50 @@ export default new Router({
                     meta: { title: '入库单详情', permission: true  }
                 },
                 {
+                    path: '/WMSinedmanage1',
+                    component: resolve => require(['../components/page/WMSInBoundedManage1.vue'], resolve),
+                    name: 'WMSinedmanage',
+                    meta: { title: '未完成', permission: true  }
+                },
+                {
+                    path: '/WMSinedmanage2',
+                    component: resolve => require(['../components/page/WMSInBoundedManage2.vue'], resolve),
+                    name: 'WMSinedmanage',
+                    meta: { title: '已完成', permission: true  }
+                },
+                {
+                    path: '/WMSinedmanage3',
+                    component: resolve => require(['../components/page/WMSInBoundedManage3.vue'], resolve),
+                    name: 'WMSinedmanage',
+                    meta: { title: '未接收', permission: true  }
+                },
+                {
+                    path: '/WMSinedmanagequick1',
+                    component: resolve => require(['../components/page/WMSInBoundedManageQuick1.vue'], resolve),
+                    name: 'WMSinedmanage',
+                    meta: { title: '未完成(入库即出)', permission: true  }
+                },
+                {
+                    path: '/WMSinedmanagequick2',
+                    component: resolve => require(['../components/page/WMSInBoundedManageQuick2.vue'], resolve),
+                    name: 'WMSinedmanage',
+                    meta: { title: '已完成(入库即出)', permission: true  }
+                },
+                {
+                    path: '/WMSinedmanagequick3',
+                    component: resolve => require(['../components/page/WMSInBoundedManageQuick3.vue'], resolve),
+                    name: 'WMSinedmanage',
+                    meta: { title: '未接收(入库即出)', permission: true  }
+                },
+                {
                     path: '/WMSinsettlement',
                     component: resolve => require(['../components/page/WMSInBoundSettlementManage.vue'], resolve),
-                    meta: { title: '已完成', permission: true  }
+                    meta: { title: '已完成(批次)', permission: true  }
+                },
+                {
+                    path: '/WMSinsettlementquick',
+                    component: resolve => require(['../components/page/WMSInBoundSettlementManageQuick.vue'], resolve),
+                    meta: { title: '已完成(入库即出批次)', permission: true  }
                 },
                 {
                     path: '/WMSbatchinmanage',
@@ -186,6 +303,21 @@ export default new Router({
                 {
                     path: '/WMSsendmanage',
                     component: resolve => require(['../components/page/WMSsendManage.vue'], resolve),
+                    meta: { title: 'WMS发货管理', permission: true  }
+                },
+                {
+                    path: '/WMSoutboundmanagequick',
+                    component: resolve => require(['../components/page/WMSOutBoundManageQuick.vue'], resolve),
+                    meta: { title: 'WMS出库单管理(美国)', permission: true  }
+                },
+                {
+                    path: '/WMSoutboundmanageChinaquick',
+                    component: resolve => require(['../components/page/WMSOutBoundManageChinaQuick.vue'], resolve),
+                    meta: { title: 'WMS出库单管理(国内)', permission: true  }
+                },
+                {
+                    path: '/WMSsendmanagequick',
+                    component: resolve => require(['../components/page/WMSsendManageQuick.vue'], resolve),
                     meta: { title: 'WMS发货管理', permission: true  }
                 },
 //              {
@@ -232,6 +364,11 @@ export default new Router({
                     path: '/WMSOutBoundStatistics',
                     component: resolve => require(['../components/page/WMSOutBoundStatistics.vue'], resolve),
                     meta: { title: 'WMS出库统计详情', permission: true }
+                },
+                {
+                    path: '/WMSsettlementmanage',
+                    component: resolve => require(['../components/page/WMSsettlementmanage.vue'], resolve),
+                    meta: { title: 'WMS结算详情', permission: true }
                 },
                 {
                     // 权限页面

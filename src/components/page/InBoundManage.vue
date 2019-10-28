@@ -191,7 +191,7 @@
 			},
 			// 获取 easy-mock 的模拟数据
 			getBatchData() {
-				this.$axios.get('/batch_store_ins?page=' + this.cur_page + '&batch_number=' + this.select_batch + '&status=in', {
+				this.$axios.get('/batch_store_ins?page=' + this.cur_page + '&batch_number=' + this.select_batch + '&status=in&is_quick=0', {
 					headers: {
 						'Authorization': localStorage.getItem('token')
 					},
@@ -228,7 +228,7 @@
 			filter_BatchData() {
 				this.paginationShow = false
 				this.cur_page = 1
-				this.$axios.get('/batch_store_ins?page=' + this.cur_page + '&batch_number=' + this.select_batch + '&status=in', {
+				this.$axios.get('/batch_store_ins?page=' + this.cur_page + '&batch_number=' + this.select_batch + '&status=in&is_quick=0', {
 					headers: {
 						'Authorization': localStorage.getItem('token')
 					},

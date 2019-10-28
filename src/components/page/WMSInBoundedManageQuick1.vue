@@ -2,7 +2,7 @@
 	<div class="table">
 		<div class="crumbs">
 			<el-breadcrumb separator="/">
-				<el-breadcrumb-item><i class="el-icon-tickets"></i> WMS入库批次管理</el-breadcrumb-item>
+				<el-breadcrumb-item><i class="el-icon-tickets"></i> WMS入库管理</el-breadcrumb-item>
 				<el-breadcrumb-item>入库单详情</el-breadcrumb-item>
 			</el-breadcrumb>
 		</div>
@@ -47,7 +47,7 @@
 				<el-table-column prop="total_plan_sum" label="计划总数量" width="150">
 				</el-table-column>
 				<el-table-column prop="total_arrive_sum" label="已收到数量" width="120">
-				</el-table-column>				
+				</el-table-column>
 				<el-table-column prop="user_remark" label="用户备注" show-overflow-tooltip>
 				</el-table-column>
 				<el-table-column prop="manager_remark" label="仓库备注" show-overflow-tooltip>
@@ -80,6 +80,9 @@
 										<el-button @click="handleEdit(scope.$index, scope.row)" type="text">入库</el-button>
 									</el-dropdown-item>
 								</template>
+								<el-dropdown-item>
+									<el-button @click="change(scope.row)" type="text">移未接收</el-button>
+								</el-dropdown-item>
 								<el-dropdown-item>
 									<el-button @click="handleDelete(scope.$index, scope.row)" type="text">删除</el-button>
 								</el-dropdown-item>
@@ -284,7 +287,7 @@
 				} else {
 					this.statusOptions = this.statusOptions2
 				}
-				this.$axios.get('/admin/store_ins?page=' + this.cur_page + '&batch_store_in_id=' + this.$route.params.batch_store_in_id + '&user_id=' + this.select_cate + '&fnsku=' + this.search_fnsku + '&status=' + this.statusSelect + '&logistics_number=' + this.search_logistics_number, {
+				this.$axios.get('/admin/store_ins?page=' + this.cur_page + '&is_quick=1&s_status=1' + '&user_id=' + this.select_cate + '&fnsku=' + this.search_fnsku + '&status=' + this.statusSelect + '&logistics_number=' + this.search_logistics_number, {
 					headers: {
 						'Authorization': localStorage.getItem('token_admin')
 					},
@@ -300,7 +303,7 @@
 			filter_inbound() {
 				this.paginationShow = false
 				this.cur_page = 1
-				this.$axios.get('/admin/store_ins?page=' + this.cur_page + '&batch_store_in_id=' + this.$route.params.batch_store_in_id + '&user_id=' + this.select_cate + '&fnsku=' + this.search_fnsku + '&status=' + this.statusSelect + '&logistics_number=' + this.search_logistics_number, {
+				this.$axios.get('/admin/store_ins?page=' + this.cur_page + '&is_quick=1&s_status=1' + '&user_id=' + this.select_cate + '&fnsku=' + this.search_fnsku + '&status=' + this.statusSelect + '&logistics_number=' + this.search_logistics_number, {
 					headers: {
 						'Authorization': localStorage.getItem('token_admin')
 					},
@@ -640,9 +643,10 @@
 						this.$message.success('入库完成')
 						this.getData()
 					}
-					this.submitDisable = false
 				}).catch((res) => {
 					this.$message.error(res)
+				}).finally(() => {
+					this.submitDisable = false
 				})
 			},
 			handleDelete(index, row) {
@@ -670,6 +674,28 @@
 					this.$message.error("删除失败")
 				})
 				this.delVisible = false;
+			},
+			change(row) {
+				this.$confirm('确定转成未接收吗？', '提示', {
+					confirmButtonText: '确定',
+					cancelButtonText: '取消',
+					type: 'warning',
+				}).then(() => {
+					this.$axios.post('/admin/store_ins/' + row.id + '/miss', '' , {
+						headers: {
+							'Authorization': localStorage.getItem('token_admin')
+						},
+					}).then((res) => {
+						if(res.data.code == 200) {
+							this.getData()
+							this.$message.success('转换成功！')
+						}
+					}).catch((res) => {
+						console.log(res)
+					})
+				}).catch(() => {
+					this.$message.info('已取消')
+				})
 			},
 			getStatusName(status) {
 				if(status == 1) {

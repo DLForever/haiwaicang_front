@@ -2,7 +2,7 @@
 	<div>
 		<div class="crumbs">
 			<el-breadcrumb separator="/">
-				<el-breadcrumb-item><i class="el-icon-date"></i> 出库单管理</el-breadcrumb-item>
+				<el-breadcrumb-item><i class="el-icon-date"></i> 入库即出订单</el-breadcrumb-item>
 				<el-breadcrumb-item>出库单管理</el-breadcrumb-item>
 			</el-breadcrumb>
 		</div>
@@ -121,35 +121,7 @@
 							<a v-else :href="$axios.defaults.baseURL+scope.row.pictures[0].url.url" target="_blank">{{scope.row.pictures[0].url.url.split('/').pop()}}</a>
 							<!-- <span v-else >无</span> -->
 						</template>
-						<!-- <template slot-scope="scope">
-							<img class="img_fnsku" :src="$axios.defaults.baseURL+scope.row.pictures[0].url.url" />					
-						</template> -->
 					</el-table-column>
-					<!-- <el-table-column prop="labal_ware_houses" label="取货详情"></el-table-column> -->
-					<!--<el-table-column prop="created_at" :formatter="formatter_created_at" label="创建时间"></el-table-column>
-					<el-table-column prop="updated_at" :formatter="formatter_updated_at" label="更新时间"></el-table-column>-->
-				</el-table>
-				<br>
-				<el-table v-if="this.ware_houseTable2.length != 0" :data="ware_houseTable2" border style="width: 100%">
-					<el-table-column prop="ware_house_name" label="库位" width="307"></el-table-column>
-					<!-- <el-table-column prop="sum" label="数量"></el-table-column> -->
-					<el-table-column prop="fnsku" label="fnsku"></el-table-column>
-					<el-table-column prop="sum" label="数量"></el-table-column>
-				</el-table>
-				<br>
-				<el-table v-if="this.order_box_cargos.length != 0" :data="order_box_cargos" border style="width: 100%">
-					<el-table-column type="expand">
-						<template slot-scope="scope">
-							<el-table :data="scope.row.order_box_cargos">
-								<el-table-column prop="fnsku" label="fnsku"></el-table-column>
-								<el-table-column prop="sum" label="数量"></el-table-column>
-							</el-table>
-						</template>
-					</el-table-column>
-					<el-table-column prop="sum" label="数量"></el-table-column>
-					<el-table-column prop="box_size" label="箱子尺寸(长*宽*高)"></el-table-column>
-					<el-table-column prop="weight" label="箱子重量"></el-table-column>
-					<el-table-column prop="repeat" label="箱子个数"></el-table-column>
 				</el-table>
 			</div>
 			<!-- </el-scrollbar>
@@ -604,7 +576,7 @@
 				}
 			},
 			getData() {
-				this.$axios.get('/admin/outbound_orders?page=' + this.cur_page + '&user_id=' + this.select_cate + '&wms=false&is_quick=0' + '&out=false&fnsku=' + this.search_fnsku + '&status=' + this.statusSelect, {
+				this.$axios.get('/admin/outbound_orders?page=' + this.cur_page + '&user_id=' + this.select_cate + '&wms=false&is_quick=1' + '&out=false&fnsku=' + this.search_fnsku + '&status=' + this.statusSelect, {
 					headers: {
 						'Authorization': localStorage.getItem('token_admin')
 					},
@@ -632,7 +604,7 @@
 			filter_inbound() {
 				this.paginationShow = false
 				this.cur_page = 1
-				this.$axios.get('/admin/outbound_orders?page=' + this.cur_page + '&user_id=' + this.select_cate + '&wms=false&is_quick=0' + '&out=false&fnsku=' + this.search_fnsku + '&status=' + this.statusSelect, {
+				this.$axios.get('/admin/outbound_orders?page=' + this.cur_page + '&user_id=' + this.select_cate + '&wms=false&is_quick=1' + '&out=false&fnsku=' + this.search_fnsku + '&status=' + this.statusSelect, {
 					headers: {
 						'Authorization': localStorage.getItem('token_admin')
 					},

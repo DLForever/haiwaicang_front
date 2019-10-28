@@ -2,7 +2,7 @@
 	<div>
 		<div class="crumbs">
 			<el-breadcrumb separator="/">
-				<el-breadcrumb-item><i class="el-icon-date"></i> 出库单管理</el-breadcrumb-item>
+				<el-breadcrumb-item><i class="el-icon-date"></i> 入库即出订单</el-breadcrumb-item>
 				<el-breadcrumb-item>出库单管理</el-breadcrumb-item>
 			</el-breadcrumb>
 		</div>
@@ -404,7 +404,7 @@
 				}
 			},
 			getData() {
-				this.$axios.get('/admin/outbound_orders?page=' + this.cur_page + '&user_id=' + this.select_cate + '&wms=true&is_quick=0' + '&out=true&fnsku=' + this.search_fnsku + '&status=' + this.statusSelect, {
+				this.$axios.get('/admin/outbound_orders?page=' + this.cur_page + '&user_id=' + this.select_cate + '&wms=true&is_quick=1' + '&out=true&fnsku=' + this.search_fnsku + '&status=' + this.statusSelect, {
 					headers: {
 						'Authorization': localStorage.getItem('token_admin')
 					},
@@ -430,7 +430,7 @@
 			filter_inbound() {
 				this.paginationShow = false
 				this.cur_page = 1
-				this.$axios.get('/admin/outbound_orders?page=' + this.cur_page + '&user_id=' + this.select_cate + '&wms=true&is_quick=0' + '&out=true&fnsku=' + this.search_fnsku + '&status=' + this.statusSelect, {
+				this.$axios.get('/admin/outbound_orders?page=' + this.cur_page + '&user_id=' + this.select_cate + '&wms=true&is_quick=1' + '&out=true&fnsku=' + this.search_fnsku + '&status=' + this.statusSelect, {
 					headers: {
 						'Authorization': localStorage.getItem('token_admin')
 					},

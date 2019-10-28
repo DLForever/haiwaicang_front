@@ -3,7 +3,7 @@
 		<div class="crumbs">
 			<el-breadcrumb separator="/">
 				<el-breadcrumb-item><i class="el-icon-tickets"></i> 入库管理</el-breadcrumb-item>
-				<el-breadcrumb-item>已完成</el-breadcrumb-item>
+				<el-breadcrumb-item>待完成</el-breadcrumb-item>
 			</el-breadcrumb>
 		</div>
 		<div class="container">
@@ -11,28 +11,22 @@
 				<div class="inbound_filter">
 					批次:
 					<el-input v-model="select_batch" placeholder="请输入批次号" class="handle-select mr10 batch_box"></el-input>
-					<!-- 状态:
-					<el-select v-model="statusSelect" placeholder="请选择" class="handle-select mr10">
-						<el-option v-for="item in statusOptions" :key="item.value" :label="item.label" :value="item.value"></el-option>
+					<!-- <el-select v-model="select_batch" placeholder="选择批次" class="handle-select mr10 batch_box">
+						<el-option v-for="item in batchoptions" :key="item.id" :label="item.batch_number" :value="item.id"></el-option>
+						<infinite-loading :on-infinite="onInfinite_batch" ref="infiniteLoading2"></infinite-loading>
 					</el-select> -->
                     <el-button @click="clear_filter" type="default">重置</el-button>
                     <el-button @click="filter_BatchData" type="primary">查询</el-button>
                 </div>
-				<!--<el-button type="primary" icon="delete" class="handle-del mr10" @click="delAll">批量删除</el-button>
-				<el-select v-model="select_cate" placeholder="筛选省份" class="handle-select mr10">
-					<el-option key="1" label="广东省" value="广东省"></el-option>
-					<el-option key="2" label="湖南省" value="湖南省"></el-option>
-				</el-select>-->
-				<!--<el-input v-model="select_word" placeholder="筛选关键词" class="handle-input mr10"></el-input>-->
-				<!--<el-button type="primary" icon="search" @click="search">搜索</el-button>-->
 			</div>
 			<br><br>
-			<!--<el-table :data="data.slice((cur_page-1)*pagesize, cur_page*pagesize)" border style="width: 100%" ref="multipleTable" @selection-change="handleSelectionChange">-->
 			<el-table :data="data" border style="width: 100%" ref="multipleTable" @selection-change="handleSelectionChange">
 				<el-table-column type="selection" width="55"></el-table-column>
-				<el-table-column prop="batch_number" label="申请批次">
+				<!-- <el-table-column prop="logistics_number" label="追踪编码" width="150">
+				</el-table-column> -->
+				<el-table-column prop="batch_number" label="批次">
 					<template slot-scope="scope">
-						<span class="link-type" @click="showInbound(scope.$index, scope.row, 'complete')">{{scope.row.batch_number}}</span>
+						<span class="link-type" @click="showInbound(scope.$index, scope.row, 'incomplete')">{{scope.row.batch_number}}</span>
 					</template>
 				</el-table-column>
 				<el-table-column prop="status" label="状态" width="120">
@@ -44,6 +38,23 @@
 				</el-table-column>
 				<el-table-column prop="updated_at" label="更新时间" :formatter="formatter_updated_at">
 				</el-table-column>
+				<!-- <el-table-column prop="order_number" label="订单编码" width="100">
+				</el-table-column>
+				<el-table-column prop="total_plan_sum" label="计划数量" width="120">
+				</el-table-column>
+				<el-table-column prop="total_arrive_sum" label="接收数量" width="120">
+				</el-table-column>
+				<el-table-column prop="created_at" label="创建时间" :formatter="formatter_created_at" width="150">
+				</el-table-column>
+				<el-table-column prop="updated_at" label="更新时间" :formatter="formatter_updated_at" width="150">
+				</el-table-column>				
+				<el-table-column prop="user_remark" label="用户备注" show-overflow-tooltip>
+				</el-table-column>
+				<el-table-column prop="manager_remark" label="仓库备注" show-overflow-tooltip>
+				</el-table-column>
+				<el-table-column prop="remove_remark" label="用户删除备注" show-overflow-tooltip>
+				</el-table-column> -->
+				
 				<!-- <el-table-column label="操作" width="100">
 					<template slot-scope="scope">
 						<el-dropdown>
@@ -52,10 +63,10 @@
 							</el-button>
 							<el-dropdown-menu slot="dropdown">
 								<el-dropdown-item>
-									<el-button @click="showInbound(scope.$index, scope.row)" type="text">查看入库单</el-button>
+									<el-button @click="detailsShow(scope.$index, scope.row)" type="text">详情</el-button>
 								</el-dropdown-item>
 								<el-dropdown-item>
-									<el-button @click="detailsShow(scope.$index, scope.row)" type="text">详情</el-button>
+									<el-button @click="showInbound(scope.$index, scope.row)" type="text">查看入库单</el-button>
 								</el-dropdown-item>
 								<el-dropdown-item>
 									<el-button @click="handleDelete(scope.$index, scope.row)" type="text">删除</el-button>
@@ -73,16 +84,15 @@
 
 		<!-- 详情弹出框 -->
 		<el-dialog title="详情" :visible.sync="detailVisible" width="50%">
-			<!-- <div class="check_button">
+			<div class="check_button">
 				<el-button type="primary" @click="check">通过审核</el-button>
 			</div>
-			<br> -->
+			<br>
 			<el-table :data="ware_details" border style="width: 100%">
 				<el-table-column prop="fnsku" label="fnsku"></el-table-column>
 				<el-table-column prop="plan_sum" label="计划数量"></el-table-column>
 				<el-table-column prop="arrive_sum" label="实际到达数量"></el-table-column>
 			</el-table>
-						
 		</el-dialog>
 
 		<!-- 删除提示框 -->
@@ -103,6 +113,7 @@
 <script>
 	import VueInfiniteLoading from "vue-infinite-loading"
 	export default {
+		//      name: 'inbounds_manage',
 		data() {
 			return {
 				url: './static/vuetable.json',
@@ -160,7 +171,7 @@
 			//类型转换
 			statusFilter(status) {
 				const statusMap = {
-					1: 'warning',
+					8: 'warning',
 					4: 'success',
 					5: 'danger',
 					7: 'warning',
@@ -177,33 +188,10 @@
 			handleCurrentChange(val) {
 				this.cur_page = val;
 				this.getBatchData()
-				// if(!this.select_batch || this.select_batch == -1) {
-				// 	this.getData()
-				// } else {
-				// 	this.dataFilterBatch()
-				// }
-				
 			},
+			// 获取 easy-mock 的模拟数据
 			getBatchData() {
-				this.$axios.get('/batch_store_ins?page=' + this.cur_page + '&batch_number=' + this.select_batch + '&status=out&is_quick=false', {
-					headers: {
-						'Authorization': localStorage.getItem('token')
-					},
-				}).then((res) => {
-					if(res.data.code == 200) {
-						this.tableData = res.data.data;
-						this.totals = res.data.count
-						this.paginationShow = true
-					}
-					
-				}).catch((res) => {
-					console.log(res)
-				})
-			},
-			filter_BatchData() {
-				this.paginationShow = false
-				this.cur_page = 1
-				this.$axios.get('/batch_store_ins?page=' + this.cur_page + '&batch_number=' + this.select_batch + '&status=out&is_quick=false', {
+				this.$axios.get('/batch_store_ins?page=' + this.cur_page + '&batch_number=' + this.select_batch + '&status=in&is_quick=1', {
 					headers: {
 						'Authorization': localStorage.getItem('token')
 					},
@@ -219,11 +207,9 @@
 				})
 			},
 			getData() {
-				// 开发环境使用 easy-mock 数据，正式环境使用 json 文件
 				if(process.env.NODE_ENV === 'development') {
-					//                  this.url = '/ms/table/list';
 				};
-				this.$axios.get('/store_ins?page=' + this.cur_page + '&batch_store_in_id=' + this.select_batch + '&fnsku=' + this.search_fnsku + '&status=4', {
+				this.$axios.get('/store_ins?page=' + this.cur_page + '&batch_store_in_id=' + this.select_batch + '&fnsku=' + this.search_fnsku + '&status=1', {
 					headers: {
 						'Authorization': localStorage.getItem('token')
 					},
@@ -239,14 +225,13 @@
 					console.log(res)
 				})
 			},
-			filter_inbound() {
+			filter_BatchData() {
 				this.paginationShow = false
 				this.cur_page = 1
-				this.$axios.get('/store_ins?page=' + this.cur_page + '&batch_store_in_id=' + this.select_batch + '&fnsku=' + this.search_fnsku + '&status=4', {
+				this.$axios.get('/batch_store_ins?page=' + this.cur_page + '&batch_number=' + this.select_batch + '&status=in&is_quick=1', {
 					headers: {
 						'Authorization': localStorage.getItem('token')
 					},
-					//                  page: this.cur_page
 				}).then((res) => {
 					if(res.data.code == 200) {
 						this.tableData = res.data.data;
@@ -262,7 +247,9 @@
 				this.paginationShow = false
 				this.cur_page = 1
 				this.select_batch = ''
-				this.filter_BatchData()
+				this.search_fnsku = ''
+				this.statusSelect = ''
+				this.getBatchData()
 			},
 			getBatch(callback = undefined) {
 				this.$axios.get('/batch_store_ins/available_index?page=' + this.batch_page, {
@@ -277,42 +264,6 @@
 							callback()
 						}
 					}
-				})
-			},
-			dataFilterBatchFirst() {
-				if(this.select_batch == -1) {
-					this.search_fnsku = ''
-					this.select_batch = ''
-					this.paginationShow = false
-					this.cur_page = 1
-					this.getData()
-					return
-				}
-				this.paginationShow = false
-				this.$axios.get('/store_ins?page=' + this.cur_page + '&batch_store_in_id=' + this.select_batch + '&fnsku=' + this.search_fnsku, {
-					headers: {
-						'Authorization': localStorage.getItem('token')
-					},
-				}).then((res) => {
-					if(res.data.code == 200) {
-						this.tableData = res.data.data
-						this.paginationShow = true
-					}
-				}).catch((res) => {
-					console.log(res)
-				})
-			},
-			dataFilterBatch() {
-				this.$axios.get('/store_ins?page=' + this.cur_page + '&batch_store_in_id=' + this.select_batch, {
-					headers: {
-						'Authorization': localStorage.getItem('token')
-					},
-				}).then((res) => {
-					if(res.data.code == 200) {
-						this.tableData = res.data.data
-					}
-				}).catch((res) => {
-					console.log(res)
 				})
 			},
 			onInfinite_batch(obj) {
@@ -333,9 +284,6 @@
 			search() {
 				this.is_search = true;
 			},
-			//          formatter(row, column) {
-			//              return row.address;
-			//          },
 			filterTag(value, row) {
 				return row.tag === value;
 			},
@@ -417,6 +365,7 @@
 					if(res.data.code == 200) {
 						this.$message.success("审核成功!")
 						this.getData()
+						this.detailVisible = false
 					}
 				}).catch((res) => {
 					console.log(res)
@@ -456,9 +405,9 @@
 				})
 			},
 			showInbound(index, row, status) {
-                this.$router.push({name: 'inbounding', params: {batch_store_in_id: row.id, status: status, type: '已完成'}});
+                this.$router.push({name: 'inbounding', params: {batch_store_in_id: row.id, status: status, type: '待完成'}});
             },
-			getStatusName(status) {
+			getStatusName2(status) {
 				if(status == 1) {
 					return "待审核"
 				}else if (status == 2) {
@@ -466,13 +415,36 @@
 				}else if (status == 3) {
 					return "删除"
 				}else if (status == 4) {
-					return "已入库"
+					return "未结算"
 				}else if (status == 6) {
 					return "已结算"
 				} else if(status == 5) {
 					return "删除待审核"
 				}else if (status == 7) {
+					return "未完成"
+				}else if (status == 8) {
 					return "等待入库"
+				} else {
+					return "其他"
+				}
+			},
+			getStatusName(status) {
+				if(status == 1) {
+					return "未使用"
+				}else if (status == 2) {
+					return "被删除"
+				}else if (status == 3) {
+					return "删除"
+				}else if (status == 4) {
+					return "已入库"
+				}else if (status == 5) {
+					return "删除待审核"
+				} else if(status == 6) {
+					return "已结算"
+				}else if (status == 7) {
+					return "待入库"
+				}else if (status == 8) {
+					return "待审核"
 				} else {
 					return "其他"
 				}

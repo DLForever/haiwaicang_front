@@ -2,7 +2,7 @@
 	<div class="table">
 		<div class="crumbs">
 			<el-breadcrumb separator="/">
-				<el-breadcrumb-item><i class="el-icon-tickets"></i> WMS入库批次管理</el-breadcrumb-item>
+				<el-breadcrumb-item><i class="el-icon-tickets"></i> WMS入库管理</el-breadcrumb-item>
 				<el-breadcrumb-item>入库单详情</el-breadcrumb-item>
 			</el-breadcrumb>
 		</div>
@@ -284,7 +284,7 @@
 				} else {
 					this.statusOptions = this.statusOptions2
 				}
-				this.$axios.get('/admin/store_ins?page=' + this.cur_page + '&batch_store_in_id=' + this.$route.params.batch_store_in_id + '&user_id=' + this.select_cate + '&fnsku=' + this.search_fnsku + '&status=' + this.statusSelect + '&logistics_number=' + this.search_logistics_number, {
+				this.$axios.get('/admin/store_ins?page=' + this.cur_page + '&is_quick=1&s_status=3' + '&user_id=' + this.select_cate + '&fnsku=' + this.search_fnsku + '&status=' + this.statusSelect + '&logistics_number=' + this.search_logistics_number, {
 					headers: {
 						'Authorization': localStorage.getItem('token_admin')
 					},
@@ -300,7 +300,7 @@
 			filter_inbound() {
 				this.paginationShow = false
 				this.cur_page = 1
-				this.$axios.get('/admin/store_ins?page=' + this.cur_page + '&batch_store_in_id=' + this.$route.params.batch_store_in_id + '&user_id=' + this.select_cate + '&fnsku=' + this.search_fnsku + '&status=' + this.statusSelect + '&logistics_number=' + this.search_logistics_number, {
+				this.$axios.get('/admin/store_ins?page=' + this.cur_page + '&is_quick=1&s_status=3' + '&user_id=' + this.select_cate + '&fnsku=' + this.search_fnsku + '&status=' + this.statusSelect + '&logistics_number=' + this.search_logistics_number, {
 					headers: {
 						'Authorization': localStorage.getItem('token_admin')
 					},
@@ -686,6 +686,8 @@
 					return "已结算"
 				}else if (status == 7) {
 					return "等待入库"
+				}else if (status == 8) {
+					return "未接收"
 				} else {
 					return "其他"
 				}

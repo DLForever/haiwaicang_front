@@ -97,12 +97,75 @@
 							},
 							{
 								index: '13',
-								title: '入库单管理',
+								title: '入库批次管理',
 								subs:[{
 									index: 'inboundmanage',
 									title: '待完成'
 								},{
 									index: 'inbounded',
+									title: '已完成'
+								}]
+							},
+							{
+								index: '16',
+								title: '入库管理',
+								subs:[{
+									index: 'inbounding3',
+									title: '未接收'
+								},{
+									index: 'inbounding1',
+									title: '未完成'
+								},{
+									index: 'inbounding2',
+									title: '已完成'
+								}]
+							},
+						]
+					},
+					{
+						icon: 'el-icon-message',
+						index: '20',
+						title: '入库即出管理',
+						subs: [{
+								index: '17',
+								title: '入库批次管理',
+								subs:[{
+									index: 'inboundmanagequick',
+									title: '待完成'
+								},{
+									index: 'inboundedquick',
+									title: '已完成'
+								}]
+							},
+							{
+								index: '18',
+								title: '入库管理',
+								subs:[{
+									index: 'inboundingquick3',
+									title: '未接收'
+								},{
+									index: 'inboundingquick1',
+									title: '未完成'
+								},{
+									index: 'inboundingquick2',
+									title: '已完成'
+								}]
+							},
+							{
+								index: 'addoutboundquick',
+								title: '创建出库单(入库即出)'
+							},
+							{
+								index: '15',
+								title: '出库单管理(入库即出)',
+								subs: [{
+									index: 'outboundmanagequick',
+									title: '待审核'
+								},{
+									index: 'outboundingmanagequick',
+									title: '正在处理'
+								},{
+									index: 'outboundedmanagequick',
 									title: '已完成'
 								}]
 							},
@@ -156,6 +219,16 @@
 							index: 'defectgoodsmanage',
 							title: '不良品管理'
 						}]
+					},
+					{
+						icon: 'el-icon-printer',
+						index: '19',
+						title: '结算记录管理',
+						subs: [{
+							index: 'Settlementmanage',
+							title: '结算记录'
+						},
+						]
 					},
 					//                  {
 					//                      icon: 'el-icon-printer',
@@ -268,7 +341,7 @@
 							},
 							{
 								index: '13',
-								title: 'WMS入库管理',
+								title: 'WMS入库批次管理',
 								subs: [{
 									index: 'WMSinmanage',
 									title: '未完成'
@@ -277,10 +350,65 @@
 									title: '已完成'
 								}]
 							},
-							//						{
-							//							index: 'WMSbatchinmanage',
-							//							title: 'WMS批量入库'
-							//						}
+							{
+								index: '15',
+								title: 'WMS入库管理',
+								subs: [{
+									index: 'WMSinedmanage3',
+									title: '未接收'
+								},{
+									index: 'WMSinedmanage1',
+									title: '未完成'
+								},{
+									index: 'WMSinedmanage2',
+									title: '已完成'
+								}]
+							},
+						]
+					},
+					{
+						icon: 'el-icon-printer',
+						index: '21',
+						title: 'WMS入库即出管理',
+						subs: [{
+								index: '18',
+								title: 'WMS入库即出批次管理',
+								subs: [{
+									index: 'WMSinmanagequick',
+									title: '未完成'
+								},{
+									index: 'WMSinsettlementquick',
+									title: '已完成'
+								}]
+							},
+							{
+								index: '19',
+								title: 'WMS入库即出管理',
+								subs: [{
+									index: 'WMSinedmanagequick3',
+									title: '未接收'
+								},{
+									index: 'WMSinedmanagequick1',
+									title: '未完成'
+								},{
+									index: 'WMSinedmanagequick2',
+									title: '已完成'
+								}]
+							},
+							{
+								index: '20',
+								title: '入库即出订单管理',
+								subs: [{
+									index: 'WMSoutboundmanagequick',
+									title: 'WMS出库单管理(美国)'
+								},{
+									index: 'WMSoutboundmanageChinaquick',
+									title: 'WMS出库单管理(国内)'
+								},{
+									index: 'WMSsendmanagequick',
+									title: 'WMS发货管理'
+								}]
+							},
 						]
 					},
 					{
@@ -338,6 +466,16 @@
 						{
 							index: 'WMSOutBoundStatistics',
 							title: '出库统计管理',
+						},
+						]
+					},
+					{
+						icon: 'el-icon-printer',
+						index: '17',
+						title: '结算记录管理',
+						subs: [{
+							index: 'WMSsettlementmanage',
+							title: '结算记录'
 						},
 						]
 					},

@@ -269,7 +269,7 @@
 						this.store_fee = dataList.store_fee
 						this.chargeStandardsVisible = true
 					}else {
-						this.charge_id = 0
+						this.charge_id = ''
 						this.store_in_fee = 0
 						this.change_label_fee = 0
 						this.box_fee = 0

@@ -12,7 +12,7 @@
 				<div class="fnsku_filter">
 					用户:
 					<el-select v-model="select_cate" filterable remote placeholder="选择用户" class="handle-select mr10" :loading="loading" @visible-change="selectVisble" :remote-method="remoteMethod">
-						<el-option v-for="item in options" :label="item.name" :value="item.id"></el-option>
+						<el-option v-for="item in options" :label="item.usercode" :value="item.id"></el-option>
 						<infinite-loading :on-infinite="onInfinite" ref="infiniteLoading"></infinite-loading>
 					</el-select>
 					Fnsku:
@@ -409,6 +409,7 @@
 				statusOptions: [{value: 11, label: '待拣货'}, {value: 2, label: '拣货中'}, {value: 3, label: '待换标'}],
 				statusSelect: '',
 				query: undefined,
+				code: ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z"],
 			}
 		},
 		created() {
@@ -520,7 +521,7 @@
 			},
 			getData() {
 				// this.paginationShow = false
-				this.$axios.get('/admin/outbound_orders?page=' + this.cur_page + '&user_id=' + this.select_cate + '&wms=true' + '&out=false&fnsku=' + this.search_fnsku + '&status=' + this.statusSelect, {
+				this.$axios.get('/admin/outbound_orders?page=' + this.cur_page + '&user_id=' + this.select_cate + '&wms=true&is_quick=0' + '&out=false&fnsku=' + this.search_fnsku + '&status=' + this.statusSelect, {
 					headers: {
 						'Authorization': localStorage.getItem('token_admin')
 					},
@@ -545,7 +546,7 @@
 			},
 			filter_inbound() {
 				this.cur_page = 1
-				this.$axios.get('/admin/outbound_orders?page=' + this.cur_page + '&user_id=' + this.select_cate + '&wms=true' + '&out=false&fnsku=' + this.search_fnsku + '&status=' + this.statusSelect, {
+				this.$axios.get('/admin/outbound_orders?page=' + this.cur_page + '&user_id=' + this.select_cate + '&wms=true&is_quick=0' + '&out=false&fnsku=' + this.search_fnsku + '&status=' + this.statusSelect, {
 					headers: {
 						'Authorization': localStorage.getItem('token_admin')
 					},
@@ -638,6 +639,18 @@
 						},
 					}).then((res) => {
 						if(res.data.code == 200) {
+							res.data.data.forEach((data) => {
+								let tempcode =  String(data.id%1000)
+								let tempindex = parseInt(data.id/1000)
+								if(tempcode.length ==1) {
+									tempcode = '00' + tempcode
+								}else if(tempcode.length ==2) {
+									tempcode = '0' + tempcode
+								}else{
+
+								}
+								data.usercode = this.code[tempindex] + tempcode
+							})
 							this.loading = false
 							if(reload) {
 								this.options = this.options2.concat(res.data.data)

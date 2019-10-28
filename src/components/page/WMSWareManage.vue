@@ -13,17 +13,67 @@
                     <el-input style="width:150px" placeholder="请输入Fnsku" v-model.trim="search_fnsku"></el-input>
                     库位:
                     <el-input style="width:150px" placeholder="请输入库位" v-model.trim="warename"></el-input>
+                    ERP编码:
+                    <el-input style="width:150px" placeholder="请输入ERP编码" v-model.trim="search_erp_number"></el-input>
                     <el-button @click="clear_filter" type="default">重置</el-button>
                     <el-button @click="filter_ware" type="primary">查询</el-button>
                 </div>
 			</div>
 			<br><br>
 			<el-table :data="data" border style="width: 100%" model="form" ref="multipleTable" @selection-change="handleSelectionChange">
-				<el-table-column type="selection" width="55"></el-table-column>
+				<!-- <el-table-column type="selection" width="55"></el-table-column> -->
+				<el-table-column type="expand">
+					<template slot-scope="scope">
+						<el-button :disabled="submitDisabled" v-if="isaddWare" type="success" size="small" icon="el-icon-circle-check-outline" @click="addWarehouse(scope.row.id)">确认</el-button>
+			        	<el-button v-else type="primary" size="small" icon="el-icon-plus" @click="isaddWare=!isaddWare">增加</el-button>
+			        	<el-button v-if="isaddWare" type="warning" icon="el-icon-refresh" @click="cancelAddWare">取消</el-button>
+			        	<template v-if="isaddWare">
+			        		<el-input placeholder="请输入Fnsku" style="width:150px" v-model="addWare.fnsku"></el-input>
+			        		<el-input placeholder="请输入数量" style="width:150px" v-model="addWare.sum"></el-input>
+			        	</template>
+			        	<br><br>
+						<el-table :data="scope.row.cargo_ware_houses" v-if="scope.row.cargo_ware_houses.length != 0">
+							<el-table-column prop="usercode" label="客户编码"></el-table-column>
+							<el-table-column prop="ware_house_name" label="库位">
+								<template slot-scope="scope">
+									<template v-if="scope.row.remove">
+										<el-input v-model="scope.row.ware_house_name" class="edit-input" size="small"/>
+										<el-button class="cancel-btn" size="small" icon="el-icon-refresh" type="warning" @click="cancelRemove(scope.row)">取消</el-button>
+									</template>
+									<span v-else>{{scope.row.ware_house_name}}</span>
+								</template>
+							</el-table-column>
+							<el-table-column prop="fnsku" label="产品名称"></el-table-column>
+							<el-table-column prop="sum" label="数量" width="250">
+								<template slot-scope="scope">
+									<template v-if="scope.row.edit">
+										<el-input v-model="scope.row.sum" class="edit-input" size="small"/>
+										<el-button class="cancel-btn" size="small" icon="el-icon-refresh" type="warning" @click="cancelEdit(scope.row)">取消</el-button>
+									</template>
+									<span v-else>{{scope.row.sum}}</span>
+								</template>
+							</el-table-column>
+							<el-table-column prop="lock_sum" label="锁定数量"></el-table-column>
+							<el-table-column label="操作" width="300">
+								<template slot-scope="scope">
+									<template v-if="!scope.row.remove">
+										<el-button v-if="scope.row.edit" :disabled="submitDisabled" type="success" size="small" icon="el-icon-circle-check-outline" @click="confirmEdit(scope.row)">确认</el-button>
+										<el-button v-else type="primary" size="small" icon="el-icon-edit" :disabled="scope.row.noshow" @click="scope.row.edit=!scope.row.edit">编辑</el-button>
+										<el-button v-if="!scope.row.edit" type="danger" size="small" icon="el-icon-delete" :disabled="scope.row.noshow" @click="deleteWare(scope.$index, scope.row)">删除</el-button>
+									</template>
+									<template v-if="!scope.row.edit">
+										<el-button v-if="scope.row.remove" type="success" size="small" icon="el-icon-circle-check-outline" :disabled="scope.row.noshow" @click="confirmRemove(scope.$index,scope.row)">确认</el-button>
+										<el-button v-else type="info" size="small" icon="el-icon-sort" :disabled="scope.row.noshow" @click="scope.row.remove=!scope.row.remove">移库</el-button>
+									</template>
+								</template>
+							</el-table-column>
+						</el-table>
+					</template>
+				</el-table-column>
 				<el-table-column prop="name" label="库位名称"></el-table-column>
 				<el-table-column prop="sum" label="总数量"></el-table-column>
 				<el-table-column prop="lock_sum" label="锁定数量"></el-table-column>
-				<el-table-column label="操作" width="100">
+				<!-- <el-table-column label="操作" width="100">
 					<template slot-scope="scope">
 						<el-dropdown>
 							<el-button type="primary">
@@ -36,7 +86,7 @@
 							</el-dropdown-menu>
 						</el-dropdown>
 					</template>
-				</el-table-column>
+				</el-table-column> -->
 			</el-table>
 			<div class="pagination">
 				<el-pagination v-if="paginationShow" @current-change="handleCurrentChange" :page-size="pagesize" layout="prev, pager, next" :total="totals">
@@ -116,6 +166,7 @@
 				cargo_ware_houses: [],
 				isaddWare: false,
 				code: ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z"],
+				search_erp_number: ''
 			}
 		},
 		created() {
@@ -142,7 +193,7 @@
 				this.multipleSelection = val
 			},
 			getData() {
-				this.$axios.get('/admin/warehouses?page=' + this.cur_page + '&fnsku=' + this.search_fnsku + '&name=' + this.warename, {
+				this.$axios.get('/admin/warehouses?page=' + this.cur_page + '&fnsku=' + this.search_fnsku + '&name=' + this.warename + '&erp_number=' + this.search_erp_number, {
 					headers: {
 						'Authorization': localStorage.getItem('token_admin')
 					},
@@ -160,6 +211,16 @@
 								data2.noshow = false
 								data2.remove = false
 								data2.originalWare = data2.ware_house_name
+								let tempcode =  String(data2.user_id%1000)
+								let tempindex = parseInt(data2.user_id/1000)
+								if(tempcode.length ==1) {
+									tempcode = '00' + tempcode
+								}else if(tempcode.length ==2) {
+									tempcode = '0' + tempcode
+								}else{
+
+								}
+								data2.usercode = this.code[tempindex] + tempcode
 							})
 						})
 						this.tableData = res.data.data
@@ -173,7 +234,7 @@
 			filter_ware() {
 				this.paginationShow = false
 				this.cur_page = 1
-				this.$axios.get('/admin/warehouses?page=' + this.cur_page + '&fnsku=' + this.search_fnsku + '&name=' + this.warename, {
+				this.$axios.get('/admin/warehouses?page=' + this.cur_page + '&fnsku=' + this.search_fnsku + '&name=' + this.warename + '&erp_number=' + this.search_erp_number, {
 					headers: {
 						'Authorization': localStorage.getItem('token_admin')
 					},
@@ -266,10 +327,10 @@
                     this.submitDisabled = false
                 })
 			},
-			addWarehouse() {
+			addWarehouse(id) {
 				this.submitDisabled = true
                 let params = {
-                    id: this.idx,
+                    id: id,
                     sum: this.addWare.sum,
                     fnsku: this.addWare.fnsku
                 }
@@ -283,6 +344,9 @@
                     	this.isaddWare = false
                     	this.cargo_ware_houses.push({ware_house_name: this.addWare.warehouse, fnsku: this.addWare.fnsku, sum: this.addWare.sum, lock_sum: '0', noshow: true})
                         this.$message.success("创建成功")
+                        this.addWare.sum = ''
+                        this.addWare.fnsku = ''
+                        this.addWare.warehouse = ''
                     }
                 }).catch((res) => {
 

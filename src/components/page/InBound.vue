@@ -12,10 +12,11 @@
 					<div class="form-box">
 						<el-form :rules="rules" label-width="140px">
 							<el-form-item label="批次" required>
-								<el-select v-model="select_batch" placeholder="选择批次" class="handle-select mr10">
+								<el-select v-model="select_batch" @change="promptQuick" placeholder="选择批次" class="handle-select mr10">
 									<el-option v-for="item in batch_options" :key="item.id" :label="item.batch_number" :value="item.id"></el-option>
 									<infinite-loading :on-infinite="onInfiniteBatch" ref="infiniteLoading2"></infinite-loading>
 								</el-select>
+								<el-tag v-if="is_quick_type == 1" type="success">该批次是入库即出</el-tag>
 							</el-form-item>
 							<el-form-item label="追踪编码/订单编码" required>
 								<table class="table text-center">
@@ -148,6 +149,7 @@
 				order_number: undefined,
 				loading: false,
 				query: undefined,
+				is_quick_type: 0
 			}
 		},
 		created() {
@@ -282,9 +284,9 @@
 					remark: this.remark
 				}
 				this.submitDisabled = true
-				setTimeout(() => {
-					this.submitDisabled = false
-				}, 3000)
+				// setTimeout(() => {
+				// 	this.submitDisabled = false
+				// }, 3000)
 				this.$axios.post('/store_ins', params, {
 					headers: {
 						'Authorization': localStorage.getItem('token')
@@ -299,10 +301,16 @@
 							product_id: '',
 						}]
 						this.getMessageCount()
-						this.$router.push('/inboundmanage')
+						if(this.is_quick_type == 1) {
+							this.$router.push('/inboundmanagequick')
+						}else {
+							this.$router.push('/inboundmanage')
+						}
 					}
 				}).catch((res) => {
 					console.log('error')
+				}).finally(() => {
+					this.submitDisabled = false
 				})
 			},
 			addFile() {
@@ -345,7 +353,6 @@
 							showClose: true,
 							duration: 6000
 						})
-						this.$router.push('/inboundmanage')
 						// this.remark = ''
 					}
 				}).catch((res) => {
@@ -411,6 +418,13 @@
 			infiniteIndex(index) {
 				console.log('index')
 				console.log(index)
+			},
+			promptQuick() {
+				this.is_quick_type = 0
+				let index = this.batch_options.findIndex((data) => data.id == this.select_batch)
+				if (this.batch_options[index].is_quick == true) {
+					this.is_quick_type = 1
+				}
 			}
 		},
 		components: {

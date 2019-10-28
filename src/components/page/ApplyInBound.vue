@@ -69,11 +69,12 @@
 						this.$message.success("提交成功")
 						this.fileList = []
 						this.remark = ''
-						this.isDisabled = false
 						this.$router.push('/applyinboundmanage')
 					}
 				}).catch((res) => {
 					this.$message.error("失败，请核对无误后联系管理员")
+				}).finally(() => {
+					this.isDisabled = false
 				})
 			},			
 			beforeUpload(file) {

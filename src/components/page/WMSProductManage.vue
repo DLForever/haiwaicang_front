@@ -18,13 +18,15 @@
                 <div class="fnsku_filter">
                     用户:
                     <el-select v-model="select_cate" filterable remote placeholder="选择用户" :loading="loading" class="handle-select mr10" @visible-change="test" :remote-method="remoteMethod">
-                        <el-option v-for="item in options" :key="item.id" :label="item.name" :value="item.id"></el-option>
+                        <el-option v-for="item in options" :key="item.id" :label="item.usercode" :value="item.id"></el-option>
                         <infinite-loading :on-infinite="onInfinite" ref="infiniteLoading"></infinite-loading>
                     </el-select>
                     店铺名:
                     <el-input style="width:150px" placeholder="请输入店铺名" v-model.trim="search_shopname"></el-input>
                     Fnsku:
                     <el-input style="width:150px" placeholder="请输入Fnsku" v-model.trim="search_fnsku"></el-input>
+                    ERP编码:
+                    <el-input style="width:150px" placeholder="请输入ERP编码" v-model.trim="search_erp_number"></el-input>
                     <el-button @click="clear_filter" type="default">重置</el-button>
                     <el-button @click="filter_product" type="primary">查询</el-button>
                 </div>
@@ -69,9 +71,9 @@
                                 <el-dropdown-item>
                                     <el-button @click="handleEdit(scope.$index, scope.row)" type="text">&nbsp&nbsp&nbsp&nbsp编&nbsp&nbsp辑</el-button>
                                 </el-dropdown-item>
-                                <!-- <el-dropdown-item>
+                                <el-dropdown-item>
                                     <el-button @click="handleDelete(scope.row)" type="text">&nbsp&nbsp&nbsp&nbsp删&nbsp&nbsp除</el-button>
-                                </el-dropdown-item> -->
+                                </el-dropdown-item>
                             </el-dropdown-menu>
                         </el-dropdown>
                     </template>
@@ -290,7 +292,9 @@
                 confirmDelProVis: false,
                 confirmDElPacVis: false,
                 picture_id: undefined,
-                submitDisabled: false
+                submitDisabled: false,
+                search_erp_number: '',
+                code: ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z"],
             }
         },
         created() {
@@ -335,7 +339,7 @@
                 if (process.env.NODE_ENV === 'development') {
 //                  this.url = '/ms/table/list';
                 };
-                this.$axios.get( '/admin/products?page='+this.cur_page + '&shopname=' + this.search_shopname + '&fnsku=' + this.search_fnsku + '&user_id=' + this.select_cate, {
+                this.$axios.get( '/admin/products?page='+this.cur_page + '&shopname=' + this.search_shopname + '&fnsku=' + this.search_fnsku + '&user_id=' + this.select_cate + '&erp_number=' + this.search_erp_number, {
                 	headers: {'Authorization': localStorage.getItem('token_admin')}
                 },
                 ).then((res) => {
@@ -354,7 +358,7 @@
             filter_product() {
                 this.cur_page = 1
                 this.paginationShow = false
-                this.$axios.get( '/admin/products?page='+this.cur_page + '&shopname=' + this.search_shopname + '&fnsku=' + this.search_fnsku + '&user_id=' + this.select_cate, {
+                this.$axios.get( '/admin/products?page='+this.cur_page + '&shopname=' + this.search_shopname + '&fnsku=' + this.search_fnsku + '&user_id=' + this.select_cate + '&erp_number=' + this.search_erp_number, {
                     headers: {'Authorization': localStorage.getItem('token_admin')}
                 },
                 ).then((res) => {
@@ -552,6 +556,18 @@
                     },
                     }).then((res) => {
                         if(res.data.code == 200){
+                            res.data.data.forEach((data) => {
+                                let tempcode =  String(data.id%1000)
+                                let tempindex = parseInt(data.id/1000)
+                                if(tempcode.length ==1) {
+                                    tempcode = '00' + tempcode
+                                }else if(tempcode.length ==2) {
+                                    tempcode = '0' + tempcode
+                                }else{
+
+                                }
+                                data.usercode = this.code[tempindex] + tempcode
+                            })
                             this.loading = false
 //                          this.options = res.data.data
                             if(reload){

@@ -658,7 +658,7 @@
 				}
 			},
 			getDatas() {
-				this.$axios.get('/outbound_orders?page=' + this.cur_page + '&fnsku=' + this.search_fnsku + '&status=10&is_quick=0', {
+				this.$axios.get('/outbound_orders?page=' + this.cur_page + '&fnsku=' + this.search_fnsku + '&status=10&is_quick=1', {
 					headers: {
 						'Authorization': localStorage.getItem('token')
 					}
@@ -683,7 +683,7 @@
 			filter_inbound() {
 				this.paginationShow = false
 				this.cur_page = 1
-				this.$axios.get('/outbound_orders?page=' + this.cur_page + '&fnsku=' + this.search_fnsku + '&status=10&is_quick=0', {
+				this.$axios.get('/outbound_orders?page=' + this.cur_page + '&fnsku=' + this.search_fnsku + '&status=10&is_quick=1', {
 					headers: {
 						'Authorization': localStorage.getItem('token')
 					}

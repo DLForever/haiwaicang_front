@@ -3,7 +3,7 @@
 		<div class="crumbs">
 			<el-breadcrumb separator="/">
 				<el-breadcrumb-item><i class="el-icon-date"></i> 出库单管理</el-breadcrumb-item>
-				<el-breadcrumb-item>已完成</el-breadcrumb-item>
+				<el-breadcrumb-item>正在处理</el-breadcrumb-item>
 			</el-breadcrumb>
 		</div>
 		<div class="container">
@@ -14,10 +14,10 @@
 				<div class="fnsku_filter">
 					Fnsku:
                     <el-input style="width:150px" placeholder="请输入Fnsku" v-model.trim="search_fnsku"></el-input>
-                    <!-- 状态:
+                    状态:
 					<el-select v-model="statusSelect" placeholder="请选择" class="handle-select mr10">
 						<el-option v-for="item in statusOptions" :key="item.value" :label="item.label" :value="item.value"></el-option>
-					</el-select> -->
+					</el-select>
                     <el-button @click="clear_search" type="default">重置</el-button>
                     <el-button @click="filter_inbound" type="primary">查询</el-button>
                 </div>
@@ -62,9 +62,9 @@
 								<el-dropdown-item>
 									<el-button @click="detailsShow(scope.$index, scope.row)" type="text">&nbsp&nbsp&nbsp详情&nbsp</el-button>
 								</el-dropdown-item>
-								<!-- <el-dropdown-item>
+								<el-dropdown-item>
 									<el-button @click="updateOutbound(scope.$index, scope.row)" type="text">&nbsp&nbsp&nbsp更新&nbsp</el-button>
-								</el-dropdown-item> -->
+								</el-dropdown-item>
 								<el-dropdown-item>
 									<el-button size="small" @click="handleEdit(scope.$index, scope.row)" type="text">&nbsp外箱标</el-button>
 								</el-dropdown-item>
@@ -301,10 +301,10 @@
 
 			<!-- 详情提示框 -->
 			<el-dialog title="详情" :visible.sync="detailVisible" width="65%">
-				<div class="check_button">
+				<!-- <div class="check_button">
 					<el-button type="primary" @click="check">通过审核</el-button>
 				</div>
-				<br>
+				<br> -->
 				<el-table :data="OutBoundTable" border style="width: 100%">
 					<el-table-column prop="fnsku" label="fnsku"></el-table-column>
 					<el-table-column prop="dst_fnsku" label="新fnsku"></el-table-column>
@@ -537,7 +537,7 @@
 				loading: false,
 				query: undefined,
 				infiniteLoading: [],
-				statusOptions: [{value: 1, label: '待自审'}, {value: 11, label: '待拣货'}, {value: 2, label: '拣货中'}, {value: 3, label: '待换标'}, {value: 12, label: '已装箱'}, {value: 4, label: '待结算'}, {value: 5, label: '待贴箱标'}, {value: 6, label: '已提供箱标'}, {value: 8, label: '待删除'}, {value: 10, label: '已完成'}],
+				statusOptions: [ {value: 11, label: '待拣货'}, {value: 2, label: '拣货中'}, {value: 3, label: '待换标'}, {value: 12, label: '已装箱'}, {value: 4, label: '待结算'}, {value: 5, label: '待贴箱标'}, {value: 6, label: '已提供箱标'}],
 				statusSelect: '',
 			}
 		},
@@ -658,7 +658,7 @@
 				}
 			},
 			getDatas() {
-				this.$axios.get('/outbound_orders?page=' + this.cur_page + '&fnsku=' + this.search_fnsku + '&status=10&is_quick=0', {
+				this.$axios.get('/outbound_orders?page=' + this.cur_page + '&fnsku=' + this.search_fnsku + '&status=' + this.statusSelect + '&process=true&is_quick=1', {
 					headers: {
 						'Authorization': localStorage.getItem('token')
 					}
@@ -683,7 +683,7 @@
 			filter_inbound() {
 				this.paginationShow = false
 				this.cur_page = 1
-				this.$axios.get('/outbound_orders?page=' + this.cur_page + '&fnsku=' + this.search_fnsku + '&status=10&is_quick=0', {
+				this.$axios.get('/outbound_orders?page=' + this.cur_page + '&fnsku=' + this.search_fnsku + '&status=' + this.statusSelect + '&process=true&is_quick=1', {
 					headers: {
 						'Authorization': localStorage.getItem('token')
 					}
@@ -896,10 +896,8 @@
 						this.outboundVisible = false
 						this.getMessageCount()
 					}else {
-
 					}
 				}).catch((res) => {
-					
 				}).finally((res) => {
 					this.submitDisable = false
 				})
@@ -944,7 +942,6 @@
 						this.updateVisible  =false
 						this.getMessageCount()
 					}
-					
 				}).catch((res) => {
 				}).finally((res) => {
 					this.updateDisabled = false
