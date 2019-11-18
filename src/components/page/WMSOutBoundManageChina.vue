@@ -118,16 +118,15 @@
 							<span v-if="scope.row.pictures.length === 0">无</span>
 							<!-- <span v-else-if="scope.row.pictures[0].url.url != null">无</span> -->
 							<img class="img_fnsku" v-else-if="scope.row.pictures[0] != undefined && !(scope.row.pictures[0].url.url.match(/.pdf/))" :src="$axios.defaults.baseURL+scope.row.pictures[0].url.url"/>
-							<a v-else :href="$axios.defaults.baseURL+scope.row.pictures[0].url.url" target="_blank">{{scope.row.pictures[0].url.url.split('/').pop()}}</a>
+							<a v-else :href="$axios.defaults.baseURL+scope.row.pictures[0].url.url" target="_blank">{{decodeURI(scope.row.pictures[0].url.url.split('/').pop())}}</a>
 							<!-- <span v-else >无</span> -->
 						</template>
-						<!-- <template slot-scope="scope">
-							<img class="img_fnsku" :src="$axios.defaults.baseURL+scope.row.pictures[0].url.url" />					
-						</template> -->
 					</el-table-column>
-					<!-- <el-table-column prop="labal_ware_houses" label="取货详情"></el-table-column> -->
-					<!--<el-table-column prop="created_at" :formatter="formatter_created_at" label="创建时间"></el-table-column>
-					<el-table-column prop="updated_at" :formatter="formatter_updated_at" label="更新时间"></el-table-column>-->
+					<el-table-column label="操作" width="80">
+						<template slot-scope="scope">
+							<el-button type="primary" @click="handleAddSum(scope.$index, scope.row)">增加</el-button>
+						</template>
+					</el-table-column>
 				</el-table>
 				<br>
 				<el-table v-if="this.ware_houseTable2.length != 0" :data="ware_houseTable2" border style="width: 100%">
@@ -135,6 +134,11 @@
 					<!-- <el-table-column prop="sum" label="数量"></el-table-column> -->
 					<el-table-column prop="fnsku" label="fnsku"></el-table-column>
 					<el-table-column prop="sum" label="数量"></el-table-column>
+					<el-table-column label="操作" width="80">
+						<template slot-scope="scope">
+							<el-button type="danger" @click="handleDeleteSum(scope.$index, scope.row)">减少</el-button>
+						</template>
+					</el-table-column>
 				</el-table>
 				<br>
 				<el-table v-if="this.order_box_cargos.length != 0" :data="order_box_cargos" border style="width: 100%">
@@ -150,6 +154,11 @@
 					<el-table-column prop="box_size" label="箱子尺寸(长*宽*高)"></el-table-column>
 					<el-table-column prop="weight" label="箱子重量"></el-table-column>
 					<el-table-column prop="repeat" label="箱子个数"></el-table-column>
+					<el-table-column label="操作" width="80">
+						<template slot-scope="scope">
+							<el-button type="danger" @click="handleDeleteBox(scope.$index, scope.row)">删除</el-button>
+						</template>
+					</el-table-column>
 				</el-table>
 			</div>
 			<!-- </el-scrollbar>
@@ -192,7 +201,7 @@
 				<el-table-column prop="dst_fnsku" label="新fnsku"></el-table-column>
 				<el-table-column prop="sum2" label="数量"></el-table-column>
 			</el-table>
-			<br>
+			<!-- <br>
 			<el-table v-if="this.checkData4.length != 0" :data="checkData4" border style="width: 100%" ref="multipleCheck" @selection-change="store_insSelectionChange">
 				<el-table-column type="selection" width="55"></el-table-column>
 				<el-table-column label="序号" width="50">
@@ -206,14 +215,13 @@
 				<el-table-column prop="total_plan_sum" label="计划数量"></el-table-column>
 				<el-table-column prop="total_arrive_sum" label="到达数量"></el-table-column>
 				<el-table-column prop="created_at" label="创建时间" :formatter="formatter_created_at"></el-table-column>
-			</el-table>
-			<br>
+			</el-table> -->
+			<!-- <br>
 			<el-table v-if="this.checkData5.length != 0" :data="checkData5" border style="width: 100%" @selection-change="productSelectionChange">
-				<!-- <el-table-column type="selection" width="55"></el-table-column> -->
 				<el-table-column prop="fnsku" label="fnsku"></el-table-column>
 				<el-table-column prop="plan_sum" label="计划数量"></el-table-column>
-				<!-- <el-table-column prop="way_sum" label="在途数量"></el-table-column> -->
 				<el-table-column prop="arrive_sum" label="到达数量"></el-table-column>
+				<el-table-column prop="remove_sum" label="移出数量"></el-table-column>
 				<el-table-column prop="check_sum" label="已结算数量"></el-table-column>
 				<el-table-column prop="created_at" label="创建时间" :formatter="formatter_created_at"></el-table-column>
 				<el-table-column prop="stock_time" label="存留时间(天/小时)"></el-table-column>
@@ -222,7 +230,7 @@
 						<el-input placeholder="输入结算数量" :value="scope.row.check_sum2" v-model.trim="scope.row.check_sum2"></el-input>
 					</template>
 				</el-table-column>
-			</el-table>
+			</el-table> -->
 			<br>
 			<el-table :data="pricetable" border style="width: 100%">
 				<el-table-column label="价格">
@@ -244,6 +252,12 @@
 					<el-button @click="back" :disabled="isDisableBu2" type="danger">撤销</el-button>
 				</div>
 				<br>
+				<el-form-item label="汇率">
+					<el-input-number :min="0" :precision="5" :step="0.01" v-model="exchange_rate"></el-input-number>
+				</el-form-item>
+				<el-form-item label="折扣">
+					<el-input-number :min="0" :max="1" :precision="5" :step="0.01" v-model="discount"></el-input-number>
+				</el-form-item>
 				<el-form-item label="备注">
 					<el-input v-model="remark"></el-input>
 				</el-form-item>
@@ -284,9 +298,9 @@
 						<tbody v-for="(p,index) in form">
 							<tr>
 							<td>
-								<el-select placeholder="选择箱子" v-model="p.boxes_id"  width="130" value-key="id">
+								<el-select placeholder="选择箱子" v-model="p.boxes_id" filterable remote :loading="loading_box" @visible-change="selectVisble_box" :remote-method="remoteMethod_box" width="130" value-key="id">
 									<el-option v-for="item in box_options" :label="item.name" :value="item.id"></el-option>
-									<infinite-loading :on-infinite="onInfinite_box" ref="infiniteLoading"></infinite-loading>
+									<infinite-loading :on-infinite="onInfinite_box" ref="infiniteLoading_box"></infinite-loading>
 								</el-select>
 							</td>
 							<td>
@@ -356,15 +370,14 @@
 		<el-dialog title="提示" :visible.sync="delVisible" width="30%" center>
 			<div class="del-dialog-cnt">删除不可恢复，是否确定删除？</div>
 			<span slot="footer" class="dialog-footer">
-                <el-button @click="delVisible = false">取 消</el-button>
-                <el-button type="danger" @click="deleteRow">删 除</el-button>
-            </span>
+				<el-button @click="delVisible = false">取 消</el-button>
+				 <el-button type="danger" @click="deleteRow">删 除</el-button>
+			</span>
 		</el-dialog>
 
 		<!-- 收费预览提示框 -->
-		<el-dialog title="收费预览" :visible.sync="previewVisible" width="65%">
+		<!-- <el-dialog title="收费预览" :visible.sync="previewVisible" width="65%">
 			<el-table :data="preview_details" border style="width: 100%">
-				<!--<el-table-column prop="ware_house_id" label="库位"></el-table-column>-->
 				<el-table-column prop="box_price" label="箱子数量"></el-table-column>
 				<el-table-column prop="box_sum" label="箱子价格" ></el-table-column>
 				<el-table-column prop="change_box_price" label="换箱费用" ></el-table-column>
@@ -387,6 +400,102 @@
 			<span slot="footer" class="dialog-footer">
 				<el-button type="danger" @click="deleteCheck">删 除 预 览</el-button>
 				<el-button type="primary" @click="confirmCheck">确 认 审 核</el-button>
+			</span>
+		</el-dialog> -->
+
+		<!-- 收费预览提示框 -->
+		<el-dialog title="详情" :visible.sync="previewVisible" width="60%">
+			<el-table :data="preview_form.charge_standard" border style="width: 100%">
+				<el-table-column type="index" width="55"></el-table-column>
+				<el-table-column label="入库收费标准" v-if="preview_form.settlement_details[0].s_type == '1' || preview_form.settlement_details[0].s_type == '3'">
+					<template slot-scope="scope">
+						<span v-if="scope.row.by_box == false">每个收费{{scope.row.store_in_fee}}美元</span>
+						<span v-else-if="scope.row.by_box == true">每箱收费{{scope.row.store_in_fee}}美元</span>
+					</template>
+				</el-table-column>
+				<el-table-column label="出库收费标准" v-if="preview_form.settlement_details[0].s_type == '2' || preview_form.settlement_details[0].s_type == '3'">
+					<template slot-scope="scope">
+						<span >箱子{{scope.row.box_fee}}美元一个，换箱费{{scope.row.change_box_fee}}美元一个，换标费{{scope.row.change_label_fee}}美元一个</span>
+					</template>
+				</el-table-column>
+				<el-table-column label="仓储收费标准" v-if="preview_form.settlement_details[0].s_type == '4'">
+					<template slot-scope="scope">
+						<span>每{{scope.row.cube}}方{{scope.row.day}}天收费{{scope.row.store_fee}}美元</span>
+					</template>
+				</el-table-column>
+			</el-table>
+			<br>
+			<el-table v-if="preview_form.settlement_details.length != 0 && preview_form.settlement_details[0].s_type != '1' && preview_form.settlement_details[0].s_type != '4'" :data="preview_form.settlement_details" border style="width: 100%">
+				<el-table-column prop="box_sum" label="箱子数量"></el-table-column>
+				<el-table-column prop="box_price" label="箱子费用"></el-table-column>
+				<el-table-column prop="change_box_price" label="换箱费用"></el-table-column>
+				<el-table-column prop="label_change_sum" label="换标数量"></el-table-column>
+				<el-table-column prop="label_change_price" label="换标费用"></el-table-column>
+			</el-table>
+			<br v-if="preview_form.settlement_details[0].s_type != '1' && preview_form.settlement_details[0].s_type != '4'">
+			<el-table v-if="preview_form.store_ins.length != 0" :data="preview_form.store_ins" border style="width: 100%">
+				<el-table-column prop="batch_number" label="批次号"></el-table-column>
+				<el-table-column prop="logistics_number" label="物流单号"></el-table-column>
+				<el-table-column prop="order_number" label="订单号"></el-table-column>
+				<el-table-column prop="total_plan_sum" label="总计划数量"></el-table-column>
+				<el-table-column prop="total_arrive_sum" label="实际到达数量"></el-table-column>
+			</el-table>
+			<br v-if="preview_form.store_ins.length != 0">
+			<el-table v-if="preview_form.settlement_details.length != 0 && preview_form.settlement_details[0].s_type != '2' && preview_form.settlement_details[0].s_type != '4'" :data="preview_form.settlement_details" border style="width: 100%">
+				<el-table-column prop="store_in_sum" label="入库数量"></el-table-column>
+				<el-table-column prop="store_in_price" label="费用"></el-table-column>
+			</el-table>
+			<br v-if="preview_form.settlement_details[0].s_type != '2' && preview_form.settlement_details[0].s_type != '4'">
+			<el-table show-summary :summary-method="getSummaries" v-if="preview_form.settlement_store_ins.length != 0 && preview_form.settlement_details[0].store_price != '0.0'" :data="preview_form.settlement_store_ins" border style="width: 100%">
+				<el-table-column type="index" width="55"></el-table-column>
+				<el-table-column prop="cube" label="立方数"></el-table-column>
+				<el-table-column prop="day" label="天数"></el-table-column>
+				<el-table-column prop="fnsku" label="fnsku"></el-table-column>
+				<el-table-column prop="sum" label="数量"></el-table-column>
+				<el-table-column prop="store_price" label="仓储费"></el-table-column>
+			</el-table>
+			<br v-if="preview_form.settlement_details[0].store_price != '0.0'">
+			<el-table v-if="preview_form.settlement_charges.length != 0" :data="preview_form.settlement_charges" border style="width: 100%">
+				<el-table-column prop="price" label="价格"></el-table-column>
+				<el-table-column prop="remark" label="备注"></el-table-column>
+			</el-table>
+			<span slot="footer" class="dialog-footer">
+				<el-button type="danger" @click="deleteCheck">删 除 预 览</el-button>
+				<el-button type="primary" @click="confirmCheck">确 认 审 核</el-button>
+			</span>
+		</el-dialog>
+
+		<!-- 减少提示框 -->
+		<el-dialog title="提示" :visible.sync="delSumVisible" width="50%" center>
+			<el-form ref="form" label-width="130px">
+				<el-form-item label="是否移除不良品" required>
+					<el-radio v-model="defetct" label="1">是</el-radio>
+					<el-radio v-model="defetct" label="0">否</el-radio>
+				</el-form-item>
+				<el-form-item label="减少数量" required>
+					<el-input-number :min="0" v-model="deleteSum"></el-input-number>
+				</el-form-item>
+			</el-form>
+			<span slot="footer" class="dialog-footer">
+				<el-button @click="delSumVisible = false">取 消</el-button>
+				 <el-button type="primary" @click="saveDeleteSum">确 认</el-button>
+			</span>
+		</el-dialog>
+		<!-- 增加提示框 -->
+		<el-dialog title="提示" :visible.sync="addSumVisible" width="50%" center>
+			<el-form ref="form" label-width="80px">
+				<el-form-item label="库位" required>
+					<el-select v-model="cargo_ware_house_id" placeholder="请选择" class="handle-select mr10">
+						<el-option v-for="item in cargo_ware_house_options" :key="item.id" :label="item.name" :value="item.cargo_ware_houses[0].id"></el-option>
+					</el-select>
+				</el-form-item>
+				<el-form-item label="数量" required>
+					<el-input-number :min="0" v-model="addSum"></el-input-number>
+				</el-form-item>
+			</el-form>
+			<span slot="footer" class="dialog-footer">
+				<el-button @click="addSumVisible = false">取 消</el-button>
+				 <el-button type="primary" @click="saveAddSum">确 认</el-button>
 			</span>
 		</el-dialog>
 	</div>
@@ -501,7 +610,27 @@
 					price: 0,
 					remark: ''
 				},
-				remark: ''
+				remark: '',
+				loading_box: false,
+				query_box: undefined,
+				preview_form: {
+					settlement_details: [{'s_type': ''}],
+					store_ins: [],
+					settlement_charges: [],
+					settlement_store_ins: [],
+					charge_standard: []
+				},
+				defetct: '',
+				delSumVisible: false,
+				deleteSum: 0,
+				label_ware_house_id: '',
+				addSum: 0,
+				addSumVisible: false,
+				label_change_id: '',
+				cargo_ware_house_id: '',
+				cargo_ware_house_options: [],
+				exchange_rate: 7,
+				discount: 1,
 			}
 		},
 		created() {
@@ -702,9 +831,52 @@
 			onInfinite_box(obj) {
 				if((this.box_page * 20) < this.box_total) {
 					this.box_page += 1
-					this.getBoxs(obj.loaded)
+					// this.getBoxs(obj.loaded)
+					this.remoteMethod_box(this.query_box, obj.loaded)
 				} else {
 					obj.complete()
+				}
+			},
+			selectVisble_box(visible) {
+				if(visible) {
+					this.query_box = undefined
+					this.remoteMethod_box("")
+				}
+			},
+			remoteMethod_box(query, callback = undefined) {
+				if(query != "" || this.query_box != "" || callback) {
+					let reload = false
+					if(this.query_box != query) {
+						this.loading_box = true
+						this.box_page = 1
+						this.query_box = query
+						reload = true
+						if(this.$refs.infiniteLoading_box.isComplete) {
+							this.$refs.infiniteLoading_box.stateChanger.reset()
+						}
+					}
+					this.$axios.get('/admin/boxes?page=' + this.box_page + '&name=' + query.trim(), {
+						headers: {
+							'Authorization': localStorage.getItem('token_admin')
+						},
+					}).then((res) => {
+						if(res.data.code == 200) {
+							this.loading_box = false
+							//							this.options = res.data.data
+							let temp_options = []
+							if(reload) {
+								this.box_options = temp_options.concat(res.data.data)
+							} else {
+								this.box_options = this.box_options.concat(res.data.data)
+							}
+							this.box_total = res.data.count
+							if(callback) {
+								callback()
+							}
+						}
+					}).catch((res) => {
+						console.log(res)
+					})
 				}
 			},
 			selectVisble(visible) {
@@ -930,6 +1102,8 @@
 			check(index, row) {
 				// let temptime = new Date()
 				// console.log(temptime)
+				this.exchange_rate = 7
+				this.discount = 1
 				this.check_id = row.id
 				this.$axios.get('/admin/outbound_orders/' + row.id + '/settlement', {
 					headers: {
@@ -944,48 +1118,49 @@
 								data.sum2 = data.sum
 							})
 							this.checkData2 = res.data.data.label_changes
-							this.Dis_Num_Rep(res.data.data.label_changes, this.aft_obj)
+							// this.Dis_Num_Rep(res.data.data.label_changes, this.aft_obj)
 							this.checkData3 = res.data.data.order_boxes
-							// res.data.data.store_ins.forEach((data) => {
-							// 	if(data.product_store_ins === undefined) {
-							// 		return -1
-							// 	} else {
-							// 		data.cate_sum = data.product_store_ins.length
-							// 	}
+							// res.data.data.product_store_ins.forEach((data) => {
+							// 	this.aft_obj.some((data2) => {
+							// 		if (data.fnsku == data2.fnsku) {
+							// 			if ((data.arrive_sum - data.check_sum - data.remove_sum) <= data2.sum && data2.sum != 0) {
+							// 				data.check_sum2 = data.arrive_sum - data.check_sum - data.remove_sum
+							// 				data2.sum = data2.sum - data.arrive_sum + data.check_sum + data.remove_sum
+							// 			}else if ((data.arrive_sum - data.check_sum - data.remove_sum) > data2.sum && data2.sum != 0) {
+							// 				data.check_sum2 = data2.sum
+							// 				data2.sum = 0
+							// 				return true
+							// 			}else {
+							// 				data.check_sum2 = ''
+							// 			}
+							// 		}
+							// 	})
 							// })
-							// this.checkData4 = res.data.data.store_ins
-							res.data.data.product_store_ins.forEach((data) => {
-								this.aft_obj.some((data2) => {
-									if (data.fnsku == data2.fnsku) {
-										if ((data.arrive_sum - data.check_sum) <= data2.sum && data2.sum != 0) {
-											data.check_sum2 = data.arrive_sum - data.check_sum
-											data2.sum = data2.sum - data.arrive_sum + data.check_sum
-										}else if ((data.arrive_sum - data.check_sum) > data2.sum && data2.sum != 0) {
-											data.check_sum2 = data2.sum
-											data2.sum = 0
-											return true
-										}else {
-											data.check_sum2 = ''
-										}
-									}
-								})
-							})
-							res.data.data.product_store_ins.forEach((data) => {
-								let temptime = data.done_time.substr(0, 19)
-								let temptime2 = temptime.replace(/T/g, " ")
-								let temptime3 = new Date(temptime2.replace(/-/g, "/"))
-								let dateEnd = new Date()
-								let dateDiff = dateEnd.getTime() - temptime3.getTime()
-								let dayDiff = Math.floor(dateDiff / (24 * 3600 * 1000))
-								let leave1 = dateDiff%(24*3600*1000)
-								let hours = Math.floor(leave1/(3600*1000))
-								data.stock_time = dayDiff + '天' + hours + '小时'
-							})
-							this.checkData5 = res.data.data.product_store_ins
+							// res.data.data.product_store_ins.forEach((data) => {
+							// 	let temptime = data.done_time.substr(0, 19)
+							// 	let temptime2 = temptime.replace(/T/g, " ")
+							// 	let temptime3 = new Date(temptime2.replace(/-/g, "/"))
+							// 	let dateEnd = new Date()
+							// 	let dateDiff = dateEnd.getTime() - temptime3.getTime()
+							// 	let dayDiff = Math.floor(dateDiff / (24 * 3600 * 1000))
+							// 	let leave1 = dateDiff%(24*3600*1000)
+							// 	let hours = Math.floor(leave1/(3600*1000))
+							// 	data.stock_time = dayDiff + '天' + hours + '小时'
+							// })
+							// this.checkData5 = res.data.data.product_store_ins
 							this.checkVisible = true
 						} else if(res.data.data[0].settlement_store_ins != undefined){
-							this.preview_details = res.data.data
-							this.preview_details_store_ins = res.data.data[0].settlement_store_ins
+							const item = res.data.data[0]
+							this.preview_form = {
+								store_ins: item.store_ins,
+								settlement_charges: item.settlement_charges,
+								settlement_details: [item],
+								settlement_store_ins: item.settlement_store_ins,
+								charge_standard: [item.charge_standard]
+							}
+
+							// this.preview_details = res.data.data
+							// this.preview_details_store_ins = res.data.data[0].settlement_store_ins
 							this.check_settlement_id = res.data.data[0].id
 							this.previewVisible = true
 						}
@@ -1019,70 +1194,31 @@
 				let price = []
 				let price_remark = []
 				this.pricetable.forEach((data) => {
-					price.push(data.price)
-					price_remark.push(data.price_remark)
-				})
-				this.checkData5.forEach((data) => {
-					// console.log(data.check_sum2.trim())
-					if((data.check_sum2 + '').trim() != '') {
-						sum.push(data.check_sum2)
-						product_store_in_ids.push(data.id)
-						checkData5_count = 1
+					if(data.price !=0 && data.price_remark != null) {
+						price.push(data.price)
+						price_remark.push(data.price_remark)
 					}
 				})
-				if(this.store_ins_mul.length == 0 || checkData5_count == 0) {
-					this.$confirm('您没有选择物流单号或输入结算数量，是否继续结算？', '提示', {
-						confirmButtonText: '确定',
-						cancelButtonText: '取消',
-						type: "warning"
-					}).then(() => {
-						// for(let i = 0; i < this.store_ins_mul.length; i++) {
-						// 	store_in_ids.push(this.store_ins_mul[i].id)
-						// }
-						let params = {
-							// store_in_ids: store_in_ids,
-							product_store_in_ids: product_store_in_ids,
-							sum: sum,
-							price: price,
-							price_remark: price_remark,
-							remark: this.remark
-						}
-						this.check_doneDisabled = true
-						this.$axios.post('/admin/outbound_orders/' + this.check_id + '/check', params, {
-							headers: {
-								'Authorization': localStorage.getItem('token_admin')
-							},
-						}).then((res) => {
-							if(res.data.code == 200) {
-								this.getData()
-								// this.$refs.multipleCheck.clearSelection()
-								this.checkVisible = false
-								this.preview_details = [res.data.data]
-								this.preview_details_store_ins = res.data.data.settlement_store_ins
-								this.check_settlement_id = res.data.data.id
-								this.previewVisible = true
-								// this.$message.success('审核成功')
-							}
-						}).catch((res) => {
-							console.log(res)
-						}).finally(() => {
-							this.check_doneDisabled = false
-						})
-					}).catch(() => {
-						this.$message.info('取消结算')
-					})
-				}else{
-					// for(let i = 0; i < this.store_ins_mul.length; i++) {
-					// 	store_in_ids.push(this.store_ins_mul[i].id)
-					// }
-					// for(let j = 0; j < this.product_store_ins_mul.length; j++) {
-					// 	sum.push(this.product_store_ins_mul[j].check_sum2)
-					// 	product_store_in_ids.push(this.product_store_ins_mul[j].id)
-					// }
+				// this.checkData5.forEach((data) => {
+				// 	if((data.check_sum2 + '').trim() != '') {
+				// 		sum.push(data.check_sum2)
+				// 		product_store_in_ids.push(data.id)
+				// 		checkData5_count = 1
+				// 	}
+				// })
+				this.$confirm('结算后不能修改，是否继续结算？', '提示', {
+					confirmButtonText: '确定',
+					cancelButtonText: '取消',
+					type: "warning"
+				}).then(() => {
 					let params = {
-						// store_in_ids: store_in_ids,
-						product_store_in_ids: product_store_in_ids,
-						sum: sum
+						// product_store_in_ids: product_store_in_ids,
+						// sum: sum,
+						price: price,
+						price_remark: price_remark,
+						remark: this.remark,
+						exchange_rate: this.exchange_rate,
+						discount: this.discount
 					}
 					this.check_doneDisabled = true
 					this.$axios.post('/admin/outbound_orders/' + this.check_id + '/check', params, {
@@ -1091,20 +1227,98 @@
 						},
 					}).then((res) => {
 						if(res.data.code == 200) {
+							this.getData()
 							// this.$refs.multipleCheck.clearSelection()
 							this.checkVisible = false
-							this.preview_details = [res.data.data]
-							this.preview_details_store_ins = res.data.data.settlement_store_ins
+							const item = [res.data.data][0]
+							this.preview_form = {
+								store_ins: item.store_ins,
+								settlement_charges: item.settlement_charges,
+								settlement_details: [item],
+								settlement_store_ins: item.settlement_store_ins,
+								charge_standard: [item.charge_standard]
+							}
+
+							// this.preview_details = [res.data.data]
+							// this.preview_details_store_ins = res.data.data.settlement_store_ins
 							this.check_settlement_id = res.data.data.id
 							this.previewVisible = true
-							this.getData()
 							// this.$message.success('审核成功')
 						}
 					}).catch((res) => {
+						console.log(res)
 					}).finally(() => {
 						this.check_doneDisabled = false
 					})
-				}
+					}).catch(() => {
+						this.$message.info('取消结算')
+					})
+
+
+				// if(this.store_ins_mul.length == 0 || checkData5_count == 0) {
+				// 	this.$confirm('结算后不能修改，是否继续结算？', '提示', {
+				// 		confirmButtonText: '确定',
+				// 		cancelButtonText: '取消',
+				// 		type: "warning"
+				// 	}).then(() => {
+				// 		let params = {
+				// 			product_store_in_ids: product_store_in_ids,
+				// 			sum: sum,
+				// 			price: price,
+				// 			price_remark: price_remark,
+				// 			remark: this.remark
+				// 		}
+				// 		this.check_doneDisabled = true
+				// 		this.$axios.post('/admin/outbound_orders/' + this.check_id + '/check', params, {
+				// 			headers: {
+				// 				'Authorization': localStorage.getItem('token_admin')
+				// 			},
+				// 		}).then((res) => {
+				// 			if(res.data.code == 200) {
+				// 				this.getData()
+				// 				this.checkVisible = false
+				// 				this.preview_details = [res.data.data]
+				// 				this.preview_details_store_ins = res.data.data.settlement_store_ins
+				// 				this.check_settlement_id = res.data.data.id
+				// 				this.previewVisible = true
+				// 				// this.$message.success('审核成功')
+				// 			}
+				// 		}).catch((res) => {
+				// 			console.log(res)
+				// 		}).finally(() => {
+				// 			this.check_doneDisabled = false
+				// 		})
+				// 	}).catch(() => {
+				// 		this.$message.info('取消结算')
+				// 	})
+				// }else{
+
+				// 	let params = {
+				// 		// store_in_ids: store_in_ids,
+				// 		product_store_in_ids: product_store_in_ids,
+				// 		sum: sum
+				// 	}
+				// 	this.check_doneDisabled = true
+				// 	this.$axios.post('/admin/outbound_orders/' + this.check_id + '/check', params, {
+				// 		headers: {
+				// 			'Authorization': localStorage.getItem('token_admin')
+				// 		},
+				// 	}).then((res) => {
+				// 		if(res.data.code == 200) {
+				// 			// this.$refs.multipleCheck.clearSelection()
+				// 			this.checkVisible = false
+				// 			this.preview_details = [res.data.data]
+				// 			this.preview_details_store_ins = res.data.data.settlement_store_ins
+				// 			this.check_settlement_id = res.data.data.id
+				// 			this.previewVisible = true
+				// 			this.getData()
+				// 			// this.$message.success('审核成功')
+				// 		}
+				// 	}).catch((res) => {
+				// 	}).finally(() => {
+				// 		this.check_doneDisabled = false
+				// 	})
+				// }
 			},
 			closeCheckVisible() {
 				this.checkVisible = false
@@ -1113,6 +1327,7 @@
 				this.checkData3 = []
 				this.checkData4 = []
 				this.checkData5 = []
+				this.pricetable = [{price: 0,remark: ''}]
 			},
 			addBoxes() {
 				this.form.push(this.new_form)
@@ -1374,6 +1589,156 @@
 			back() {
 				this.pricetable.pop(this.pricetabletemp)
 			},
+			handleDeleteBox(index, row) {
+				let order_box_ids = []
+				order_box_ids.push(row.id)
+				let params = {
+					order_box_ids: order_box_ids,
+				}
+				this.$confirm('此操作将永久删除该记录, 是否继续?', '提示', {
+					confirmButtonText: '确定',
+					cancelButtonText: '取消',
+					type: 'danger'
+				}).then(() => {
+					this.$axios.post('/admin/outbound_orders/' + this.details_id +'/delete_package', params, {
+						headers: {
+							'Authorization': localStorage.getItem('token_admin')
+						},
+					}).then((res) => {
+						if(res.data.code == 200) {
+							this.getData()
+							this.order_box_cargos.splice(index, 1)
+							// this.previewVisible = false
+							this.$message.success('删除成功！')
+						}
+					}).catch((res) => {
+						console.log('error')
+					})
+				}).catch(() => {
+					this.$message.info('已取消删除')
+				})
+			},
+			handleDeleteSum(index, row) {
+				this.deleteSum = 0
+				this.label_ware_house_id = row.id
+				this.defetct = ''
+				this.delSumVisible = true
+			},
+			saveDeleteSum() {
+				if(this.defetct == '') {
+					this.$message.info('请选择是否移除不良品')
+					return
+				}
+				let label_ware_house_ids = []
+				let sum = []
+				label_ware_house_ids.push(this.label_ware_house_id)
+				sum.push(this.deleteSum)
+				let params = {
+					label_ware_house_ids: label_ware_house_ids,
+					sum: sum,
+					defetct: this.defetct
+				}
+				this.$axios.post('/admin/outbound_orders/' + this.details_id +'/fix_less_order', params,{
+					headers: {
+						'Authorization': localStorage.getItem('token_admin')
+					},
+				}).then((res) => {
+					if(res.data.code == 200) {
+						this.$message.success("处理成功!")
+						this.getData()
+						this.delSumVisible = false
+						this.detailVisible = false
+					}
+				}).catch((res) => {
+					console.log(res)
+				}).finally(() => {
+
+				})
+			},
+			handleAddSum(index, row) {
+				this.addSum = 0
+				this.label_change_id = row.id
+				this.cargo_ware_house_options = []
+				this.cargo_ware_house_id = ''
+				this.$axios.get('/admin/warehouses?fnsku=' + row.fnsku, {
+					headers: {
+						'Authorization': localStorage.getItem('token_admin')
+					},
+				}).then((res) => {
+					if(res.data.code == 200) {
+						this.cargo_ware_house_options = res.data.data
+						this.addSumVisible = true
+					}
+				}).catch((res) => {
+					console.log(res)
+				})
+			},
+			saveAddSum() {
+				if(this.cargo_ware_house_id == '') {
+					this.$message.info('请选择库位')
+					return
+				}
+				let label_change_id = []
+				let sum = []
+				let cargo_ware_house_id = []
+				label_change_id.push(this.label_change_id)
+				cargo_ware_house_id.push(this.cargo_ware_house_id)
+				sum.push(this.addSum)
+				let params = {
+					label_change_id: label_change_id,
+					sum: sum,
+					cargo_ware_house_id: cargo_ware_house_id
+				}
+				this.$axios.post('/admin/outbound_orders/' + this.details_id +'/fix_more_order', params,{
+					headers: {
+						'Authorization': localStorage.getItem('token_admin')
+					},
+				}).then((res) => {
+					if(res.data.code == 200) {
+						this.$message.success("处理成功!")
+						this.getData()
+						this.addSumVisible = false
+						this.detailVisible = false
+					}
+				}).catch((res) => {
+					console.log(res)
+				}).finally(() => {
+
+				})
+			},
+			getSummaries(param) {
+				const { columns, data } = param;
+				const sums = [];
+				columns.forEach((column, index) => {
+					if (index === 0) {
+					sums[index] = '总计';
+					return;
+					}
+					if (index === 1 || index === 4 || index === 5) {
+						const values = data.map(item => Number(item[column.property]));
+						if (!values.every(value => isNaN(value))) {
+							sums[index] = values.reduce((prev, curr) => {
+								const value = Number(curr);
+								if (!isNaN(value)) {
+									return prev + curr;
+								} else {
+									return prev;
+								}
+							}, 0);
+							if(index === 1) {
+								sums[index] += ' 立方';
+							}else if(index === 4) {
+								sums[index] += ' 个';
+							}else if(index === 5) {
+								sums[index] += ' 美元';
+							}
+							} else {
+								sums[index] = 'N/A';
+							}
+					}
+				});
+				return sums;
+			},
 			getStatusName(status) {
 				if(status == 1) {
 					return "待审核"
@@ -1439,9 +1804,9 @@
 	}
 
 	.fnsku_filter {
-        float: right;
-    }
-    .newPrice {
+		float: right;
+	}
+	.newPrice {
 		text-align: center;
 	}
 </style>

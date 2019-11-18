@@ -23,6 +23,7 @@
 				<el-table-column prop="warehouse_name" label="库位名称"></el-table-column>
 				<el-table-column prop="fnsku" label="fnsku"></el-table-column>
 				<el-table-column prop="sum" label="总数量"></el-table-column>
+				<el-table-column prop="remark" label="备注"></el-table-column>
 				<el-table-column prop="status" label="状态">
 					<template slot-scope="scope">
 						<el-tag :type="scope.row.status | statusFilter">{{getStatusName(scope.row.status)}}</el-tag>
@@ -193,7 +194,9 @@
 				}else if (status == 4) {
 					return "库存删除"
 				}else if (status == 5) {
-					return "未上架数量更新"
+					return "抹平差异"
+				}else if (status == 6) {
+					return "初始化结算数量"
 				}else {
 					return "其他"
 				}

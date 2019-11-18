@@ -8,17 +8,21 @@
 		</div>
 		<div class="container">
 			<div class="handle-box">
-				<!-- <div class="fnsku_filter">
-                    <el-input style="width:150px" placeholder="请输入店铺名" v-model.trim="search_shopname"></el-input>
-                    <el-input style="width:150px" placeholder="请输入fnsku" v-model.trim="search_fnsku"></el-input>
-                    <el-button @click="filter_product" type="primary">查询</el-button>
-                </div> -->
+				<div class="fnsku_filter">
+					状态:
+					<el-select v-model="statusSelect" placeholder="请选择" class="handle-select mr10">
+						<el-option v-for="item in statusOptions" :key="item.value" :label="item.label" :value="item.value"></el-option>
+					</el-select>
+					<el-button @click="clear_search" type="default">重置</el-button>
+					<el-button @click="filter_apply" type="primary">查询</el-button>
+				</div>
 			</div>
+			<br><br>
 			<el-table :data="data" border style="width: 100%" model="form" ref="multipleTable" @selection-change="handleSelectionChange">
 				<el-table-column type="selection" width="55"></el-table-column>
 				<el-table-column label="申请文件">
 					<template slot-scope="scope">
-						<a :href="$axios.defaults.baseURL+scope.row.url.url">查看文件</a>
+						<a :href="$axios.defaults.baseURL+scope.row.url.url">{{decodeURI(scope.row.url.url.split('/').pop())}}</a>
 					</template>
 				</el-table-column>
 				<el-table-column prop="created_at" label="创建时间" :formatter="formatter_created_at">
@@ -32,6 +36,12 @@
 						<el-tag :type="scope.row.status | statusFilter">{{getStatusName(scope.row.status)}}</el-tag>
 					</template>
 				</el-table-column>
+				<el-table-column prop="is_quick" label="是否入库即出">
+					<template slot-scope="scope">
+						<el-tag v-if="scope.row.is_quick == true" type="warning">是</el-tag>
+						<el-tag v-else-if="scope.row.is_quick == false" type="success">否</el-tag>
+					</template>
+				</el-table-column>
 				<el-table-column label="操作" width="100">
 					<template slot-scope="scope">
 						<el-dropdown>
@@ -39,6 +49,9 @@
 								操作<i class="el-icon-arrow-down el-icon--right"></i>
 							</el-button>
 							<el-dropdown-menu slot="dropdown">
+								<el-dropdown-item>
+									<el-button @click="handleEdit(scope.$index, scope.row)" type="text">编辑</el-button>
+								</el-dropdown-item>
 								<el-dropdown-item>
 									<el-button @click="detailsShow(scope.$index, scope.row)" type="text">详情</el-button>
 								</el-dropdown-item>
@@ -88,6 +101,29 @@
                 <el-button type="primary" @click="deleteRow">确 定</el-button>
             </span>
 		</el-dialog>
+
+		<el-dialog title="编辑" :visible.sync="editVisible" width="65%">
+			<el-form label-width="110px">
+				<el-form-item label="上传文件">
+					<el-upload class="upload-demo" drag action="" :file-list="fileList" :on-remove="handleRemove" :on-exceed="exceed" :auto-upload="false" :on-change="changeFile" :limit="1" multiple>
+						<i class="el-icon-upload"></i>
+						<div class="el-upload__text">将文件拖到此处，或<em>点击上传</em></div>
+						<div class="el-upload__tip" slot="tip">只能上传xls/xlsx文件</div>
+					</el-upload>
+					<a :href="$axios.defaults.baseURL +'/apply.xlsx'">模板下载</a>
+				</el-form-item>
+				<el-form-item label="是否入库即出" required>
+					<el-radio v-model="is_quick" label="1">是</el-radio>
+					<el-radio v-model="is_quick" label="0">否</el-radio>
+				</el-form-item>
+				<el-form-item label="备注">
+					<el-input v-model="remark"></el-input>
+				</el-form-item>
+				<el-form-item>
+					<el-button type="primary" @click="onSubmit" :disabled="isDisabled">修改申请</el-button>
+				</el-form-item>
+			</el-form>
+		</el-dialog>
 	</div>
 </template>
 
@@ -113,7 +149,15 @@
 				mix_list: [],
 				inputValue: '',
 				idx: -1,
-				address: [{address1: '12851 Telegraph Rd', address2: 'Santa Fe Springs', recipients: '', tel: '5177753674', city: 'Los Angeles', zip: '90670', area: 'CA'}]
+				address: [{address1: '12851 Telegraph Rd', address2: 'Santa Fe Springs', recipients: '', tel: '5177753674', city: 'Los Angeles', zip: '90670', area: 'CA'}],
+				statusSelect: '',
+				statusOptions: [{value: 1, label: '待通过'}, {value: 3, label: '已通过'}],
+				paginationShow: true,
+				editVisible: false,
+				remark: '',
+				is_quick: '',
+				isDisabled: false,
+				apply_id: ''
 			}
 		},
 		created() {
@@ -161,6 +205,23 @@
 					this.totals = res.data.count
 				})
 			},
+			filter_apply() {
+				this.paginationShow = 
+				this.$axios.get('/apply_store_ins?page=' + this.cur_page, {
+					headers: {
+						'Authorization': localStorage.getItem('token')
+					}
+				}).then((res) => {
+					this.tableData = res.data.data
+					this.totals = res.data.count
+				})
+			},
+			clear_search() {
+				this.paginationShow = false
+				this.cur_page = 1
+				this.statusSelect = ''
+				this.getData()
+			},
 			search() {
 				this.is_search = true;
 			},
@@ -174,14 +235,9 @@
 				return row.tag === value;
 			},
 			handleEdit(index, row) {
-				this.idx = index;
-				const item = this.tableData[index];
-				this.form = {
-					id: item.id,
-					sum: item.stock_sum,
-					dst_fnsku: item.dst_fnsku,
-					remark: item.remark
-				}
+				this.is_quick = row.is_quick == true ? '1' : '0'
+				this.remark = ''
+				this.apply_id = row.id
 				this.editVisible = true;
 			},
 			handleDelete(index, row) {
@@ -189,13 +245,7 @@
 				this.delVisible = true;
 			},
 			handleSendEdit(index, row) {
-				this.idx = index;
-				const item = this.tableData[index];
-				this.form = {
-					id: item.id,
-					sum: item.stock_sum,
-					remark: item.remark
-				}
+				this.is_quick = row.is_quick == true ? 1 : 0
 				this.sendVisible = true;
 			},
 			delAll() {
@@ -251,6 +301,44 @@
 					cosnole.log('error')
 				})
 			},
+			onSubmit() {
+				this.isDisabled = true
+				let formData = new FormData()
+				let config = {
+					headers: {
+						'Authorization': localStorage.getItem('token')
+					}
+				}
+				this.fileList.forEach((item) => {
+					formData.append('file', item.raw)
+				})
+				formData.append('is_quick', this.is_quick)
+				formData.append('remark', this.remark)
+				// formData.append('id', this.apply_id)
+				this.$axios.patch('/apply_store_ins/' + this.apply_id, formData, config).then((res) => {
+					if(res.data.code == 200) {
+						this.$message.success("提交成功")
+						this.fileList = []
+						this.remark = ''
+						this.getData()
+						this.editVisible = false
+						// this.$router.push('/applyinboundmanage')
+					}
+				}).catch((res) => {
+					console.log(res)
+				}).finally(() => {
+					this.isDisabled = false
+				})
+			},
+			changeFile(file) {
+				this.fileList.push(file)
+			},
+			handleRemove(a, b) {
+				this.fileList = b
+			},
+			exceed() {
+				this.$message.error("对不起，超过个数限制")
+			}
 		}
 	}
 </script>
@@ -288,5 +376,8 @@
 	
 	.newOrder {
 		text-align: center;
+	}
+	.fnsku_filter {
+		float: right;
 	}
 </style>

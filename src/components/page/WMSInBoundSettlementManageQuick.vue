@@ -39,7 +39,27 @@
 			<br><br>
 			<!--<el-table :data="data.slice((cur_page-1)*pagesize, cur_page*pagesize)" border style="width: 100%" model="form" ref="multipleTable" @selection-change="handleSelectionChange">-->
 			<el-table :data="data" border style="width: 100%" model="form" ref="multipleTable" @selection-change="handleSelectionChange">
-				<el-table-column type="selection" width="55"></el-table-column>
+				<el-table-column type="expand">
+					<template slot-scope="scope">
+						<el-table :data="scope.row.batch_store_in_infos">
+							<el-table-column prop="fnsku" label="fnsku"></el-table-column>
+							<el-table-column prop="total" label="总数量" ></el-table-column>
+							<el-table-column prop="waiting_sum" label="待入库数量" ></el-table-column>
+							<el-table-column prop="done_sum" label="已入库数量" width="120">
+							</el-table-column>
+							<el-table-column prop="done_diff_sum" label="入库差异" width="120">
+							</el-table-column>
+							<el-table-column prop="putaway_sum" label="已上架数量" width="120">
+							</el-table-column>
+							<el-table-column prop="miss_sum" label="未接收数量" width="120">
+							</el-table-column>
+							<el-table-column prop="defect_sum" label="次品数量" width="120">
+							</el-table-column>
+							<el-table-column prop="diff_sum" label="差异" width="120">
+							</el-table-column>
+						</el-table>
+					</template>
+				</el-table-column>
 				<el-table-column prop="batch_number" label="申请批次">
 					<template slot-scope="scope">
 						<span class="link-type" @click="showInbound(scope.$index, scope.row, 'complete')">{{scope.row.batch_number}}</span>
@@ -73,15 +93,15 @@
 								操作<i class="el-icon-arrow-down el-icon--right"></i>
 							</el-button>
 							<el-dropdown-menu slot="dropdown">
-								<el-dropdown-item>
+								<!-- <el-dropdown-item>
 									<el-button @click="detailsShow(scope.$index, scope.row)" type="text">详情</el-button>
-								</el-dropdown-item>
+								</el-dropdown-item> -->
 								<el-dropdown-item>
 									<el-button @click="floatingDiff(scope.row)" type="text">补全差异</el-button>
 								</el-dropdown-item>
-								<el-dropdown-item>
+								<!-- <el-dropdown-item>
 									<el-button @click="settlement(scope.row)" type="text">结算</el-button>
-								</el-dropdown-item>
+								</el-dropdown-item> -->
 								<!-- <el-dropdown-item>
 									<el-button @click="showInbound(scope.$index, scope.row)" type="text">查看入库单</el-button>
 								</el-dropdown-item>
@@ -380,7 +400,7 @@
 				const statusMap = {
 //					2: 'info',
 					1: 'warning',
-					4: 'success',
+					4: 'primary',
 					5: 'danger',
 					7: 'warning',
 					6: 'success'
@@ -422,6 +442,7 @@
 								data.defect_sum += data2.defect_sum
 								data.miss_sum += data2.miss_sum
 								data.done_diff_sum += data2.done_diff_sum
+								data2.diff_sum = data2.done_sum - data2.putaway_sum - data2.defect_sum
 							})
 							data.diff_sum = data.done_sum - data.putaway_sum - data.defect_sum
 						})
@@ -459,6 +480,7 @@
 								data.defect_sum += data2.defect_sum
 								data.miss_sum += data2.miss_sum
 								data.done_diff_sum += data2.done_diff_sum
+								data2.diff_sum = data2.done_sum - data2.putaway_sum - data2.defect_sum
 							})
 							data.diff_sum = data.done_sum - data.putaway_sum - data.defect_sum
 						})

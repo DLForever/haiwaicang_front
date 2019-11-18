@@ -37,6 +37,11 @@
 				</el-table-column> -->
 				<el-table-column prop="user_number" label="用户名">
 				</el-table-column>
+				<el-table-column prop="user_number" label="批次号">
+					<template slot-scope="scope">
+						<span>{{scope.row.batch_store_in.batch_number}}</span>
+					</template>
+				</el-table-column>
 				<el-table-column prop="total" label="数量">
 				</el-table-column>
 				<el-table-column prop="user_remark" label="用户备注" show-overflow-tooltip>

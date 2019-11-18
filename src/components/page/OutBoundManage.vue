@@ -945,6 +945,7 @@
 						this.$message.success("更新成功")
 						this.updateVisible  =false
 						this.getMessageCount()
+						this.getDatas()
 					}
 					this.updateDisabled = false
 				}).catch((res) => {
@@ -1274,7 +1275,7 @@
 				}else if (status == 11) {
 					return "等待拣货"
 				}else if (status == 12) {
-					return '已装箱'
+					return '待装箱'
 				} else {
 					return '其他'
 				}

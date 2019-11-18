@@ -27,25 +27,25 @@
 								<template slot-scope="scope">
 									<el-col :span="7">
 										<el-form-item prop="length">
-											<el-input v-model.trim="form.length" placeholder="长(英寸)"></el-input>
+											<el-input v-model.trim="form.length" placeholder="长(厘米)"></el-input>
 										</el-form-item>
 									</el-col>
 									<el-col class="line" :span="1">-</el-col>
 									<el-col :span="7">
 										<el-form-item prop="width">
-											<el-input v-model.trim="form.width" placeholder="宽(英寸)"></el-input>
+											<el-input v-model.trim="form.width" placeholder="宽(厘米)"></el-input>
 										</el-form-item>
 									</el-col>
 									<el-col class="line" :span="1">-</el-col>
 									<el-col :span="7">
 										<el-form-item prop="height">
-											<el-input v-model.trim="form.height" placeholder="高(英寸)"></el-input>
+											<el-input v-model.trim="form.height" placeholder="高(厘米)"></el-input>
 										</el-form-item>
 									</el-col>
 								</template>
 							</el-form-item>
 							<el-form-item label="重量" prop="weight">
-								<el-input v-model.trim="form.weight"></el-input>
+								<el-input v-model.trim="form.weight" placeholder="kg"></el-input>
 							</el-form-item>
 							<el-form-item label="店铺名" prop="shopname">
 								<el-input v-model.trim="form.shopname"></el-input>

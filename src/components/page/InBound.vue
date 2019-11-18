@@ -32,7 +32,7 @@
 										</td>
 										<tr v-for="(q,index2) in p['form_branch']">
 											<td>
-												<el-select v-model="q.product_id" filterable remote placeholder="选择产品" class="handle-select mr10" :loading="loading" @visible-change="selectVisble" :remote-method="remoteMethod">
+												<el-select v-model="q.product_id" filterable remote placeholder="选择产品" :loading="loading" @visible-change="selectVisble" :remote-method="remoteMethod">
 													<el-option v-for="item in options" :key="item.id" :label="item.fnsku" :value="item.id"></el-option>
 													<infinite-loading :on-infinite="onInfinite" ref="infiniteLoading"></infinite-loading>
 												</el-select>

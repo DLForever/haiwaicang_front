@@ -58,10 +58,35 @@ axios.defaults.baseURL = defaultHost
 //     }
 // 	return config
 // })
+
 axios.interceptors.response.use(
     response => {
         if (response.data.code != 200) {
             ElementUI.Message.error(response.data.message)
+        }
+        if (response.data.code == 1005) {
+            ElementUI.Message.info('服务器更新中,请稍等')
+        }
+        if (response.data.code == 1500) {
+            Vue.prototype.$alert('登陆过期，请重新登陆！', '提示', {
+                    confirmButtonText: '确定',
+                    // cancelButtonText: '取消',
+                    type: 'info'
+                }).then(() => {
+                    clearInterval(localStorage.getItem('myVal'))
+                    localStorage.removeItem('token')
+                    localStorage.removeItem('token_admin')
+                    localStorage.removeItem('notifyid')
+                    localStorage.removeItem('ms_username')
+                    router.push('/login')
+                }).catch((res) => {
+                    clearInterval(localStorage.getItem('myVal'))
+                    localStorage.removeItem('token')
+                    localStorage.removeItem('token_admin')
+                    localStorage.removeItem('notifyid')
+                    localStorage.removeItem('ms_username')
+                    router.push('/login')
+                })
         }
         return response
     },

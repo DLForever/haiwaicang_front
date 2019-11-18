@@ -21,40 +21,57 @@
 			</div>
 			<br><br>
 			<el-table :data="data" border style="width: 100%" ref="multipleTable" @selection-change="handleSelectionChange">
-				<el-table-column type="selection" width="55"></el-table-column>
-				<!-- <el-table-column prop="logistics_number" label="追踪编码" width="150">
-				</el-table-column> -->
-				<el-table-column prop="batch_number" label="批次">
+				<el-table-column type="expand">
+					<template slot-scope="scope">
+						<el-table :data="scope.row.batch_store_in_infos">
+							<el-table-column prop="fnsku" label="fnsku"></el-table-column>
+							<el-table-column prop="total" label="总数量" ></el-table-column>
+							<el-table-column prop="waiting_sum" label="待入库数量" ></el-table-column>
+							<el-table-column prop="done_sum" label="已入库数量" width="110">
+							</el-table-column>
+							<el-table-column prop="done_diff_sum" label="入库差异" width="110">
+							</el-table-column>
+							<el-table-column prop="putaway_sum" label="已上架数量" width="110">
+							</el-table-column>
+							<el-table-column prop="miss_sum" label="未接收数量" width="110">
+							</el-table-column>
+							<el-table-column prop="defect_sum" label="次品数量" width="110">
+							</el-table-column>
+							<el-table-column prop="diff_sum" label="差异" width="110">
+							</el-table-column>
+						</el-table>
+					</template>
+				</el-table-column>
+				<el-table-column prop="batch_number" label="申请批次">
 					<template slot-scope="scope">
 						<span class="link-type" @click="showInbound(scope.$index, scope.row, 'incomplete')">{{scope.row.batch_number}}</span>
 					</template>
 				</el-table-column>
-				<el-table-column prop="status" label="状态" width="120">
+				<el-table-column prop="total" label="批次总数量" width="120">
+				</el-table-column>
+				<el-table-column prop="waiting_sum" label="待入库数量" width="120">
+				</el-table-column>
+				<el-table-column prop="done_sum" label="已入库数量" width="120">
+				</el-table-column>
+				<el-table-column prop="done_diff_sum" label="入库差异" width="120">
+				</el-table-column>
+				<el-table-column prop="putaway_sum" label="已上架数量" width="120">
+				</el-table-column>
+				<el-table-column prop="miss_sum" label="未接收数量" width="120">
+				</el-table-column>
+				<el-table-column prop="defect_sum" label="次品数量" width="120">
+				</el-table-column>
+				<el-table-column prop="diff_sum" label="差异" width="120">
+				</el-table-column>
+				<el-table-column prop="status" label="状态">
 					<template slot-scope="scope">
 						<el-tag :type="scope.row.status | statusFilter">{{getStatusName(scope.row.status)}}</el-tag>
 					</template>
 				</el-table-column>
-				<el-table-column prop="created_at" label="创建时间" :formatter="formatter_created_at">
+				<el-table-column prop="created_at" :formatter="formatter_created_at" label="创建时间" width="140">
 				</el-table-column>
-				<el-table-column prop="updated_at" label="更新时间" :formatter="formatter_updated_at">
+				<el-table-column prop="updated_at" :formatter="formatter_updated_at" label="更新时间" width="140">
 				</el-table-column>
-				<!-- <el-table-column prop="order_number" label="订单编码" width="100">
-				</el-table-column>
-				<el-table-column prop="total_plan_sum" label="计划数量" width="120">
-				</el-table-column>
-				<el-table-column prop="total_arrive_sum" label="接收数量" width="120">
-				</el-table-column>
-				<el-table-column prop="created_at" label="创建时间" :formatter="formatter_created_at" width="150">
-				</el-table-column>
-				<el-table-column prop="updated_at" label="更新时间" :formatter="formatter_updated_at" width="150">
-				</el-table-column>				
-				<el-table-column prop="user_remark" label="用户备注" show-overflow-tooltip>
-				</el-table-column>
-				<el-table-column prop="manager_remark" label="仓库备注" show-overflow-tooltip>
-				</el-table-column>
-				<el-table-column prop="remove_remark" label="用户删除备注" show-overflow-tooltip>
-				</el-table-column> -->
-				
 				<!-- <el-table-column label="操作" width="100">
 					<template slot-scope="scope">
 						<el-dropdown>
@@ -197,6 +214,26 @@
 					},
 				}).then((res) => {
 					if(res.data.code == 200) {
+						res.data.data.forEach((data) => {
+							data.total = 0
+							data.waiting_sum = 0
+							data.done_sum = 0
+							data.putaway_sum = 0
+							data.defect_sum = 0
+							data.miss_sum = 0
+							data.done_diff_sum = 0
+							data.batch_store_in_infos.forEach((data2) => {
+								data.total += data2.total
+								data.waiting_sum += data2.waiting_sum
+								data.done_sum += data2.done_sum
+								data.putaway_sum += data2.putaway_sum
+								data.defect_sum += data2.defect_sum
+								data.miss_sum += data2.miss_sum
+								data.done_diff_sum += data2.done_diff_sum
+								data2.diff_sum = data2.done_sum - data2.putaway_sum - data2.defect_sum
+							})
+							data.diff_sum = data.done_sum - data.putaway_sum - data.defect_sum
+						})
 						this.tableData = res.data.data;
 						this.totals = res.data.count
 						this.paginationShow = true
@@ -234,6 +271,26 @@
 					},
 				}).then((res) => {
 					if(res.data.code == 200) {
+						res.data.data.forEach((data) => {
+							data.total = 0
+							data.waiting_sum = 0
+							data.done_sum = 0
+							data.putaway_sum = 0
+							data.defect_sum = 0
+							data.miss_sum = 0
+							data.done_diff_sum = 0
+							data.batch_store_in_infos.forEach((data2) => {
+								data.total += data2.total
+								data.waiting_sum += data2.waiting_sum
+								data.done_sum += data2.done_sum
+								data.putaway_sum += data2.putaway_sum
+								data.defect_sum += data2.defect_sum
+								data.miss_sum += data2.miss_sum
+								data.done_diff_sum += data2.done_diff_sum
+								data2.diff_sum = data2.done_sum - data2.putaway_sum - data2.defect_sum
+							})
+							data.diff_sum = data.done_sum - data.putaway_sum - data.defect_sum
+						})
 						this.tableData = res.data.data;
 						this.totals = res.data.count
 						this.paginationShow = true

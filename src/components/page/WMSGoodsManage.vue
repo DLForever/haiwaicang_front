@@ -76,7 +76,7 @@
 				</el-table-column>
 			</el-table>
 			<div class="pagination">
-				<el-pagination v-if="paginationShow" @current-change="handleCurrentChange" :current-page='cur_page' :page-size="5" layout="prev, pager, next" :total="totals">
+				<el-pagination v-if="paginationShow" @current-change="handleCurrentChange" :current-page='cur_page' :page-size="20" layout="prev, pager, next" :total="totals">
 				</el-pagination>
 			</div>
 		</div>
@@ -169,12 +169,12 @@
 		<!-- 未上架提示框 -->
         <el-dialog title="编辑" :visible.sync="editSumVisible" width="50%">
         	<el-form ref="form" label-width="100px">
+        		<el-form-item label="批次号" required>
+        			<el-input v-model.trim="batch_number_ground"></el-input>
+        		</el-form-item>
         		<el-form-item label="未上架数量" required>
         			<el-input-number :min="0" v-model="noGroundSum"></el-input-number>
         		</el-form-item>
-<!--         		<el-form-item label="备注" required>
-        			<el-input v-model.trim="remark"></el-input>
-        		</el-form-item> -->
         	</el-form>
         	<span slot="footer" class="dialog-footer">
                 <el-button @click="editSumVisible = false">取 消</el-button>
@@ -315,7 +315,8 @@
 				label_changes_source: [],
 				product_store_ins_source: [],
 				transfer_records_source: [],
-				batch_number: ''
+				batch_number: '',
+				batch_number_ground: ''
 			}
 		},
 		created() {
@@ -743,13 +744,15 @@
 			},
 			handleEdit(index, row) {
 				this.form.id = row.id
-				this.noGroundSum = row.arrive_sum
+				this.noGroundSum = 0
+				this.batch_number_ground = ''
 				this.editSumVisible = true
 			},
 			onSubmitSum() {
 				this.submitDisable = true
 				let params = {
 					arrive_sum: this.noGroundSum,
+					batch_number: this.batch_number_ground
 				}
 				this.$axios.post('/admin/cargos/' + this.form.id + '/set_arrive_sum', params, {
 					headers: {

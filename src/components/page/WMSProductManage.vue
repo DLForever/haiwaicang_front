@@ -308,19 +308,20 @@
                 return this.tableData.filter((d) => {
 //              	let totals = tableData.length
                     let is_del = false;
+                    return d
 //                  for (let i = 0; i < this.del_list.length; i++) {
 //                      if (d.name === this.del_list[i].name) {
 //                          is_del = true;
 //                          break;
 //                      }
 //                  }
-                    if (!is_del) {
-                        if ((d.name.indexOf(this.select_word) > -1 ||
-                                d.fnsku.indexOf(this.select_word) > -1)
-                        ) {
-                            return d;
-                        }
-                    }
+                    // if (!is_del) {
+                    //     if ((d.name.indexOf(this.select_word) > -1 ||
+                    //             d.fnsku.indexOf(this.select_word) > -1)
+                    //     ) {
+                    //         return d;
+                    //     }
+                    // }
                 })
             }
         },
@@ -380,6 +381,7 @@
                 this.select_cate = ''
                 this.search_fnsku = ''
                 this.search_shopname = ''
+                this.search_erp_number = ''
                 this.getData()
             },
             formatter_created_at(row, column) {

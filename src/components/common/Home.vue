@@ -56,6 +56,7 @@
             getMessageTimer() {
                 this.getMessageCount()
                 this.myVal = setInterval(this.getMessageCount, 1000*30)
+                localStorage.setItem('myVal', this.myVal)
             },
             clearInte() {
                 console.log('myval:')

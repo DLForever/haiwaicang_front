@@ -88,6 +88,10 @@
         		<el-form-item label="计算仓储费的价格" required>
         			<el-input-number v-model="store_fee" :min="0" :step="2"></el-input-number>
         		</el-form-item>
+        		<el-form-item label="是否按箱收费" required>
+					<el-radio v-model="by_box" label="1">是</el-radio>
+					<el-radio v-model="by_box" label="0">否</el-radio>
+        		</el-form-item>
         	</el-form>
         	<span slot="footer" class="dialog-footer">
                 <el-button @click="chargeStandardsVisible = false">取 消</el-button>
@@ -135,7 +139,8 @@
 				store_fee: 0,
 				chargeStandardsVisible: false,
 				user_id: '',
-				charge_id: ''
+				charge_id: '',
+				by_box: ''
 			}
 		},
 		created() {
@@ -267,6 +272,7 @@
 						this.day = dataList.day
 						this.cube = dataList.cube
 						this.store_fee = dataList.store_fee
+						this.by_box = dataList.by_box == true ? '1' : '0'
 						this.chargeStandardsVisible = true
 					}else {
 						this.charge_id = ''
@@ -277,12 +283,18 @@
 						this.day = 0
 						this.cube = 0
 						this.store_fee = 0
+						// this.by_box = dataList.by_box == true ? '1' : '0'
 						this.chargeStandardsVisible = true
 					}
 				}).catch((res) => {
+					console.log(res)
 				})
 			},
 			onSubmitChargeStandards() {
+				if(this.by_box == '') {
+					this.$message.info('请选择是否按箱收费')
+					return
+				}
 				let params = {
 					id: this.charge_id,
 					user_id: this.user_id,
@@ -293,6 +305,7 @@
 					day: this.day,
 					cube: this.cube,
 					store_fee: this.store_fee,
+					by_box: this.by_box
 				}
 				this.$axios.post('/admin/charge_standards', params, {
 					headers: {

@@ -22,13 +22,18 @@
                     <el-button @click="filter_inbound" type="primary">查询</el-button>
                 </div>
 			</div>
-				
+			<br><br>
 			<el-table :data="data" border style="width: 100%" ref="multipleTable" @selection-change="handleSelectionChange">
 				<el-table-column type="selection" width="55"></el-table-column>
 				<!--<el-table-column prop="created_at" label="创建时间" :formatter="formatter_created_at" width="150">
 				</el-table-column>
 				<el-table-column prop="updated_at" label="更新时间" :formatter="formatter_updated_at" width="150">
 				</el-table-column>				-->
+				<el-table-column prop="user_number" label="批次号">
+					<template slot-scope="scope">
+						<span>{{scope.row.batch_store_in.batch_number}}</span>
+					</template>
+				</el-table-column>
 				<el-table-column prop="barcode" label="出库单单号">
 				</el-table-column>
 				<el-table-column prop="total" label="数量">
@@ -62,9 +67,9 @@
 								<el-dropdown-item>
 									<el-button @click="detailsShow(scope.$index, scope.row)" type="text">&nbsp&nbsp&nbsp详情&nbsp</el-button>
 								</el-dropdown-item>
-								<el-dropdown-item>
+								<!-- <el-dropdown-item>
 									<el-button @click="updateOutbound(scope.$index, scope.row)" type="text">&nbsp&nbsp&nbsp更新&nbsp</el-button>
-								</el-dropdown-item>
+								</el-dropdown-item> -->
 								<el-dropdown-item>
 									<el-button size="small" @click="handleEdit(scope.$index, scope.row)" type="text">&nbsp外箱标</el-button>
 								</el-dropdown-item>
@@ -976,36 +981,39 @@
 						'Authorization': localStorage.getItem('token')
 					},
 				}).then((res) => {
-					res.data.data.label_changes.forEach((data, index) => {
-						console.log(this.options.find((option) => option.id == data.cargo_id))
-						if(!(this.options.find((option) => option.id == data.cargo_id))){
-							this.options.push({fnsku:data.fnsku,id:data.cargo_id})
-						}
-						this.updateLength = res.data.data.label_changes.length
-						this.updateform.push(this.updateform2)
-						this.updateform[index].id = data.id
-						this.updateform[index].product_id = data.cargo_id
-						this.updateform[index].new_fnsku = data.dst_fnsku
-						this.updateform[index].plan_sum = data.sum
-						this.updateform[index].sku = data.sku
-						if(data.pictures[0] != undefined) {
-							this.updateform[index].picturefileList = data.pictures[0].url.url
-						}
-						this.updateform2 = {
-							// id: '',
-							product_id: '',
-							new_fnsku: '',
-							sku: '',
-							plan_sum: '',
-							picturefileList: '',
-							infiniteLoading: []
-						}
-					})
-					this.remark = res.data.data.user_remark
-					this.updateRadio = String(res.data.data.is_mix)
-					this.updateVisible = true
+					if(res.data.code == 200) {
+						res.data.data.label_changes.forEach((data, index) => {
+							console.log(this.options.find((option) => option.id == data.cargo_id))
+							if(!(this.options.find((option) => option.id == data.cargo_id))){
+								this.options.push({fnsku:data.fnsku,id:data.cargo_id})
+							}
+							this.updateLength = res.data.data.label_changes.length
+							this.updateform.push(this.updateform2)
+							this.updateform[index].id = data.id
+							this.updateform[index].product_id = data.cargo_id
+							this.updateform[index].new_fnsku = data.dst_fnsku
+							this.updateform[index].plan_sum = data.sum
+							this.updateform[index].sku = data.sku
+							if(data.pictures[0] != undefined) {
+								this.updateform[index].picturefileList = data.pictures[0].url.url
+							}
+							this.updateform2 = {
+								// id: '',
+								product_id: '',
+								new_fnsku: '',
+								sku: '',
+								plan_sum: '',
+								picturefileList: '',
+								infiniteLoading: []
+							}
+						})
+						this.remark = res.data.data.user_remark
+						this.updateRadio = String(res.data.data.is_mix)
+						this.updateVisible = true
+					}
+				}).catch((res) => {
+
 				})
-				
 			},
 			updateAdd() {
 				this.updateform.push(this.updateform2)
@@ -1267,7 +1275,7 @@
 				}else if (status == 11) {
 					return "等待拣货"
 				}else if (status == 12) {
-					return '已装箱'
+					return '待装箱'
 				} else {
 					return '其他'
 				}

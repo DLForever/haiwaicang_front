@@ -30,6 +30,11 @@
 				</el-table-column>
 				<el-table-column prop="updated_at" label="更新时间" :formatter="formatter_updated_at" width="150">
 				</el-table-column>				-->
+				<el-table-column prop="user_number" label="批次号">
+					<template slot-scope="scope">
+						<span>{{scope.row.batch_store_in.batch_number}}</span>
+					</template>
+				</el-table-column>
 				<el-table-column prop="barcode" label="出库单单号">
 				</el-table-column>
 				<el-table-column prop="total" label="数量">
@@ -216,13 +221,15 @@
 					</el-table-column> -->
 					<el-table-column prop="total" label="原fnsku" width="260">
 						<template slot-scope="scope">
-							<el-select v-model="scope.row.product_id" filterable remote placeholder="选择产品" class="handle-select mr10" :loading="loading" @visible-change="selectVisble" :remote-method="remoteMethod">
+							<el-select v-model="scope.row.fnsku" filterable placeholder="选择产品">
+								<el-option v-for="item in fnsku_options" :key="item" :label="item" :value="item" ></el-option>
+							</el-select>
+							<!-- <el-select v-model="scope.row.product_id" filterable remote placeholder="选择产品" class="handle-select mr10" :loading="loading" @visible-change="selectVisble" :remote-method="remoteMethod">
 								<el-option v-for="item in options" :key="item.id" :label="item.fnsku" :value="item.id" ></el-option>
 								<span v-for="(q, index6) in form" v-if="index6===0">
 									<infinite-loading :on-infinite="onInfinite_product" ref="infiniteLoading"></infinite-loading>
 								</span>
-								<!-- <infinite-loading :on-infinite="onInfinite_product" ref="infiniteLoading"></infinite-loading> -->
-							</el-select>
+							</el-select> -->
 						</template>
 					</el-table-column>
 					<el-table-column prop="new_fnsku" label="新的fnsku">
@@ -540,6 +547,7 @@
 				infiniteLoading: [],
 				statusOptions: [{value: 1, label: '待自审'}, {value: 11, label: '待拣货'}, {value: 2, label: '拣货中'}, {value: 3, label: '待换标'}, {value: 12, label: '已装箱'}, {value: 4, label: '待结算'}, {value: 5, label: '待贴箱标'}, {value: 6, label: '已提供箱标'}, {value: 8, label: '待删除'}, {value: 10, label: '已完成'}],
 				statusSelect: '',
+				fnsku_options: []
 			}
 		},
 		props:{
@@ -917,7 +925,7 @@
 					if(data['picturefileList'] == '') {
 						noPic = 1
 					}
-					formData.append('label_changes[][cargo_id]',data['product_id'])
+					formData.append('label_changes[][fnsku]',data['fnsku'])
 					formData.append('label_changes[][dst_fnsku]',data['new_fnsku'])
 					formData.append('label_changes[][sum]',data['plan_sum'])
 					formData.append('label_changes[][sku]',data['sku'])
@@ -945,6 +953,7 @@
 						this.$message.success("更新成功")
 						this.updateVisible  =false
 						this.getMessageCount()
+						this.getDatas()
 					}
 					this.updateDisabled = false
 				}).catch((res) => {
@@ -976,6 +985,21 @@
 				this.editVisible = true;
 			},
 			updateOutbound(index, row) {
+				this.fnsku_options = []
+				this.$axios.get('/batch_store_ins?batch_number=' + row.batch_store_in.batch_number, {
+					headers: {
+						'Authorization': localStorage.getItem('token')
+					}
+				}).then((res) => {
+					if(res.data.code == 200) {
+						res.data.data[0].batch_store_in_infos.forEach((data) => {
+						this.fnsku_options.push(data.fnsku)
+					})
+					}
+				}).catch((res) => {
+					console.log(res)
+				})
+
 				this.update_id = row.id
 				this.$axios.get('/outbound_orders/' + row.id, {
 					headers: {
@@ -990,7 +1014,7 @@
 						this.updateLength = res.data.data.label_changes.length
 						this.updateform.push(this.updateform2)
 						this.updateform[index].id = data.id
-						this.updateform[index].product_id = data.cargo_id
+						this.updateform[index].fnsku = data.fnsku
 						this.updateform[index].new_fnsku = data.dst_fnsku
 						this.updateform[index].plan_sum = data.sum
 						this.updateform[index].sku = data.sku

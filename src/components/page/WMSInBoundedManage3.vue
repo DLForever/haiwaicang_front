@@ -21,6 +21,8 @@
 						<el-option v-for="item in batchoptions" :key="item.id" :label="item.batch_number" :value="item.id"></el-option>
 						<infinite-loading :on-infinite="onInfinite_batch" ref="infiniteLoading2"></infinite-loading>
 					</el-select> -->
+					批次号:
+					<el-input style="width:150px" placeholder="请输入批次号" v-model.trim="search_batch_number"></el-input>
 					Fnsku:
 					<el-input style="width:150px" placeholder="请输入Fnsku" v-model.trim="search_fnsku"></el-input>
 					追踪编码:
@@ -223,6 +225,7 @@
 				statusSelect: '',
 				search_logistics_number: '',
 				code: ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z"],
+				search_batch_number: ''
 			}
 		},
 		created() {
@@ -284,7 +287,7 @@
 				} else {
 					this.statusOptions = this.statusOptions2
 				}
-				this.$axios.get('/admin/store_ins?page=' + this.cur_page + '&is_quick=false&s_status=3' + '&user_id=' + this.select_cate + '&fnsku=' + this.search_fnsku + '&status=' + this.statusSelect + '&logistics_number=' + this.search_logistics_number, {
+				this.$axios.get('/admin/store_ins?page=' + this.cur_page + '&is_quick=false&s_status=3' + '&user_id=' + this.select_cate + '&fnsku=' + this.search_fnsku + '&status=' + this.statusSelect + '&logistics_number=' + this.search_logistics_number + '&batch_number=' + this.search_batch_number, {
 					headers: {
 						'Authorization': localStorage.getItem('token_admin')
 					},
@@ -300,7 +303,7 @@
 			filter_inbound() {
 				this.paginationShow = false
 				this.cur_page = 1
-				this.$axios.get('/admin/store_ins?page=' + this.cur_page + '&is_quick=false&s_status=3' + '&user_id=' + this.select_cate + '&fnsku=' + this.search_fnsku + '&status=' + this.statusSelect + '&logistics_number=' + this.search_logistics_number, {
+				this.$axios.get('/admin/store_ins?page=' + this.cur_page + '&is_quick=false&s_status=3' + '&user_id=' + this.select_cate + '&fnsku=' + this.search_fnsku + '&status=' + this.statusSelect + '&logistics_number=' + this.search_logistics_number + '&batch_number=' + this.search_batch_number, {
 					headers: {
 						'Authorization': localStorage.getItem('token_admin')
 					},
@@ -323,6 +326,7 @@
 				this.search_fnsku = ''
 				this.statusSelect = ''
 				this.search_logistics_number = ''
+				this.search_batch_number = ''
 				this.getData()
 			},
 			allUser() {	

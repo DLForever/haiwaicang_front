@@ -686,6 +686,8 @@
 					return "已结算"
 				}else if (status == 7) {
 					return "等待入库"
+				}else if (status == 8) {
+					return "未接收"
 				} else {
 					return "其他"
 				}

@@ -8,24 +8,26 @@
 		</div>
 		<div class="container">
 			<div class="handle-box">
-				<!--<el-button type="primary" icon="delete" class="handle-del mr10" @click="delAll">批量删除</el-button>-->
-				<el-select v-model="select_cate" filterable remote placeholder="选择用户" :loading="loading" class="handle-select mr10" @visible-change="selectVisble" @change="getUserDatasFirst" :remote-method="remoteMethod">
-					<el-option v-for="item in options" :key="item.id" :label="item.usercode" :value="item.id"></el-option>
-					<infinite-loading :on-infinite="onInfinite" ref="infiniteLoading"></infinite-loading>
-				</el-select>
-				
-				<!--<el-select v-model="select_cate" filterable placeholder="选择用户" class="handle-select mr10" @change="getUserDatasFirst">
-					<el-option v-for="item in options" :key="item.id" :label="item.name" :value="item.id"></el-option>
-					<infinite-loading :on-infinite="onInfinite" ref="infiniteLoading"></infinite-loading>
-				</el-select>-->
-				<!--<el-button type="primary" icon="search" @click="allUser">所有用户</el-button>-->
+				<div class="fnsku_filter">
+					用户:
+					<el-select v-model="select_cate" filterable remote placeholder="选择用户" :loading="loading" class="handle-select mr10" @visible-change="selectVisble" @change="getUserDatasFirst" :remote-method="remoteMethod">
+						<el-option v-for="item in options" :key="item.id" :label="item.usercode" :value="item.id"></el-option>
+						<infinite-loading :on-infinite="onInfinite" ref="infiniteLoading"></infinite-loading>
+					</el-select>
+					状态:
+					<el-select v-model="statusSelect" placeholder="请选择" class="handle-select mr10">
+						<el-option v-for="item in statusOptions" :key="item.value" :label="item.label" :value="item.value"></el-option>
+					</el-select>
+					<el-button @click="clear_search" type="default">重置</el-button>
+					<el-button @click="filter_apply" type="primary">查询</el-button>
+				</div>
 			</div>
-			<!--<el-table :data="data.slice((cur_page-1)*pagesize, cur_page*pagesize)" border style="width: 100%" model="form" ref="multipleTable" @selection-change="handleSelectionChange">-->
+			<br><br>
 			<el-table :data="data" border style="width: 100%" model="form" ref="multipleTable" @selection-change="handleSelectionChange">
 				<el-table-column type="selection" width="55"></el-table-column>
 				<el-table-column label="文件">
 					<template slot-scope="scope">
-						<a :href="$axios.defaults.baseURL+scope.row.url.url">查看文件</a>
+						<a :href="$axios.defaults.baseURL+scope.row.url.url">{{decodeURI(scope.row.url.url.split('/').pop())}}</a>
 					</template>
 				</el-table-column>
 				<el-table-column prop="created_at" :formatter="formatter_created_at" label="创建时间">
@@ -37,6 +39,12 @@
 				<el-table-column prop="status" label="状态">
 					<template slot-scope="scope">
 						<el-tag :type="scope.row.status | statusFilter">{{getStatusName(scope.row.status)}}</el-tag>
+					</template>
+				</el-table-column>
+				<el-table-column prop="is_quick" label="是否入库即出">
+					<template slot-scope="scope">
+						<el-tag v-if="scope.row.is_quick == true" type="warning">是</el-tag>
+						<el-tag v-else-if="scope.row.is_quick == false" type="success">否</el-tag>
 					</template>
 				</el-table-column>
 				<el-table-column label="操作" width="100">
@@ -69,13 +77,13 @@
 		
 		<!-- 创建批次弹出框 -->
 		<el-dialog title="创建批次" :visible.sync="editVisible" width="30%">
-			<!-- <span>确定创建批次吗？</span> -->
-			<el-form label-width="115px">
+			<span>确定创建批次吗？</span>
+			<!-- <el-form label-width="115px">
 				<el-form-item label="是否入库即出" required>
 					<el-radio v-model="is_quick" label="true" border>是</el-radio>
 					<el-radio v-model="is_quick" label="false" border>否</el-radio>
 				</el-form-item>
-			</el-form>
+			</el-form> -->
 			<span slot="footer" class="dialog-footer">
                 <el-button @click="editVisible = false">取 消</el-button>
                 <el-button type="danger" @click="refuseEdit('form')">拒 绝</el-button>
@@ -163,7 +171,9 @@
 				inputVisible: true,
 				inputValue: '',
 				code: ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z"],
-				is_quick: undefined
+				is_quick: undefined,
+				statusSelect: '',
+				statusOptions: [{value: 1, label: '待通过'}, {value: 3, label: '已通过'}],
 			}
 		},
 		created() {
@@ -203,11 +213,11 @@
 					this.getData();
 				} else {
 					this.getUserDatas()
-				}				
+				}
 			},
 			
-			getData() {			
-				this.$axios.get('/admin/apply_store_ins?page=' + this.cur_page + '&user_id=' + this.select_cate, {
+			getData() {
+				this.$axios.get('/admin/apply_store_ins?page=' + this.cur_page + '&user_id=' + this.select_cate +'&status=' + this.statusSelect, {
 					headers: {
 						'Authorization': localStorage.getItem('token_admin')
 					},
@@ -220,6 +230,30 @@
 				}).catch((res) => {
 					console.log('error')
 				})
+			},
+			filter_apply() {
+				this.paginationShow = false
+				this.cur_page = 1
+				this.$axios.get('/admin/apply_store_ins?page=' + this.cur_page + '&user_id=' + this.select_cate +'&status=' + this.statusSelect, {
+					headers: {
+						'Authorization': localStorage.getItem('token_admin')
+					},
+				}).then((res) => {
+					if(res.data.code == 200) {
+						this.tableData = res.data.data;
+						this.totals = res.data.count
+						this.paginationShow = true
+					}
+				}).catch((res) => {
+					console.log('error')
+				})
+			},
+			clear_search() {
+				this.paginationShow = false
+				this.cur_page = 1
+				this.select_cate = ''
+				this.statusSelect = ''
+				this.getData()
 			},
 			allUser() {	
 				this.paginationShow = false
@@ -248,8 +282,8 @@
 			selectVisble(visible) {
 				if(visible){
 					this.query = undefined
-				  	this.remoteMethod("")
-				}  
+					this.remoteMethod("")
+				}
 			},
 			remoteMethod(query,callback=undefined) {
 				if(query != "" || this.query != "" || callback){
@@ -402,10 +436,6 @@
 				// setTimeout(() => {
 				// 	this.isDisabled = false
 				// }, 3000)
-				if(this.is_quick == undefined) {
-					this.$message.error("请选择是否入库即出")
-					return
-				}
 				let apply_store_in_id = this.form.apply_store_in_id
 				let user_id = this.form.user_id
 				if(!this.isDisabled) {
@@ -416,7 +446,6 @@
 					this.$axios.post('/admin/batch_store_ins', {
 						apply_store_in_id: apply_store_in_id,
 						user_id: user_id,
-						is_quick: this.is_quick
 					}, {
 						headers: {
 							'Authorization': localStorage.getItem('token_admin')
@@ -542,5 +571,8 @@
 		width: 90px;
 		margin-left: 10px;
 		vertical-align: bottom;
+	}
+	.fnsku_filter {
+		float: right;
 	}
 </style>

@@ -39,27 +39,48 @@
 			<br><br>
 			<!--<el-table :data="data.slice((cur_page-1)*pagesize, cur_page*pagesize)" border style="width: 100%" model="form" ref="multipleTable" @selection-change="handleSelectionChange">-->
 			<el-table :data="data" border style="width: 100%" model="form" ref="multipleTable" @selection-change="handleSelectionChange">
-				<el-table-column type="selection" width="55"></el-table-column>
+				<!-- <el-table-column type="selection" width="55"></el-table-column> -->
+				<el-table-column type="expand">
+					<template slot-scope="scope">
+						<el-table :data="scope.row.batch_store_in_infos">
+							<el-table-column prop="fnsku" label="fnsku"></el-table-column>
+							<el-table-column prop="total" label="总数量" ></el-table-column>
+							<el-table-column prop="waiting_sum" label="待入库数量" ></el-table-column>
+							<el-table-column prop="done_sum" label="已入库数量" width="120">
+							</el-table-column>
+							<el-table-column prop="done_diff_sum" label="入库差异" width="120">
+							</el-table-column>
+							<el-table-column prop="putaway_sum" label="已上架数量" width="120">
+							</el-table-column>
+							<el-table-column prop="miss_sum" label="未接收数量" width="120">
+							</el-table-column>
+							<el-table-column prop="defect_sum" label="次品数量" width="120">
+							</el-table-column>
+							<el-table-column prop="diff_sum" label="差异" width="120">
+							</el-table-column>
+						</el-table>
+					</template>
+				</el-table-column>
 				<el-table-column prop="batch_number" label="申请批次">
 					<template slot-scope="scope">
 						<span class="link-type" @click="showInbound(scope.$index, scope.row, 'complete')">{{scope.row.batch_number}}</span>
 					</template>
 				</el-table-column>
-				<el-table-column prop="total" label="批次总数量" width="120">
+				<el-table-column prop="total" label="批次总数量" width="110">
 				</el-table-column>
-				<el-table-column prop="waiting_sum" label="待入库数量" width="120">
+				<el-table-column prop="waiting_sum" label="待入库数量" width="110">
 				</el-table-column>
-				<el-table-column prop="done_sum" label="已入库数量" width="120">
+				<el-table-column prop="done_sum" label="已入库数量" width="110">
 				</el-table-column>
-				<el-table-column prop="done_diff_sum" label="入库差异" width="120">
+				<el-table-column prop="done_diff_sum" label="入库差异" width="110">
 				</el-table-column>
-				<el-table-column prop="putaway_sum" label="已上架数量" width="120">
+				<el-table-column prop="putaway_sum" label="已上架数量" width="110">
 				</el-table-column>
-				<el-table-column prop="miss_sum" label="未接收数量" width="120">
+				<el-table-column prop="miss_sum" label="未接收数量" width="110">
 				</el-table-column>
-				<el-table-column prop="defect_sum" label="次品数量" width="120">
+				<el-table-column prop="defect_sum" label="次品数量" width="110">
 				</el-table-column>
-				<el-table-column prop="diff_sum" label="差异" width="120">
+				<el-table-column prop="diff_sum" label="差异" width="110">
 				</el-table-column>
 				<el-table-column prop="status" label="状态">
 					<template slot-scope="scope">
@@ -79,14 +100,14 @@
 								操作<i class="el-icon-arrow-down el-icon--right"></i>
 							</el-button>
 							<el-dropdown-menu slot="dropdown">
-								<el-dropdown-item>
+								<!-- <el-dropdown-item>
 									<el-button @click="detailsShow(scope.$index, scope.row)" type="text">详情</el-button>
-								</el-dropdown-item>
+								</el-dropdown-item> -->
 								<el-dropdown-item>
 									<el-button @click="floatingDiff(scope.row)" type="text">补全差异</el-button>
 								</el-dropdown-item>
 								<el-dropdown-item>
-									<el-button @click="settlement(scope.row)" type="text">结算</el-button>
+									<el-button @click="settlement(scope.row)" type="text">&nbsp&nbsp结算</el-button>
 								</el-dropdown-item>
 								<!-- <el-dropdown-item>
 									<el-button @click="showInbound(scope.$index, scope.row)" type="text">查看入库单</el-button>
@@ -227,8 +248,14 @@
 					<el-button @click="back" :disabled="isDisableBu" type="danger">撤销</el-button>
 				</div>
 				<br>
+				<el-form-item label="汇率">
+					<el-input-number :min="0" :precision="5" :step="0.01" v-model="exchange_rate"></el-input-number>
+				</el-form-item>
+				<el-form-item label="折扣">
+					<el-input-number :min="0" :max="1" :precision="5" :step="0.01" v-model="discount"></el-input-number>
+				</el-form-item>
 				<el-form-item label="备注">
-					<el-input v-model="form.remark"></el-input>
+					<el-input v-model="remark"></el-input>
 				</el-form-item>
 			</el-form>
 			<span slot="footer" class="dialog-footer">
@@ -345,7 +372,10 @@
 				previewVisible: false,
 				preview_details: [],
 				preview_details_store_ins: [],
-				store_ins_details: []
+				store_ins_details: [],
+				exchange_rate: 7,
+				discount: 1,
+				remark: ''
 			}
 		},
 		created() {
@@ -386,7 +416,7 @@
 				const statusMap = {
 //					2: 'info',
 					1: 'warning',
-					4: 'success',
+					4: 'primary',
 					5: 'danger',
 					7: 'warning',
 					6: 'success'
@@ -428,6 +458,7 @@
 								data.defect_sum += data2.defect_sum
 								data.miss_sum += data2.miss_sum
 								data.done_diff_sum += data2.done_diff_sum
+								data2.diff_sum = data2.done_sum - data2.putaway_sum - data2.defect_sum
 							})
 							data.diff_sum = data.done_sum - data.putaway_sum - data.defect_sum
 						})
@@ -465,6 +496,7 @@
 								data.defect_sum += data2.defect_sum
 								data.miss_sum += data2.miss_sum
 								data.done_diff_sum += data2.done_diff_sum
+								data2.diff_sum = data2.done_sum - data2.putaway_sum - data2.defect_sum
 							})
 							data.diff_sum = data.done_sum - data.putaway_sum - data.defect_sum
 						})
@@ -932,7 +964,7 @@
 						},
 					}).then((res) => {
 						if(res.data.code == 200) {
-							this.getData()
+							this.getBatchData()
 							this.$message.success('处理成功！')
 						}
 					}).catch((res) => {
@@ -966,6 +998,8 @@
 				})
 			},
 			settlement_turn(row) {
+				this.exchange_rate = 7
+				this.discount = 1
 				this.remark = ''
 				this.batch_id = row.id
 				this.pricetable = [{
@@ -996,10 +1030,22 @@
 				this.pricetable.pop(this.pricetabletemp)
 			},
 			saveSettlement() {
-				this.submitDisable = true
 				let store_in_ids = []
 				let price = []
 				let price_remark = []
+				let isNull = 0
+				this.pricetable.forEach((data) => {
+					if(data.price == 0 || data.price_remark == null || data.price_remark == '') {
+						isNull = 1
+					}
+					price.push(data.price)
+					price_remark.push(data.price_remark)
+				})
+				if(isNull == 1) {
+					this.$message.info('价格和备注不能为空，请核对！')
+					return
+				}
+				this.submitDisable = true
 				this.pricetable.forEach((data) => {
 					price.push(data.price)
 					price_remark.push(data.price_remark)
@@ -1011,7 +1057,9 @@
 					store_in_ids: store_in_ids,
 					price: price,
 					price_remark: price_remark,
-					remark: this.remark
+					remark: this.remark,
+					discount: this.discount,
+					exchange_rate: this.exchange_rate
 				}
 				this.$axios.post('/admin/batch_store_ins/' + this.batch_id + '/settlement', params, {
 					headers: {

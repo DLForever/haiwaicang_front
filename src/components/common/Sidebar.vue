@@ -156,6 +156,10 @@
 								title: '创建出库单(入库即出)'
 							},
 							{
+								index: 'batchoutboundmanagequick',
+								title: '批量出库(入库即出)'
+							},
+							{
 								index: '15',
 								title: '出库单管理(入库即出)',
 								subs: [{

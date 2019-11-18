@@ -14,6 +14,11 @@
 				<div class="inbound_filter">
 					物流单号:
 					<el-input v-model="search_logistics_number" placeholder="请输入物流单号" class="handle-select mr10 batch_box"></el-input>
+					批次号:
+					<el-select v-model="select_batch" filterable remote :loading="loading2" placeholder="选择批次" class="handle-select mr10 batch_box" @visible-change="batchVisible" :remote-method="remoteMethodBatch">
+						<el-option v-for="item in batchoptions" :key="item.id" :label="item.batch_number" :value="item.id"></el-option>
+						<infinite-loading :on-infinite="onInfinite_batch" ref="infiniteLoading2"></infinite-loading>
+					</el-select>
 					FNSKU:
 					<el-input v-model="search_fnsku" placeholder="请输入FNSKU" class="handle-select mr10 batch_box"></el-input>
 					<!-- 批次:
@@ -155,7 +160,9 @@
 				statusOptions2: [{value: '', label: '全部'}, {value: 4, label: '已入库'}, {value: 6, label: '已结算'}, {value: 5, label: '待删除'},],
 				statusSelect: '',
 				search_logistics_number: '',
-				need_check: false
+				need_check: false,
+				loading2: '',
+				query2: undefined
 			}
 		},
 		created() {
@@ -205,7 +212,7 @@
 				} else {
 					this.statusOptions = this.statusOptions2
 				}
-				this.$axios.get('/store_ins?page=' + this.cur_page + '&is_quick=0&s_status=2' + '&fnsku=' + this.search_fnsku + '&logistics_number=' + this.search_logistics_number + '&status=' + this.statusSelect, {
+				this.$axios.get('/store_ins?page=' + this.cur_page + '&is_quick=0&s_status=2' + '&fnsku=' + this.search_fnsku + '&logistics_number=' + this.search_logistics_number + '&status=' + this.statusSelect + '&batch_store_in_id=' + this.select_batch, {
 					headers: {
 						'Authorization': localStorage.getItem('token')
 					},
@@ -223,7 +230,7 @@
 			filter_inbound() {
 				this.paginationShow = false
 				this.cur_page = 1
-				this.$axios.get('/store_ins?page=' + this.cur_page + '&is_quick=0&s_status=2' + '&fnsku=' + this.search_fnsku + '&logistics_number=' + this.search_logistics_number + '&status=' + this.statusSelect, {
+				this.$axios.get('/store_ins?page=' + this.cur_page + '&is_quick=0&s_status=2' + '&fnsku=' + this.search_fnsku + '&logistics_number=' + this.search_logistics_number + '&status=' + this.statusSelect + '&batch_store_in_id=' + this.select_batch, {
 					headers: {
 						'Authorization': localStorage.getItem('token')
 					},
@@ -245,6 +252,7 @@
 				this.search_logistics_number = ''
 				this.search_fnsku = ''
 				this.statusSelect = ''
+				this.select_batch = ''
 				this.getData()
 			},
 			getBatch(callback = undefined) {
@@ -298,13 +306,59 @@
 					console.log(res)
 				})
 			},
+			batchVisible(visible){
+				if(visible){
+					this.query2 = undefined
+				  	this.remoteMethodBatch("")
+				}  
+			},
 			onInfinite_batch(obj) {
 				if((this.batch_page * 20) < this.batch_total) {
 					this.batch_page += 1
-					this.getBatch(obj.loaded)
+					this.remoteMethodBatch(this.query2,obj.loaded)
+//					this.getUser(obj.loaded)
 				} else {
 					obj.complete()
 					console.log(obj.complete())
+				}
+			},
+			remoteMethodBatch(query,callback=undefined){
+				if(query != "" || this.query2 != "" || callback){
+					let reload = false
+					if(this.query2 != query){
+						this.loading2 = true
+						this.batch_page = 1
+						this.query2 = query
+						reload = true
+						if(this.$refs.infiniteLoading2.isComplete){
+							this.$refs.infiniteLoading2.stateChanger.reset()
+						}
+					}
+					console.log(this.user_page)
+					this.$axios.get("/batch_store_ins?batch_number=" + query.trim()+"&page="+this.batch_page, {
+						headers: {
+						'Authorization': localStorage.getItem('token')
+					},
+					}).then((res) => {
+						if(res.data.code == 200){
+							console.log(res.data.data)
+							this.loading2 = false
+//							this.options = res.data.data
+							if(reload){
+//								this.user_page = 1
+								this.batchoptions = res.data.data
+							}else{
+								this.batchoptions = this.batchoptions.concat(res.data.data)
+							}
+//							this.options = this.options.concat(res.data.data)
+							this.batch_total = res.data.count
+							if(callback){
+								callback()
+							}
+						}
+					}).catch((res) => {
+						console.log('失败')
+					})
 				}
 			},
 			formatter_created_at(row, column) {

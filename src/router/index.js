@@ -189,6 +189,11 @@ export default new Router({
                     meta: { title: '批量出库' }
                 },
                 {
+                    path: '/batchoutboundmanagequick',
+                    component: resolve => require(['../components/page/batchoutboundquick.vue'], resolve),
+                    meta: { title: '批量出库(入库即出)' }
+                },
+                {
                     path: '/fbamanage',
                     component: resolve => require(['../components/page/FBAManage.vue'], resolve),
                     meta: { title: 'FBA管理' }

@@ -8,27 +8,52 @@
 		</div>
 		<div class="container">
 			<div class="handle-box">
+				<el-button @click="addSettlement" type="primary">添加</el-button>
 				<div class="fnsku_filter">
 					用户:
 					<el-select v-model="select_cate" filterable remote placeholder="选择用户" class="handle-select mr10" :loading="loading" @visible-change="selectVisble" :remote-method="remoteMethod">
 						<el-option v-for="item in options" :key="item.id" :label="item.usercode" :value="item.id"></el-option>
 						<infinite-loading :on-infinite="onInfinite" ref="infiniteLoading"></infinite-loading>
 					</el-select>
+					类型:
+					<el-select v-model="typeSelect" placeholder="请选择" class="handle-select mr10">
+						<el-option v-for="item in typeOptions" :key="item.value" :label="item.label" :value="item.value"></el-option>
+					</el-select>
+					是否支付:
+					<el-select v-model="paySelect" placeholder="请选择" class="handle-select mr10">
+						<el-option v-for="item in payOptions" :key="item.value" :label="item.label" :value="item.value"></el-option>
+					</el-select>
 					<!-- <el-date-picker v-model="date_filter" type="daterange" range-separator="至" start-placeholder="开始日期" end-placeholder="结束日期" :picker-options="pickerOptions2" unlink-panels value-format="yyyy-MM-dd"></el-date-picker> -->
 					<!-- fnsku:
 					<el-input style="width:150px" placeholder="请输入fnsku" v-model.trim="search_fnsku"></el-input> -->
 					<el-button @click="clear_filter" type="default">重置</el-button>
-					<el-button @click="filter_ware" type="primary">查询</el-button>
+					<el-button @click="filter_settlement" type="primary">查询</el-button>
 				</div>
 			</div>
 			<br><br>
 			<el-table :data="data" border style="width: 100%" model="form" ref="multipleTable" @selection-change="handleSelectionChange">
 				<el-table-column type="index" width="55"></el-table-column>
 				<el-table-column prop="usercode" label="用户"></el-table-column>
-				<el-table-column prop="total_price" label="费用"></el-table-column>
+				<el-table-column label="批次号/出库单号">
+					<template slot-scope="scope">
+						<span v-if="scope.row.batch_store_in != null">{{scope.row.batch_store_in.batch_number}}</span>
+						<span v-else-if="scope.row.s_type == 2 ">{{'hwc_' + scope.row.outbound_order_id}}</span>
+					</template>
+				</el-table-column>
+				<el-table-column prop="total_price_dollar" label="费用(美元)"></el-table-column>
+				<el-table-column prop="total_price_cny" label="费用(人民币)"></el-table-column>
+				<el-table-column prop="exchange_rate" label="汇率"></el-table-column>
+				<el-table-column prop="discount" label="折扣"></el-table-column>
+				<el-table-column prop="remark" label="备注"></el-table-column>
 				<el-table-column prop="status" label="类型">
 					<template slot-scope="scope">
 						<el-tag :type="scope.row.s_type | statusFilter">{{getStatusName(scope.row.s_type)}}</el-tag>
+					</template>
+				</el-table-column>
+				<el-table-column prop="check" label="状态">
+					<template slot-scope="scope">
+						<el-tag v-if="scope.row.check == true" type="success">已支付</el-tag>
+						<el-tag v-else-if="scope.row.check == false" type="warning">未支付</el-tag>
 					</template>
 				</el-table-column>
 				<el-table-column prop="created_at" label="创建时间" :formatter="formatter_created_at" show-overflow-tooltip>
@@ -43,6 +68,18 @@
 								<el-dropdown-item>
 									<el-button @click="detailsShow(scope.$index, scope.row)" type="text">详情</el-button>
 								</el-dropdown-item>
+								<el-dropdown-item>
+									<el-button @click="confirmCheck(scope.row)" type="text">结算</el-button>
+								</el-dropdown-item>
+								<el-dropdown-item>
+									<el-button @click="handelEdit(scope.row)" type="text">编辑</el-button>
+								</el-dropdown-item>
+								<!-- <el-dropdown-item>
+									<el-button @click="addSettlement(scope.row)" type="text">添加</el-button>
+								</el-dropdown-item> -->
+								<el-dropdown-item>
+									<el-button @click="deleteConfirm(scope.row)" type="text">删除</el-button>
+								</el-dropdown-item>
 							</el-dropdown-menu>
 						</el-dropdown>
 					</template>
@@ -54,15 +91,40 @@
 			</div>
 		</div>
 		<!-- 详情提示框 -->
-		<el-dialog title="详情" :visible.sync="detailVisible" width="50%">
-			<el-table v-if="form.settlement_details.length != 0 && form.settlement_details[0].s_type != '1'" :data="form.settlement_details" border style="width: 100%">
+		<el-dialog title="详情" :visible.sync="detailVisible" width="60%">
+			<div style="text-align:center;">
+				<el-tag type="warning" size="max">总费用：{{total_price}}美元</el-tag>
+			</div>
+			<br>
+			<el-table :data="form.charge_standard" border style="width: 100%">
+				<el-table-column type="index" width="55"></el-table-column>
+				<el-table-column label="入库收费标准" v-if="form.settlement_details[0].s_type == '1' || form.settlement_details[0].s_type == '3'">
+					<template slot-scope="scope">
+						<span v-if="scope.row.by_box == false">每个收费{{scope.row.store_in_fee}}美元</span>
+						<span v-else-if="scope.row.by_box == true">每箱收费{{scope.row.store_in_fee}}美元</span>
+					</template>
+				</el-table-column>
+				<el-table-column label="出库收费标准" v-if="form.settlement_details[0].s_type == '2' || form.settlement_details[0].s_type == '3'">
+					<template slot-scope="scope">
+						<span >箱子{{scope.row.box_fee}}美元一个，换箱费{{scope.row.change_box_fee}}美元一个，换标费{{scope.row.change_label_fee}}美元一个</span>
+					</template>
+				</el-table-column>
+				<el-table-column label="仓储收费标准" v-if="form.settlement_details[0].s_type == '4'">
+					<template slot-scope="scope">
+						<span>每{{scope.row.cube}}方{{scope.row.day}}天收费{{scope.row.store_fee}}美元</span>
+					</template>
+				</el-table-column>
+			</el-table>
+			<br>
+			<el-table v-if="form.settlement_details.length != 0 && form.settlement_details[0].s_type != '1' && form.settlement_details[0].s_type != '4'" :data="form.settlement_details" border style="width: 100%">
 				<el-table-column prop="box_sum" label="箱子数量"></el-table-column>
 				<el-table-column prop="box_price" label="箱子费用"></el-table-column>
 				<el-table-column prop="change_box_price" label="换箱费用"></el-table-column>
 				<el-table-column prop="label_change_sum" label="换标数量"></el-table-column>
 				<el-table-column prop="label_change_price" label="换标费用"></el-table-column>
+				<el-table-column prop="store_price" label="仓储费"></el-table-column>
 			</el-table>
-			<br>
+			<br v-if="form.settlement_details[0].s_type != '1' && form.settlement_details[0].s_type != '4'">
 			<el-table v-if="form.store_ins.length != 0" :data="form.store_ins" border style="width: 100%">
 				<el-table-column prop="batch_number" label="批次号"></el-table-column>
 				<el-table-column prop="logistics_number" label="物流单号"></el-table-column>
@@ -70,24 +132,90 @@
 				<el-table-column prop="total_plan_sum" label="总计划数量"></el-table-column>
 				<el-table-column prop="total_arrive_sum" label="实际到达数量"></el-table-column>
 			</el-table>
-			<br>
-			<el-table v-if="form.settlement_details.length != 0" :data="form.settlement_details" border style="width: 100%">
+			<br v-if="form.store_ins.length != 0">
+			<el-table v-if="form.settlement_details.length != 0 && form.settlement_details[0].s_type != '2' && form.settlement_details[0].s_type != '4'" :data="form.settlement_details" border style="width: 100%">
 				<el-table-column prop="store_in_sum" label="入库数量"></el-table-column>
 				<el-table-column prop="store_in_price" label="费用"></el-table-column>
 			</el-table>
+			<br v-if="form.settlement_details[0].s_type != '2' && form.settlement_details[0].s_type != '4'">
+			<el-table show-summary :summary-method="getSummaries" v-if="form.settlement_store_ins.length != 0 && form.settlement_details[0].store_price != '0.0'" :data="form.settlement_store_ins" border style="width: 100%">
+				<el-table-column type="index" width="55"></el-table-column>
+				<!-- <el-table-column prop="cube" label="立方数"></el-table-column> -->
+				<el-table-column prop="day" label="天数"></el-table-column>
+				<el-table-column prop="fnsku" label="fnsku"></el-table-column>
+				<el-table-column prop="sum" label="数量"></el-table-column>
+				<!-- <el-table-column prop="store_price" label="仓储费"></el-table-column> -->
+			</el-table>
+			<br v-if="form.settlement_details[0].store_price != '0.0'">
+			<el-table v-if="form.settlement_charges.length != 0" :data="form.settlement_charges" border style="width: 100%">
+				<el-table-column prop="price" label="价格"></el-table-column>
+				<el-table-column prop="remark" label="备注"></el-table-column>
+			</el-table>
+		</el-dialog>
+
+		<!-- 详情提示框 -->
+		<el-dialog title="详情" :visible.sync="detailVisible2" width="60%">
+			<div style="text-align:center;">
+				<el-tag type="warning" size="max">总费用：{{total_price}}美元</el-tag>
+			</div>
 			<br>
 			<el-table v-if="form.settlement_charges.length != 0" :data="form.settlement_charges" border style="width: 100%">
 				<el-table-column prop="price" label="价格"></el-table-column>
 				<el-table-column prop="remark" label="备注"></el-table-column>
 			</el-table>
-			<br>
-			<el-table v-if="form.settlement_store_ins.length != 0 && form.settlement_details[0].store_price != '0.0'" :data="form.settlement_store_ins" border style="width: 100%">
-				<el-table-column prop="cube" label="立方数"></el-table-column>
-				<el-table-column prop="day" label="天数"></el-table-column>
-				<el-table-column prop="fnsku" label="fnsku"></el-table-column>
-				<el-table-column prop="sum" label="数量"></el-table-column>
-				<el-table-column prop="store_price" label="仓储费"></el-table-column>
+		</el-dialog>
+
+		<!-- 添加结算提示框 -->
+		<el-dialog title="结算" :visible.sync="settlementVisible" width="65%">
+			<el-table :data="pricetable" border style="width: 100%">
+				<el-table-column label="价格">
+					<template slot-scope="scope">
+						<el-input-number :min="0" :precision="2" :step="10" v-model="scope.row.price"></el-input-number>
+					</template>
+				</el-table-column>
+				<el-table-column label="备注">
+					<template scope="scope">
+						<el-input placeholder="请输入备注" v-model.trim="scope.row.price_remark">
+						</el-input>
+					</template>
+				</el-table-column>
 			</el-table>
+			<br>
+			<el-form label-width="60px">
+				<div class="newPrice">
+					<el-button @click="createPrice">添加价格</el-button>
+					<el-button @click="back" :disabled="isDisableBu" type="danger">撤销</el-button>
+				</div>
+				<br>
+				<el-form-item label="汇率">
+					<el-input-number :min="0" :precision="5" :step="0.01" v-model="exchange_rate"></el-input-number>
+				</el-form-item>
+				<el-form-item label="折扣">
+					<el-input-number :min="0" :max="1" :precision="5" :step="0.01" v-model="discount"></el-input-number>
+				</el-form-item>
+				<el-form-item label="备注">
+					<el-input v-model="remark"></el-input>
+				</el-form-item>
+			</el-form>
+			<span slot="footer" class="dialog-footer">
+				<el-button @click="settlementVisible = false">取 消</el-button>
+				<el-button type="primary" @click="saveSettlement()" :disabled="submitDisable">确 定</el-button>
+			</span>
+		</el-dialog>
+		<!-- 修改提示框 -->
+		<el-dialog title="修改" :visible.sync="editVisible" width="30%">
+			<el-form label-width="60px">
+				<el-form-item label="汇率">
+					<el-input-number :min="0" :precision="5" :step="0.01" v-model="exchange_rate"></el-input-number>
+				</el-form-item>
+				<el-form-item label="折扣">
+					<el-input-number :min="0" :max="1" :precision="5" :step="0.01" v-model="discount"></el-input-number>
+				</el-form-item>
+			</el-form>
+			<span slot="footer" class="dialog-footer">
+				<el-button @click="editVisible = false">取 消</el-button>
+				<el-button type="primary" @click="saveEdit()" :disabled="submitDisable">确 定</el-button>
+			</span>
 		</el-dialog>
 	</div>
 </template>
@@ -105,10 +233,11 @@
 				totals: 0,
 				detailVisible: false,
 				form: {
-					settlement_details: [],
+					settlement_details: [{'s_type': ''}],
 					store_ins: [],
 					settlement_charges: [],
-					settlement_store_ins: []
+					settlement_store_ins: [],
+					charge_standard: []
 				},
 				search_fnsku: '',
 				paginationShow: true,
@@ -147,7 +276,29 @@
 				select_cate: '',
 				options: [],
 				code: ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z"],
-				options2: []
+				options2: [],
+				typeSelect: '',
+				typeOptions: [{value: 1, label: '入库费'}, {value: 2, label: '出库费'}, {value: 3, label: '入库即出库费'}, {value: 4, label: '仓储费'}, {value: 5, label: '其他费用'}],
+				paySelect: '',
+				payOptions: [{value: 1, label: '已支付'}, {value: 0, label: '未支付'}],
+				pricetable: [],
+				pricetable: [{
+					price: 0,
+					remark: ''
+				}],
+				pricetabletemp: {
+					price: 0,
+					remark: ''
+				},
+				settlementVisible: false,
+				remark: '',
+				submitDisable: false,
+				user_id: '',
+				detailVisible2: false,
+				total_price: '',
+				editVisible: false,
+				exchange_rate: 7,
+				discount: 1,
 			}
 		},
 		created() {
@@ -161,7 +312,14 @@
 				return this.tableData.filter((d) => {
 					return d
 				})
-			}
+			},
+			isDisableBu() {
+				if(this.pricetable.length <= 1) {
+					return this.isdisable = true
+				} else {
+					return this.isdisable = false
+				}
+			},
 		},
 		filters: {
 			//类型转换
@@ -191,7 +349,7 @@
                     date_begin_temp = ''
                     date_end_temp = ''
                 }
-				this.$axios.get('/admin/settlement_records?page=' + this.cur_page + '&date_begin=' + date_begin_temp +'&date_end=' + date_end_temp + '&check=1' + '&user_id=' + this.select_cate, {
+				this.$axios.get('/admin/settlement_records?page=' + this.cur_page + '&check=' + this.paySelect + '&s_type=' + this.typeSelect + '&user_id=' + this.select_cate, {
 					headers: {
 						'Authorization': localStorage.getItem('token_admin')
 					},
@@ -208,11 +366,14 @@
 
 							}
 							data.usercode = this.code[tempindex] + tempcode
-							data.total_price = 0
+							data.total_price_dollar = 0
+							data.total_price_cny = 0
 							data.settlement_charges.forEach((data2) => {
-								data.total_price += parseFloat(Number(data2.price))
+								data.total_price_dollar += parseFloat(Number(data2.price))
 							})
-							data.total_price += parseFloat(Number(data.box_price) + Number(data.change_box_price) + Number(data.label_change_price) + Number(data.store_in_price) + Number(data.store_price))
+							data.total_price_dollar += parseFloat(Number(data.box_price) + Number(data.change_box_price) + Number(data.label_change_price) + Number(data.store_in_price) + Number(data.store_price))
+							data.total_price_dollar = Math.round((data.total_price_dollar * data.discount) * 100) / 100
+							data.total_price_cny = Math.round((data.total_price_dollar * data.exchange_rate * data.discount) * 100) / 100
 						})
 						// res.data.data.forEach((data) => {
 						// 	data.sum = 0
@@ -231,7 +392,7 @@
 					console.log(res)
 				})
 			},
-			filter_ware() {
+			filter_settlement() {
 				this.paginationShow = false
 				this.cur_page = 1
 				let date_begin_temp = this.date_filter[0]
@@ -240,7 +401,7 @@
                     date_begin_temp = ''
                     date_end_temp = ''
                 }
-				this.$axios.get('/admin/settlement_records?page=' + this.cur_page + '&fnsku=' + this.search_fnsku + '&date_begin=' + date_begin_temp +'&date_end=' + date_end_temp + '&check=1' + '&user_id=' + this.select_cate, {
+				this.$axios.get('/admin/settlement_records?page=' + this.cur_page + '&fnsku=' + this.search_fnsku + '&check=' + this.paySelect + '&s_type=' + this.typeSelect + '&user_id=' + this.select_cate, {
 					headers: {
 						'Authorization': localStorage.getItem('token_admin')
 					},
@@ -257,11 +418,14 @@
 
 							}
 							data.usercode = this.code[tempindex] + tempcode
-							data.total_price = 0
+							data.total_price_dollar = 0
+							data.total_price_cny = 0
 							data.settlement_charges.forEach((data2) => {
-								data.total_price += parseFloat(Number(data2.price))
+								data.total_price_dollar += parseFloat(Number(data2.price))
 							})
-							data.total_price += parseFloat(Number(data.box_price) + Number(data.change_box_price) + Number(data.label_change_price) + Number(data.store_in_price) + Number(data.store_price))
+							data.total_price_dollar += parseFloat(Number(data.box_price) + Number(data.change_box_price) + Number(data.label_change_price) + Number(data.store_in_price) + Number(data.store_price))
+							data.total_price_dollar = Math.round((data.total_price_dollar * data.discount) * 100) / 100
+							data.total_price_cny = Math.round((data.total_price_dollar * data.exchange_rate * data.discount) * 100) / 100
 						})
 						// res.data.data.forEach((data) => {
 						// 	data.sum = 0
@@ -283,18 +447,27 @@
 			clear_filter() {
 				this.paginationShow = false
 				this.cur_page = 1
+				this.paySelect = ''
+				this.typeSelect = ''
 				this.select_cate = ''
-				this.date_filter = []
 				this.getData()
 			},
 			detailsShow(index, row) {
+				this.total_price = row.total_price_dollar
+				if(row.s_type == 5) {
+					this.form.settlement_charges = row.settlement_charges,
+					this.detailVisible2= true
+					return
+				}
 				this.idx = index;
 				const item = this.tableData[index];
+				
 				this.form = {
 					store_ins: item.store_ins,
 					settlement_charges: item.settlement_charges,
 					settlement_details: [item],
-					settlement_store_ins: item.settlement_store_ins
+					settlement_store_ins: item.settlement_store_ins,
+					charge_standard: [item.charge_standard]
 				}
 				this.detailVisible = true
 			},
@@ -368,6 +541,171 @@
 					obj.complete()
 				}
 			},
+			confirmCheck(row) {
+				this.$confirm('结算后不可修改, 是否继续?', '提示', {
+					confirmButtonText: '确定',
+					cancelButtonText: '取消',
+					type: 'danger'
+				}).then(() => {
+					this.$axios.patch('/admin/settlement_records/' + row.id, '', {
+						headers: {
+							'Authorization': localStorage.getItem('token_admin')
+						},
+					}).then((res) => {
+						if(res.data.code == 200) {
+							this.getData()
+							this.$message.success('结算成功！')
+						}
+					}).catch((res) => {
+						console.log('error')
+					})
+				}).catch(() => {
+					this.$message.info('已取消结算')
+				})
+			},
+			deleteConfirm(row) {
+				this.$confirm('此操作将永久删除该记录, 是否继续?', '提示', {
+					confirmButtonText: '确定',
+					cancelButtonText: '取消',
+					type: 'danger'
+				}).then(() => {
+					this.$axios.delete('/admin/settlement_records/' + row.id, {
+						headers: {
+							'Authorization': localStorage.getItem('token_admin')
+						},
+					}).then((res) => {
+						if(res.data.code == 200) {
+							this.getData()
+							this.$message.success('删除成功！')
+						}
+					}).catch((res) => {
+						console.log('error')
+					})
+				}).catch(() => {
+					this.$message.info('已取消删除')
+				})
+			},
+			createPrice() {
+				this.pricetable.push(this.pricetabletemp)
+				this.pricetabletemp = {
+					price: 0,
+					remark: ''
+				}
+			},
+			back() {
+				this.pricetable.pop(this.pricetabletemp)
+			},
+			saveSettlement() {
+				let price = []
+				let price_remark = []
+				let isNull = 0
+				this.pricetable.forEach((data) => {
+					if(data.price == 0 || data.price_remark == null || data.price_remark == '') {
+						isNull = 1
+					}
+					price.push(data.price)
+					price_remark.push(data.price_remark)
+				})
+				if(isNull == 1) {
+					this.$message.info('价格和备注不能为空，请核对！')
+					return
+				}
+				this.submitDisable = true
+				let params = {
+					user_id: this.user_id,
+					price: price,
+					price_remark: price_remark,
+					remark: this.remark,
+					exchange_rate: this.exchange_rate,
+					discount: this.discount
+				}
+				this.$axios.post('/admin/settlement_records', params, {
+					headers: {
+						'Authorization': localStorage.getItem('token_admin')
+					},
+				}).then((res) => {
+					if(res.data.code == 200) {
+						this.select_cate = ''
+						this.getData()
+						this.settlementVisible = false;
+					}
+				}).catch((res) => {
+					console.log('error')
+				}).finally(() => {
+					this.submitDisable = false
+				})
+			},
+			addSettlement(row) {
+				if(this.select_cate == '') {
+					this.$message.info('请选择用户')
+					return
+				}
+				this.remark = ''
+				this.user_id = this.select_cate
+				this.exchange_rate = 7
+				this.discount = 1
+				this.pricetable = [{
+					price: 0,
+					remark: ''
+				}]
+				this.settlementVisible = true
+			},
+			handelEdit(row){
+				this.idx = row.id
+				this.exchange_rate = row.exchange_rate
+				this.discount = row.discount
+				this.editVisible = true
+			},
+			saveEdit(){
+				this.submitDisable = true
+				let params = {
+					exchange_rate: this.exchange_rate,
+					discount: this.discount,
+				}
+				this.$axios.post('/admin/settlement_records/' + this.idx + '/change_info', params, {
+					headers: {
+						'Authorization': localStorage.getItem('token_admin')
+					},
+				}).then((res) => {
+					if(res.data.code == 200) {
+						this.getData()
+						this.editVisible = false;
+					}
+				}).catch((res) => {
+					console.log('error')
+				}).finally(() => {
+					this.submitDisable = false
+				})
+			},
+			getSummaries(param) {
+				const { columns, data } = param;
+				const sums = [];
+				columns.forEach((column, index) => {
+					if (index === 0) {
+					sums[index] = '总计';
+					return;
+					}
+					if (index === 3) {
+						const values = data.map(item => Number(item[column.property]));
+						if (!values.every(value => isNaN(value))) {
+							sums[index] = values.reduce((prev, curr) => {
+								const value = Number(curr);
+								if (!isNaN(value)) {
+									return prev + curr;
+								} else {
+									return prev;
+								}
+							}, 0);
+							if(index === 3) {
+								sums[index] += ' 个';
+							}
+							} else {
+								sums[index] = 'N/A';
+							}
+					}
+				});
+				return sums;
+			},
 			getStatusName(status) {
 				if(status == 1) {
 					return "入库费"
@@ -377,6 +715,8 @@
 					return "入库即出库费"
 				}else if (status == 4) {
 					return "仓储费"
+				}else if (status == 5) {
+					return "其他费用"
 				}else {
 					return "其他"
 				}
@@ -396,4 +736,10 @@
     .fnsku_filter {
         float: right;
     }
+    .handle-select {
+		width: 120px;
+	}
+	.newPrice {
+		text-align: center;
+	}
 </style>

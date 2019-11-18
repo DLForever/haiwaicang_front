@@ -1270,7 +1270,7 @@
 				}else if (status == 11) {
 					return "等待拣货"
 				}else if (status == 12) {
-					return '已装箱'
+					return '待装箱'
 				} else {
 					return '其他'
 				}
