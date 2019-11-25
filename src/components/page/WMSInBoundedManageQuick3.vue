@@ -9,6 +9,9 @@
 		<div class="container">
 			<div class="handle-box">
 				<!--<el-button type="primary" icon="delete" class="handle-del mr10" @click="delAll">批量删除</el-button>-->
+				<el-button type="primary">
+					<a style="color:#fff;" :href="$axios.defaults.baseURL + '/admin/store_ins/export_url?s_status=3&is_quick=1&token=' + export_token + '&user_id=' + select_cate + '&status=' + statusSelect + '&logistics_number=' + search_logistics_number + '&batch_number=' + search_batch_number">导出</a>
+				</el-button>
 				<div class="search">
 					<!-- <span>用户:</span> -->
 					用户:
@@ -21,6 +24,8 @@
 						<el-option v-for="item in batchoptions" :key="item.id" :label="item.batch_number" :value="item.id"></el-option>
 						<infinite-loading :on-infinite="onInfinite_batch" ref="infiniteLoading2"></infinite-loading>
 					</el-select> -->
+					批次号:
+					<el-input style="width:150px" placeholder="请输入批次号" v-model.trim="search_batch_number"></el-input>
 					Fnsku:
 					<el-input style="width:150px" placeholder="请输入Fnsku" v-model.trim="search_fnsku"></el-input>
 					追踪编码:
@@ -223,6 +228,8 @@
 				statusSelect: '',
 				search_logistics_number: '',
 				code: ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z"],
+				export_token: '',
+				search_batch_number: '',
 			}
 		},
 		created() {
@@ -276,6 +283,7 @@
 			// 获取 easy-mock 的模拟数据
 			getData() {
 				// 开发环境使用 easy-mock 数据，正式环境使用 json 文件
+				this.export_token = localStorage.getItem('token_admin')
 				if(process.env.NODE_ENV === 'development') {
 					//					this.url = '/ms/table/list';
 				};
@@ -284,7 +292,7 @@
 				} else {
 					this.statusOptions = this.statusOptions2
 				}
-				this.$axios.get('/admin/store_ins?page=' + this.cur_page + '&is_quick=1&s_status=3' + '&user_id=' + this.select_cate + '&fnsku=' + this.search_fnsku + '&status=' + this.statusSelect + '&logistics_number=' + this.search_logistics_number, {
+				this.$axios.get('/admin/store_ins?page=' + this.cur_page + '&is_quick=1&s_status=3' + '&user_id=' + this.select_cate + '&fnsku=' + this.search_fnsku + '&status=' + this.statusSelect + '&logistics_number=' + this.search_logistics_number + '&batch_number=' + this.search_batch_number, {
 					headers: {
 						'Authorization': localStorage.getItem('token_admin')
 					},
@@ -300,7 +308,7 @@
 			filter_inbound() {
 				this.paginationShow = false
 				this.cur_page = 1
-				this.$axios.get('/admin/store_ins?page=' + this.cur_page + '&is_quick=1&s_status=3' + '&user_id=' + this.select_cate + '&fnsku=' + this.search_fnsku + '&status=' + this.statusSelect + '&logistics_number=' + this.search_logistics_number, {
+				this.$axios.get('/admin/store_ins?page=' + this.cur_page + '&is_quick=1&s_status=3' + '&user_id=' + this.select_cate + '&fnsku=' + this.search_fnsku + '&status=' + this.statusSelect + '&logistics_number=' + this.search_logistics_number + '&batch_number=' + this.search_batch_number, {
 					headers: {
 						'Authorization': localStorage.getItem('token_admin')
 					},
@@ -323,6 +331,7 @@
 				this.search_fnsku = ''
 				this.statusSelect = ''
 				this.search_logistics_number = ''
+				this.search_batch_number = ''
 				this.getData()
 			},
 			allUser() {	

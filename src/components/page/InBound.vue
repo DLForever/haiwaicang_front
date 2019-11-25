@@ -318,19 +318,19 @@
 					this.$message.error("请选择xlsx文件")
 					return false;
 				}
-				const extension = this.fileList[0].name.split('.')[1] === 'xls';
-                const extension2 = this.fileList[0].name.split('.')[1] === 'xlsx';
-                const maxSzie = this.fileList[0].size / 1024 / 1024 < 10;
+				const extension = this.fileList[0].name.split('.')[this.fileList[0].name.split('.').length - 1] === 'xls';
+                const extension2 = this.fileList[0].name.split('.')[this.fileList[0].name.split('.').length - 1] === 'xlsx';
+                // const maxSzie = this.fileList[0].size / 1024 / 1024 < 10;
                 if (!extension && !extension2) {
                     console.log('格式有误，请上传xls、xlsx格式的文件！');
                     this.$message.error('上传失败，请上传xls、xlsx格式的文件！')
                     return false
                 }
-                if (!maxSzie) {
-                    console.log('上传文件不能超过10MB！')
-                    this.$message.error('上传文件不能超过10MB!')
-                    return false
-                }
+    //             if (!maxSzie) {
+    //                 console.log('上传文件不能超过10MB！')
+    //                 this.$message.error('上传文件不能超过10MB!')
+    //                 return false
+    //             }
                 this.uploadDisabled = true
 				let formData = new FormData()
 				let config = {
@@ -357,6 +357,8 @@
 					}
 				}).catch((res) => {
 					this.$message.error("失败，请核对无误后联系管理员")
+				}).finally(() => {
+					this.uploadDisabled = false
 				})
 			},
 			uploadError(res, file, FileList) {

@@ -290,7 +290,7 @@
 				} else {
 					this.statusOptions = this.statusOptions2
 				}
-				this.$axios.get('/admin/store_ins?page=' + this.cur_page + '&is_quick=false&s_status=1' + '&user_id=' + this.select_cate + '&fnsku=' + this.search_fnsku + '&status=' + this.statusSelect + '&logistics_number=' + this.search_logistics_number + '&batch_number=' + this.search_batch_number, {
+				this.$axios.get('/admin/store_ins?page=' + this.cur_page + '&is_quick=0&s_status=1' + '&user_id=' + this.select_cate + '&fnsku=' + this.search_fnsku + '&status=' + this.statusSelect + '&logistics_number=' + this.search_logistics_number + '&batch_number=' + this.search_batch_number, {
 					headers: {
 						'Authorization': localStorage.getItem('token_admin')
 					},
@@ -306,7 +306,7 @@
 			filter_inbound() {
 				this.paginationShow = false
 				this.cur_page = 1
-				this.$axios.get('/admin/store_ins?page=' + this.cur_page + '&is_quick=false&s_status=1' + '&user_id=' + this.select_cate + '&fnsku=' + this.search_fnsku + '&status=' + this.statusSelect + '&logistics_number=' + this.search_logistics_number + '&batch_number=' + this.search_batch_number, {
+				this.$axios.get('/admin/store_ins?page=' + this.cur_page + '&is_quick=0&s_status=1' + '&user_id=' + this.select_cate + '&fnsku=' + this.search_fnsku + '&status=' + this.statusSelect + '&logistics_number=' + this.search_logistics_number + '&batch_number=' + this.search_batch_number, {
 					headers: {
 						'Authorization': localStorage.getItem('token_admin')
 					},

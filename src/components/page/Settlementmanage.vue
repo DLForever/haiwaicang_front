@@ -26,7 +26,69 @@
 			</div>
 			<br><br>
 			<el-table :data="data" border style="width: 100%" model="form" ref="multipleTable" @selection-change="handleSelectionChange">
-				<el-table-column type="index" width="55"></el-table-column>
+				<el-table-column type="expand">
+					<template slot-scope="scope" >
+						<template v-if="scope.row.s_type != '5'">
+						<el-table :data="[scope.row]" border style="width: 100%">
+							<el-table-column type="index" width="55"></el-table-column>
+							<el-table-column label="入库收费标准" v-if="scope.row.s_type == '1' || scope.row.s_type == '3'">
+								<template slot-scope="scope">
+									<span v-if="scope.row.charge_standard.by_box == false">每个收费{{scope.row.charge_standard.store_in_fee}}美元</span>
+									<span v-else-if="scope.row.charge_standard.by_box == true">每箱收费{{scope.row.charge_standard.store_in_fee}}美元</span>
+								</template>
+							</el-table-column>
+							<el-table-column label="出库收费标准" v-if="scope.row.s_type == '2' || scope.row.s_type == '3'">
+								<template slot-scope="scope">
+									<span >箱子{{scope.row.charge_standard.box_fee}}美元一个，换箱费{{scope.row.charge_standard.change_box_fee}}美元一个，换标费{{scope.row.charge_standard.change_label_fee}}美元一个</span>
+								</template>
+							</el-table-column>
+							<el-table-column label="仓储收费标准" v-if="scope.row.s_type == '4'">
+								<template slot-scope="scope">
+									<span>每{{scope.row.charge_standard.cube}}方{{scope.row.charge_standard.day}}天收费{{scope.row.charge_standard.store_fee}}美元</span>
+								</template>
+							</el-table-column>
+						</el-table>
+						<br>
+						<el-table v-if="[scope.row].length != 0 && scope.row.s_type != '1' && scope.row.s_type != '4'" :data="[scope.row]" border style="width: 100%">
+							<el-table-column prop="box_sum" label="箱子数量"></el-table-column>
+							<el-table-column prop="box_price" label="箱子费用"></el-table-column>
+							<el-table-column prop="change_box_price" label="换箱费用"></el-table-column>
+							<el-table-column prop="label_change_sum" label="换标数量"></el-table-column>
+							<el-table-column prop="label_change_price" label="换标费用"></el-table-column>
+							<el-table-column prop="store_price" label="仓储费"></el-table-column>
+						</el-table>
+						<br v-if="scope.row.s_type != '1' && scope.row.s_type != '4'">
+						<el-table v-if="scope.row.store_ins.length != 0" :data="scope.row.store_ins" border style="width: 100%">
+							<el-table-column prop="batch_number" label="批次号"></el-table-column>
+							<el-table-column prop="logistics_number" label="物流单号"></el-table-column>
+							<el-table-column prop="order_number" label="订单号"></el-table-column>
+							<el-table-column prop="total_plan_sum" label="总计划数量"></el-table-column>
+							<el-table-column prop="total_arrive_sum" label="实际到达数量"></el-table-column>
+						</el-table>
+						<br v-if="scope.row.store_ins.length != 0">
+						<el-table v-if="scope.row.length != 0 && scope.row.s_type != '2' && scope.row.s_type != '4'" :data="[scope.row]" border style="width: 100%">
+							<el-table-column prop="store_in_sum" label="入库数量"></el-table-column>
+							<el-table-column prop="store_in_price" label="费用"></el-table-column>
+						</el-table>
+						<br v-if="scope.row.s_type != '2' && scope.row.s_type != '4'">
+						<el-table show-summary :summary-method="getSummaries" v-if="scope.row.settlement_store_ins.length != 0 && scope.row.store_price != '0.0'" :data="scope.row.settlement_store_ins" border style="width: 100%">
+							<el-table-column type="index" width="55"></el-table-column>
+							<el-table-column prop="day" label="天数"></el-table-column>
+							<el-table-column prop="fnsku" label="fnsku"></el-table-column>
+							<el-table-column prop="sum" label="数量"></el-table-column>
+						</el-table>
+						<br v-if="scope.row.store_price != '0.0'">
+						<el-table v-if="scope.row.settlement_charges.length != 0" :data="scope.row.settlement_charges" border style="width: 100%">
+							<el-table-column prop="price" label="价格"></el-table-column>
+							<el-table-column prop="remark" label="备注"></el-table-column>
+						</el-table></template>
+						<template v-if="scope.row.s_type == '5'">
+						<el-table v-if="scope.row.settlement_charges.length != 0" :data="scope.row.settlement_charges" border style="width: 100%">
+							<el-table-column prop="price" label="价格"></el-table-column>
+							<el-table-column prop="remark" label="备注"></el-table-column>
+						</el-table></template>
+					</template>
+				</el-table-column>
 				<el-table-column label="批次号/出库单号">
 					<template slot-scope="scope">
 						<span v-if="scope.row.batch_store_in != null">{{scope.row.batch_store_in.batch_number}}</span>
@@ -51,7 +113,7 @@
 				</el-table-column>
 				<el-table-column prop="created_at" label="创建时间" :formatter="formatter_created_at" show-overflow-tooltip>
 				</el-table-column>
-				<el-table-column label="操作" width="100">
+				<!-- <el-table-column label="操作" width="100">
 					<template slot-scope="scope">
 						<el-dropdown>
 							<el-button type="primary">
@@ -64,7 +126,7 @@
 							</el-dropdown-menu>
 						</el-dropdown>
 					</template>
-				</el-table-column>
+				</el-table-column> -->
 			</el-table>
 			<div class="pagination">
 				<el-pagination v-if="paginationShow" @current-change="handleCurrentChange" :page-size="pagesize" layout="prev, pager, next" :total="totals">
@@ -267,7 +329,7 @@
 							})
 							data.total_price_dollar += parseFloat(Number(data.box_price) + Number(data.change_box_price) + Number(data.label_change_price) + Number(data.store_in_price) + Number(data.store_price))
 							data.total_price_dollar = Math.round((data.total_price_dollar * data.discount) * 100) / 100
-							data.total_price_cny = Math.round((data.total_price_dollar * data.exchange_rate * data.discount) * 100) / 100
+							data.total_price_cny = Math.round((data.total_price_dollar * data.exchange_rate) * 100) / 100
 						})
 						this.tableData = res.data.data
 						this.totals = res.data.count
@@ -300,7 +362,7 @@
 							})
 							data.total_price_dollar += parseFloat(Number(data.box_price) + Number(data.change_box_price) + Number(data.label_change_price) + Number(data.store_in_price) + Number(data.store_price))
 							data.total_price_dollar = Math.round((data.total_price_dollar * data.discount) * 100) / 100
-							data.total_price_cny = Math.round((data.total_price_dollar * data.exchange_rate * data.discount) * 100) / 100
+							data.total_price_cny = Math.round((data.total_price_dollar * data.exchange_rate) * 100) / 100
 						})
 						this.tableData = res.data.data
 						this.totals = res.data.count

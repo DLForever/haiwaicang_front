@@ -73,6 +73,9 @@
 									<el-button @click="package(scope.$index, scope.row, 'extra')" type="text">额外打包</el-button>
 								</el-dropdown-item>
 								<el-dropdown-item>
+									<el-button @click="packageBatch(scope.$index, scope.row, 'extra')" type="text">批量打包</el-button>
+								</el-dropdown-item>
+								<el-dropdown-item>
 									<el-button @click="check(scope.$index, scope.row)" type="text">&nbsp&nbsp&nbsp结&nbsp算&nbsp&nbsp&nbsp</el-button>
 								</el-dropdown-item>
 								<!-- <el-dropdown-item>
@@ -498,6 +501,23 @@
 				 <el-button type="primary" @click="saveAddSum">确 认</el-button>
 			</span>
 		</el-dialog>
+		<!-- 批量打包提示框 -->
+		<el-dialog title="提示" :visible.sync="batchpackVisible" width="50%" center>
+			<el-form ref="form" label-width="80px">
+				<el-form-item label="上传文件">
+					<el-upload class="upload-demo" drag action="" :file-list="fileList" :on-remove="handleRemove" :on-exceed="exceed" :auto-upload="false" :on-change="changeFile" :limit="1" multiple>
+						<i class="el-icon-upload"></i>
+						<div class="el-upload__text">将文件拖到此处，或<em>点击上传</em></div>
+						<div class="el-upload__tip" slot="tip">只能上传xls/xlsx文件</div>
+					</el-upload>
+					<a :href="$axios.defaults.baseURL +'/package.xlsx'">模板下载</a>
+				</el-form-item>
+			</el-form>
+			<span slot="footer" class="dialog-footer">
+				<el-button @click="batchpackVisible = false">取 消</el-button>
+				 <el-button type="primary" @click="saveBatchPackage" :disabled="isDisabled">确 认</el-button>
+			</span>
+		</el-dialog>
 	</div>
 </template>
 
@@ -631,6 +651,9 @@
 				cargo_ware_house_options: [],
 				exchange_rate: 7,
 				discount: 1,
+				fileList: [],
+				batchpackVisible: false,
+				isDisabled: false
 			}
 		},
 		created() {
@@ -1738,6 +1761,52 @@
 					}
 				});
 				return sums;
+			},
+			changeFile(file) {
+				this.fileList.push(file)
+			},
+			handleRemove(a, b) {
+				this.fileList = b
+			},
+			exceed() {
+				this.$message.error("对不起，超过个数限制")
+			},
+			packageBatch() {
+				this.fileList = []
+				this.batchpackVisible = true
+			},
+			saveBatchPackage() {
+				if(this.fileList.length == 0) {
+					this.$message.error("请选择文件")
+					return false;
+				}
+				const extension = this.fileList[0].name.split('.')[this.fileList[0].name.split('.').length - 1] === 'xls';
+				const extension2 = this.fileList[0].name.split('.')[this.fileList[0].name.split('.').length - 1] === 'xlsx';
+				if (!extension && !extension2) {
+					this.$message.error('上传失败，请上传xls、xlsx格式的文件！')
+					return false
+				}
+				this.isDisabled = true
+				let formData = new FormData()
+				let config = {
+					headers: {
+						'Authorization': localStorage.getItem('token_admin')
+					}
+				}
+				this.fileList.forEach((item) => {
+					formData.append('file', item.raw)
+				})
+				this.$axios.post('/admin/outbound_orders/batch_package', formData, config).then((res) => {
+					if(res.data.code == 200) {
+						this.$message.success("提交成功")
+						this.fileList = []
+						this.batchpackVisible = false
+					}
+				}).catch((res) => {
+					
+				}).finally(() => {
+					this.isDisabled = false
+				})
 			},
 			getStatusName(status) {
 				if(status == 1) {

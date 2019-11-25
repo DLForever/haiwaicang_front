@@ -52,16 +52,19 @@
 		</div>
 
 		<!-- 编辑提示框 -->
-        <el-dialog title="编辑" :visible.sync="detailVisible" width="50%">
-        	<el-form ref="form" label-width="80px">
-        		<el-form-item label="备注" required>
-        			<el-input v-model.trim="remark"></el-input>
-        		</el-form-item>
-        	</el-form>
-        	<span slot="footer" class="dialog-footer">
-                <el-button @click="detailVisible = false">取 消</el-button>
-                <el-button type="primary" @click="onSubmit" :disabled="submitDisable">确 定</el-button>
-            </span>
+		<el-dialog title="编辑" :visible.sync="detailVisible" width="50%">
+			<el-form ref="form" label-width="80px">
+				<el-form-item label="密码" required>
+					<el-input v-model.trim="password"></el-input>
+				</el-form-item>
+				<el-form-item label="备注" required>
+					<el-input v-model.trim="remark"></el-input>
+				</el-form-item>
+			</el-form>
+			<span slot="footer" class="dialog-footer">
+				<el-button @click="detailVisible = false">取 消</el-button>
+				<el-button type="primary" @click="onSubmit" :disabled="submitDisable">确 定</el-button>
+			</span>
 		</el-dialog>
 
 		<!-- 编辑提示框 -->
@@ -140,7 +143,8 @@
 				chargeStandardsVisible: false,
 				user_id: '',
 				charge_id: '',
-				by_box: ''
+				by_box: '',
+				password: ''
 			}
 		},
 		created() {
@@ -223,20 +227,23 @@
 				this.detailVisible = true
 			},
 			editRemark(index, row) {
-				this.idx = index;
-				const item = this.tableData[index];
-				this.form = row
-				this.sex = String(row.sex)
+				// this.idx = index;
+				// const item = this.tableData[index];
+				this.form.id = row.id
+				// this.sex = String(row.sex)
+				this.remark = row.remark
+				this.password = ''
 				this.detailVisible = true
 			},
 			onSubmit() {
-				this.submitDisable = true
-				if(this.remark.trim() == '') {
-					this.$message.error("请输入备注")
+				if(this.remark == '' || this.password == '') {
+					this.$message.error("请至少编辑一项!")
 					return
 				}
+				this.submitDisable = true
 				let params = {
 					remark: this.remark,
+					password: this.password
 				}
 				this.$axios.patch('/admin/users/' + this.form.id, params, {
 					headers: {
@@ -249,9 +256,10 @@
 						this.getData()
 						this.remark = ''
 					}
-					this.submitDisable = false
 				}).catch((res) => {
 					console.log('error')
+				}).finally(() => {
+					this.submitDisable = false
 				})
 			},
 			editSettle(index, row) {

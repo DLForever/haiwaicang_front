@@ -86,7 +86,7 @@
 				}).finally(() => {
 					this.isDisabled = false
 				})
-			},			
+			},
 			beforeUpload(file) {
                 const extension = file.name.split('.')[1] === 'xls';
                 const extension2 = file.name.split('.')[1] === 'xlsx';
