@@ -133,10 +133,10 @@
 				</el-table>
 				<br>
 				<el-table v-if="this.ware_houseTable2.length != 0" :data="ware_houseTable2" border style="width: 100%">
-					<el-table-column prop="ware_house_name" label="库位" width="307"></el-table-column>
-					<!-- <el-table-column prop="sum" label="数量"></el-table-column> -->
+					<el-table-column prop="ware_house_name" label="库位"></el-table-column>
 					<el-table-column prop="fnsku" label="fnsku"></el-table-column>
-					<el-table-column prop="sum" label="数量"></el-table-column>
+					<el-table-column prop="dst_fnsku" label="新fnsku"></el-table-column>
+					<el-table-column prop="sum" label="数量" width="100"></el-table-column>
 					<el-table-column label="操作" width="80">
 						<template slot-scope="scope">
 							<el-button type="danger" @click="handleDeleteSum(scope.$index, scope.row)">减少</el-button>
@@ -1492,6 +1492,7 @@
 							// data.labal_ware_houses = ''
 							data.label_ware_houses.forEach((data2) => {
 								// data.labal_ware_houses = data.labal_ware_houses + ' ' + data2.ware_house_name + '(' + data2.sum + ')'
+								data2.dst_fnsku = data.dst_fnsku
 								this.ware_houseTable.push(data2)
 							})
 						})
@@ -1520,7 +1521,7 @@
 						this.barcode = 'hwc_' + row.id
 						this.status = row.status
 						//						this.barcode = Base64.encode('123456789_1')
-						console.log(this.barcode)
+						console.log(this.ware_houseTable2)
 						this.detailVisible = true
 					} else {
 						this.$message.error("失败,请联系管理员")
@@ -1555,6 +1556,7 @@
 			closeDetails() {
 				this.ware_houseTable = []
 				this.ware_houseTable2 = []
+				this.order_box_cargos = []
 			},
 			confirmCheck() {
 				this.$confirm('审核后不可修改, 是否继续?', '提示', {

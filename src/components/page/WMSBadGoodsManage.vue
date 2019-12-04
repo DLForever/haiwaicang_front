@@ -622,11 +622,11 @@
 			onSubmitOut() {
 				this.submitDisable = true
 				let params = {
-					cargo_id: this.outId,
+					cargo_id: this.outId2,
 					remark: this.remark,
 					sum: this.outSum,
 				}
-				this.$axios.delete('/admin/transfer_records/' + this.outId2, {
+				this.$axios.delete('/admin/transfer_records/1', {
 					headers: {
 						'Authorization': localStorage.getItem('token_admin')
 					},
