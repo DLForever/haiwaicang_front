@@ -9,6 +9,9 @@
 		<div class="container">
 			<div class="handle-box">
 				<!--<el-button type="primary" icon="delete" class="handle-del mr10" @click="delAll">批量删除</el-button>-->
+				<el-button type="primary">
+					<a style="color:#fff;" :href="$axios.defaults.baseURL + '/admin/store_ins/export_url?s_status=2&is_quick=1&token=' + export_token + '&user_id=' + select_cate + '&status=' + statusSelect + '&logistics_number=' + search_logistics_number + '&batch_number=' + search_batch_number">导出</a>
+				</el-button>
 				<div class="search">
 					<!-- <span>用户:</span> -->
 					用户:
@@ -271,15 +274,17 @@
 			// 分页导航
 			handleCurrentChange(val) {
 				this.cur_page = val;
-				if(!this.select_cate || this.select_cate == -1) {
-					this.getData();
-				} else {
-					this.getUserDatas()
-				}				
+				this.getData();
+				// if(!this.select_cate || this.select_cate == -1) {
+				// 	this.getData();
+				// } else {
+				// 	this.getUserDatas()
+				// }				
 			},
 			// 获取 easy-mock 的模拟数据
 			getData() {
 				// 开发环境使用 easy-mock 数据，正式环境使用 json 文件
+				this.export_token = localStorage.getItem('token_admin')
 				if(process.env.NODE_ENV === 'development') {
 					//					this.url = '/ms/table/list';
 				};

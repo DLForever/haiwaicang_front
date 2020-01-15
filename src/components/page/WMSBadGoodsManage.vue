@@ -607,7 +607,7 @@
 				this.ware_id = ''
 				this.transferSum = 0
 				this.transferMaxSum = row.defect_sum
-				this.cargo_id = row.product_id
+				this.cargo_id = row.id
 				this.remark = ''
 				this.editVisible = true
 			},

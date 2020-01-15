@@ -104,8 +104,8 @@
 				})
 			},			
 			beforeUpload(file) {
-                const extension = file.name.split('.')[1] === 'xls';
-                const extension2 = file.name.split('.')[1] === 'xlsx';
+                const extension = this.xlsxList[0].name.split('.')[this.xlsxList[0].name.split('.').length - 1] === 'xls';
+                const extension2 = this.xlsxList[0].name.split('.')[this.xlsxList[0].name.split('.').length - 1] === 'xlsx';
                 const maxSzie = file.size / 1024 / 1024 < 10;
                 if (!extension && !extension2) {
                     console.log('格式有误，请上传xls、xlsx格式的文件！');

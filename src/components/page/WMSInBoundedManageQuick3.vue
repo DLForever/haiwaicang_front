@@ -225,6 +225,7 @@
 				submitDisable: false,
 				statusOptions: [{value: '', label: '全部'}, {value: 7, label: '待入库'}, {value: 4, label: '已入库'}, {value: 5, label: '待删除'}],
 				statusOptions2: [{value: '', label: '全部'}, {value: 4, label: '已入库'}, {value: 6, label: '已结算'}, {value: 5, label: '待删除'}],
+				statusOptions3: [{value: '', label: '全部'}, {value: 5, label: '待删除'}],
 				statusSelect: '',
 				search_logistics_number: '',
 				code: ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z"],
@@ -274,11 +275,12 @@
 			// 分页导航
 			handleCurrentChange(val) {
 				this.cur_page = val;
-				if(!this.select_cate || this.select_cate == -1) {
-					this.getData();
-				} else {
-					this.getUserDatas()
-				}				
+				this.getData();
+				// if(!this.select_cate || this.select_cate == -1) {
+				// 	this.getData();
+				// } else {
+				// 	this.getUserDatas()
+				// }				
 			},
 			// 获取 easy-mock 的模拟数据
 			getData() {
@@ -287,11 +289,12 @@
 				if(process.env.NODE_ENV === 'development') {
 					//					this.url = '/ms/table/list';
 				};
-				if (this.$route.params.status == 'incomplete') {
-					this.statusOptions = this.statusOptions
-				} else {
-					this.statusOptions = this.statusOptions2
-				}
+				// if (this.$route.params.status == 'incomplete') {
+				// 	this.statusOptions = this.statusOptions
+				// } else {
+				// 	this.statusOptions = this.statusOptions2
+				// }
+				this.statusOptions = this.statusOptions3
 				this.$axios.get('/admin/store_ins?page=' + this.cur_page + '&is_quick=1&s_status=3' + '&user_id=' + this.select_cate + '&fnsku=' + this.search_fnsku + '&status=' + this.statusSelect + '&logistics_number=' + this.search_logistics_number + '&batch_number=' + this.search_batch_number, {
 					headers: {
 						'Authorization': localStorage.getItem('token_admin')

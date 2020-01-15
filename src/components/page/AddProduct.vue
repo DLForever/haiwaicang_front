@@ -260,8 +260,8 @@
 					this.$message.error("请选择xlsx文件")
 					return
 				}
-				const extension = this.batchList[0].name.split('.')[1] === 'xls'
-				const extension2 = this.batchList[0].name.split('.')[1] === 'xlsx'
+				const extension = this.batchList[0].name.split('.')[this.batchList[0].name.split('.').length - 1] === 'xls';
+				const extension2 = this.batchList[0].name.split('.')[this.batchList[0].name.split('.').length - 1] === 'xlsx';
 				const isLt2M = this.batchList[0].size / 1024 / 1024 < 10
 				if(!extension & !extension2) {
 					console.log('上传模板只能是 xls、xlsx格式！')
