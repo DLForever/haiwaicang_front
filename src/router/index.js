@@ -204,6 +204,11 @@ export default new Router({
                     meta: { title: '结算详情'}
                 },
                 {
+                    path: '/RecordStatistics',
+                    component: resolve => require(['../components/page/RecordStatistics.vue'], resolve),
+                    meta: { title: '扫描记录详情' }
+                },
+                {
                     path: '/WMSaddware',
                     component: resolve => require(['../components/page/WMSAddWare.vue'], resolve),
                     meta: { title: 'WMS新建库位', permission: true  }
@@ -369,6 +374,11 @@ export default new Router({
                     path: '/WMSOutBoundStatistics',
                     component: resolve => require(['../components/page/WMSOutBoundStatistics.vue'], resolve),
                     meta: { title: 'WMS出库统计详情', permission: true }
+                },
+                {
+                    path: '/WMSRecordStatistics',
+                    component: resolve => require(['../components/page/WMSRecordStatistics.vue'], resolve),
+                    meta: { title: 'WMS扫描记录详情', permission: true }
                 },
                 {
                     path: '/WMSsettlementmanage',

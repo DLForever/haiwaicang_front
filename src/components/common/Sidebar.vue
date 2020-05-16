@@ -234,6 +234,17 @@
 						},
 						]
 					},
+					{
+						icon: 'el-icon-printer',
+						index: '12',
+						title: '出入库统计',
+						subs: [
+						{
+							index: 'RecordStatistics',
+							title: '扫描记录管理',
+						},
+						]
+					},
 					//                  {
 					//                      icon: 'el-icon-printer',
 					//                      index: '5',
@@ -470,6 +481,10 @@
 						{
 							index: 'WMSOutBoundStatistics',
 							title: '出库统计管理',
+						},
+						{
+							index: 'WMSRecordStatistics',
+							title: '扫描记录管理',
 						},
 						]
 					},
