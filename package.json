@@ -15,7 +15,7 @@
     "babel-polyfill": "^6.23.0",
     "element-ui": "^2.3.3",
     "js-base64": "^2.4.9",
-    "mavon-editor": "^2.5.4",
+    "mavon-editor": "^2.8.2",
     "print-js": "^1.0.52",
     "vue": "^2.5.16",
     "vue-cropperjs": "^2.2.0",
